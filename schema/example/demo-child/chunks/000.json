@@ -1,0 +1,28 @@
+{
+  "chunk": 0,
+  "events": [
+    {
+      "i": 0,
+      "kind": "assistant",
+      "ts": "2026-08-01T00:00:11.000Z",
+      "text": "Writing a concise README for the project.",
+      "tokens": { "input": 300, "output": 180, "cacheRead": 0, "cacheWrite": 0 }
+    },
+    {
+      "i": 1,
+      "kind": "tool_call",
+      "ts": "2026-08-01T00:00:12.000Z",
+      "tool": {
+        "name": "Write",
+        "callId": "call_c1",
+        "input": { "path": "README.md", "contents": "# Project\n\nA demo." }
+      },
+      "result": {
+        "text": "wrote README.md (2 lines)",
+        "isError": false,
+        "ts": "2026-08-01T00:00:29.000Z",
+        "durationMs": 17000
+      }
+    }
+  ]
+}

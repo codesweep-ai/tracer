@@ -1,0 +1,10 @@
+{
+  "name": "tracer-fixture-tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Schema-conformance harness for the fixture corpus. Run: node fixtures/test/schema-conformance.mjs",
+  "type": "module",
+  "devDependencies": {
+    "ajv": "^8.20.0"
+  }
+}

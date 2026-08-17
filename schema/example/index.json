@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-01T00:00:00.000Z",
+  "trajectories": [
+    {
+      "id": "demo-root",
+      "path": "demo-root"
+    },
+    {
+      "id": "demo-child",
+      "path": "demo-child"
+    }
+  ],
+  "links": [
+    {
+      "fromSessionId": "demo-root",
+      "toSessionId": "demo-child",
+      "kind": "campaign",
+      "label": "dispatched worker",
+      "evidence": "dispatched-worker prompt (heuristic)"
+    }
+  ]
+}

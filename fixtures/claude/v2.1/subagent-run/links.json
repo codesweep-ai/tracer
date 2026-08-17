@@ -1,0 +1,14 @@
+[
+  {
+    "fromSessionId": "document runs failures",
+    "toSessionId": "and records and",
+    "kind": "spawned",
+    "label": "line output module",
+    "evidence": "the no document output and for change reports across"
+  },
+  {
+    "fromSessionId": "and records and",
+    "toSessionId": "a successfully values",
+    "kind": "handoff"
+  }
+]

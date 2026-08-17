@@ -1,0 +1,66 @@
+{
+  "chunk": 0,
+  "events": [
+    {
+      "i": 0,
+      "kind": "user",
+      "ts": "2026-08-01T00:00:00.000Z",
+      "text": "Summarize the repository and list the top-level files."
+    },
+    {
+      "i": 1,
+      "kind": "thinking",
+      "ts": "2026-08-01T00:00:01.000Z",
+      "text": "I should list the directory first, then read the README.",
+      "tokens": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0, "reasoning": 210 }
+    },
+    {
+      "i": 2,
+      "kind": "assistant",
+      "ts": "2026-08-01T00:00:02.000Z",
+      "text": "I'll start by listing the top-level files.",
+      "tokens": { "input": 1200, "output": 210, "cacheRead": 40210, "cacheWrite": 3120 }
+    },
+    {
+      "i": 3,
+      "kind": "tool_call",
+      "ts": "2026-08-01T00:00:03.000Z",
+      "tool": {
+        "name": "Bash",
+        "callId": "call_1",
+        "input": { "command": "ls -la && cat /nope" },
+        "command": "ls -la && cat /nope"
+      },
+      "result": {
+        "text": "cat: /nope: No such file or directory",
+        "isError": true,
+        "ts": "2026-08-01T00:00:04.200Z",
+        "durationMs": 1200
+      }
+    },
+    {
+      "i": 4,
+      "kind": "tool_call",
+      "ts": "2026-08-01T00:00:10.000Z",
+      "subtask": true,
+      "childSessionId": "demo-child",
+      "tool": {
+        "name": "Task",
+        "callId": "call_2",
+        "input": { "description": "Write README", "subagent_type": "general-purpose" }
+      },
+      "result": {
+        "text": "Child agent completed: wrote README.md",
+        "isError": false,
+        "ts": "2026-08-01T00:00:30.000Z",
+        "durationMs": 20000
+      }
+    },
+    {
+      "i": 5,
+      "kind": "turn_end",
+      "ts": "2026-08-01T00:00:31.500Z",
+      "durationMs": 31500
+    }
+  ]
+}

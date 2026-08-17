@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 2,
+  "trajectories": [
+    {
+      "id": "71a3287d-1de6-0fdb-a06f-1f96b0f3a6af",
+      "path": "71a3287d-1de6-0fdb-a06f-1f96b0f3a6af"
+    },
+    {
+      "id": "0db5db5c-8c87-f86a-b37f-82499cd8daff",
+      "path": "0db5db5c-8c87-f86a-b37f-82499cd8daff"
+    },
+    {
+      "id": "1ac78177-3297-babb-6552-7e056fd4fc4c",
+      "path": "1ac78177-3297-babb-6552-7e056fd4fc4c"
+    }
+  ]
+}

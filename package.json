@@ -1,0 +1,22 @@
+{
+  "name": "tracer-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/viewer"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/postinstall.mjs",
+    "build": "npm run build --workspace apps/viewer",
+    "test": "npm run test --workspaces --if-present && node fixtures/test/schema-conformance.mjs",
+    "lint": "npm run lint --workspace apps/viewer",
+    "dev": "npm run dev --workspace apps/viewer --"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

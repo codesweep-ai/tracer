@@ -1,0 +1,16 @@
+# The scripts here carry a `#!/usr/bin/env bash` shebang and are run on Linux
+# and macOS. A checkout on Windows applies core.autocrlf and rewrites every text
+# file to CRLF, after which the shebang reads as `bash\r` and executing one
+# fails with
+#
+#     /usr/bin/env: 'bash\r': No such file or directory
+#
+# which names the interpreter rather than the script, and so reads as though the
+# script itself were missing.
+#
+# The oracle trees are the other reason. A golden is compared byte for byte
+# against what the binary writes, and a line ending rewritten on checkout fails
+# every one of them for a reason no diff explains.
+#
+# text=auto still lets git detect and leave binaries alone.
+* text=auto eol=lf

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "source": "claude-code",
+    "sessionId": "demo-root",
+    "parentSessionId": null,
+    "agentId": null,
+    "label": "Summarize the repository",
+    "title": "Summarize the repository",
+    "model": "claude-opus-4-8",
+    "cliVersion": "2.1.220",
+    "cwd": "/home/user/project",
+    "startedAt": "2026-08-01T00:00:00.000Z",
+    "endedAt": "2026-08-01T00:00:31.500Z",
+    "durationMs": 31500,
+    "cost": 0.0142
+  },
+  "totals": {
+    "events": 6,
+    "toolCalls": 2,
+    "toolErrors": 1,
+    "input": 1200,
+    "output": 640,
+    "cacheRead": 40210,
+    "cacheWrite": 3120,
+    "reasoning": 210,
+    "cost": 0.0142,
+    "costEstimated": true
+  },
+  "parse": {
+    "adapter": "claude-code",
+    "adapterVersion": "1.0.0",
+    "cliVersionRange": "2.1.x",
+    "skipped": 3,
+    "unrecognized": 1,
+    "warnings": [
+      { "message": "unrecognized record type 'x-experimental' rendered as meta", "rawType": "x-experimental", "count": 1 }
+    ]
+  },
+  "links": [
+    {
+      "fromSessionId": "demo-root",
+      "toSessionId": "demo-child",
+      "kind": "campaign",
+      "label": "dispatched worker",
+      "evidence": "dispatched-worker prompt (heuristic)"
+    }
+  ],
+  "chunkSize": 1000,
+  "chunkCount": 1,
+  "strip": [
+    { "i": 0, "kind": "user", "error": false, "ts": "2026-08-01T00:00:00.000Z", "size": 42 },
+    { "i": 1, "kind": "thinking", "error": false, "ts": "2026-08-01T00:00:01.000Z", "size": 120 },
+    { "i": 2, "kind": "assistant", "error": false, "ts": "2026-08-01T00:00:02.000Z", "size": 88 },
+    { "i": 3, "kind": "tool_call", "error": true, "ts": "2026-08-01T00:00:03.000Z", "label": "Bash", "size": 512 },
+    { "i": 4, "kind": "tool_call", "error": false, "ts": "2026-08-01T00:00:10.000Z", "subtask": true, "childSessionId": "demo-child", "label": "Task", "size": 220 },
+    { "i": 5, "kind": "turn_end", "error": false, "ts": "2026-08-01T00:00:31.500Z", "turnEnd": true, "size": 0 }
+  ]
+}

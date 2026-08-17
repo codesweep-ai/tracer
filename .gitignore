@@ -1,0 +1,32 @@
+# The embedded viewer artifacts under internal/cli/viewer DO live in the tree.
+# They are what makes a clone build with no Node toolchain, so they are
+# deliberately not ignored here. Nothing else generated belongs in the source
+# tree.
+
+# npm's install tree
+node_modules/
+
+# Go build output
+/bin/
+
+# goreleaser release artifacts
+/dist/
+
+# Vite build output, before it is copied under internal/cli/viewer
+dist-single/
+dist-split/
+
+# Local credentials and env config
+/.env
+
+# Python bytecode, written when anything imports a script under scripts/
+__pycache__/
+
+*.log
+
+# Editor state. A vim swap file was committed once: leakcheck cannot inspect a
+# binary, so it carried a username straight past the gate.
+*.swp
+*.swo
+*~
+.DS_Store

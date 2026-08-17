@@ -1,0 +1,5 @@
+exit 0
+stdout: normalized 0 trajectory(s) to <OUT>; skipped 2
+0 sessions normalized (2 file(s) skipped, reported above)
+skipping fixtures/claude/v2.1/all-skipped/a.jsonl: normalized to zero events (adapter: claude-code) — not a session file
+skipping fixtures/claude/v2.1/all-skipped/b.jsonl: normalized to zero events (adapter: claude-code) — not a session file

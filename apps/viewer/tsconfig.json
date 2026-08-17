@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "noUncheckedIndexedAccess": false,
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
+    "baseUrl": ".",
+    "paths": { "@codesweep-ai/ui": ["../../vendor/codesweep-ui/src/index.ts"], "@codesweep-ai/ui/*": ["../../vendor/codesweep-ui/src/*"] }
+  },
+  "include": ["src", "vite.config.ts", "vite.single.config.ts", "vite.split.config.ts", "vitest.config.ts"]
+}

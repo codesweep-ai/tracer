@@ -1,0 +1,9 @@
+Vendored from the @codesweep-ai/ui design system.
+
+  package:  @codesweep-ai/eslint-plugin v0.3.0
+  copied:   2026-08-16
+  files:    index.js
+
+The rules enforce design-system token discipline in apps/viewer. `no-unknown-token`
+reads its token list from ../codesweep-ui/src/styles/tokens.css, configured in
+apps/viewer/eslint.config.js.

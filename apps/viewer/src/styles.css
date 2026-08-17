@@ -1,0 +1,17 @@
+@import "@codesweep-ai/ui/styles/tokens.css";
+@import "@codesweep-ai/ui/styles/base.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Viewer layout tokens: canvas height, virtual row height, and agent-tree indentation. */
+  --strip-height: 18px;
+  --event-row-height: 224px;
+  --trajectory-depth-indent: 32px;
+  --trace-user: var(--color-link);
+  --trace-assistant: var(--color-warning);
+  --trace-tool: var(--color-brand);
+  --trace-recessive: var(--muted);
+}
+canvas { image-rendering: pixelated; }

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "trajectories": [
+    {
+      "id": "4f00d255-46e9-4373-7232-09f72fda039e",
+      "path": "4f00d255-46e9-4373-7232-09f72fda039e"
+    },
+    {
+      "id": "0ab5e331349408f01",
+      "path": "0ab5e331349408f01"
+    },
+    {
+      "id": "25ae75425a8bc0e94",
+      "path": "25ae75425a8bc0e94"
+    }
+  ],
+  "links": [
+    {
+      "fromSessionId": "document runs failures",
+      "toSessionId": "and records and",
+      "kind": "spawned",
+      "label": "line output module",
+      "evidence": "the no document output and for change reports across"
+    },
+    {
+      "fromSessionId": "and records and",
+      "toSessionId": "a successfully values",
+      "kind": "handoff"
+    }
+  ]
+}

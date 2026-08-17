@@ -1,0 +1,725 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codesweep.ai/schemas/tracer/trajectory.v1.json",
+  "title": "Tracer normalized trajectory (v1)",
+  "description": "The published contract between the normalizer and its consumers. A single trajectory is one document. Large trajectories are stored in the sharded layout (see $defs.summary + $defs.chunk); concatenating a summary's meta/totals/parse/links with the events from its chunks in index order must reproduce a document valid against this top-level schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "meta",
+    "totals",
+    "events",
+    "parse"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2,
+      "description": "Schema version. A consumer MUST refuse a document whose version it does not implement."
+    },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "totals": {
+      "$ref": "#/$defs/totals"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    },
+    "parse": {
+      "$ref": "#/$defs/parse"
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/link"
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "enum": [
+        "claude-code",
+        "codex",
+        "opencode"
+      ]
+    },
+    "eventKind": {
+      "enum": [
+        "user",
+        "assistant",
+        "thinking",
+        "tool_call",
+        "tool_result",
+        "system",
+        "meta",
+        "turn_end"
+      ]
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "source",
+        "sessionId"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "parentSessionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "agentId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "agentPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "agentNickname": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autoTitle": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Derived fallback name (first user message, truncated); title stays authored-only"
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider": {
+          "type": "string",
+          "description": "Serving host, captured only where the transcript names one: codex session_meta.model_provider, opencode message providerID (verbatim). ABSENT for claude — the transcript does not name a host — and absent when opencode messages disagree."
+        },
+        "speed": {
+          "type": "string",
+          "description": "Anthropic serving speed from message.usage.speed, recorded verbatim (e.g. 'standard'). ABSENT when unrecorded."
+        },
+        "inferenceGeo": {
+          "type": "string",
+          "description": "Anthropic inference geo from message.usage.inference_geo, only when it is a real geo. The literal 'not_available' is the source saying it does not know and is captured as absence."
+        },
+        "cliVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cwd": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "startedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "ISO-8601"
+        },
+        "endedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "ISO-8601"
+        },
+        "durationMs": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "cost": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Session mode reported by the CLI (e.g. normal)."
+        },
+        "permissionMode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Permission mode reported by the CLI (e.g. default)."
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "events",
+        "toolCalls",
+        "toolErrors",
+        "input",
+        "output",
+        "cacheRead",
+        "cacheWrite"
+      ],
+      "properties": {
+        "events": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "toolCalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "toolErrors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "input": {
+          "type": "number",
+          "description": "Uncached input tokens, SAME meaning for every source: tokens billed at the base input rate, DISJOINT from cacheRead and cacheWrite. Sources whose raw usage reports cache-inclusive input (codex: cache reads and writes are subsets of input_tokens) are normalized by the adapter; the raw figure is recoverable as input + cacheRead + cacheWrite. Sources whose cache accounting is unknown (see pricing cachedIncludedInInput: null) pass through as reported and refuse cost estimates when cache tokens are present."
+        },
+        "output": {
+          "type": "number"
+        },
+        "cacheRead": {
+          "type": "number",
+          "description": "Input tokens served from cache. Disjoint from input for every source."
+        },
+        "cacheWrite": {
+          "type": "number",
+          "description": "Total cache-write tokens. Unchanged meaning; cacheWrite5m + cacheWrite1h when the split is present."
+        },
+        "cacheWrite5m": {
+          "type": "number",
+          "description": "Anthropic 5-minute-TTL cache writes. ABSENT when the source reports no TTL split — absent is not zero."
+        },
+        "cacheWrite1h": {
+          "type": "number",
+          "description": "Anthropic 1-hour-TTL cache writes (billed 2x base input). ABSENT when the source reports no TTL split."
+        },
+        "reasoning": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Reasoning/thinking tokens AS METERED BY THE PROVIDER — semantics are per-source. codex/OpenAI: real count; the thinking EVENTS are content-empty (encrypted upstream). opencode/Fireworks: count when the host meters it, else 0 even when visible thinking text exists. claude/Anthropic: always 0 — thinking tokens are folded into output and no split exists. Therefore reasoning=0 does NOT mean no thinking, and empty thinking events do NOT mean no thinking."
+        },
+        "cost": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "costEstimated": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": "number",
+          "description": "Per-event share of totals.input — same uncached, cache-disjoint semantics (see totals.input)."
+        },
+        "output": {
+          "type": "number"
+        },
+        "cacheRead": {
+          "type": "number"
+        },
+        "cacheWrite": {
+          "type": "number"
+        },
+        "cacheWrite5m": {
+          "type": "number",
+          "description": "Anthropic 5-minute-TTL share of cacheWrite. ABSENT when the source reports no split."
+        },
+        "cacheWrite1h": {
+          "type": "number",
+          "description": "Anthropic 1-hour-TTL share of cacheWrite. ABSENT when the source reports no split."
+        },
+        "reasoning": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "callId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "input": {},
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "isError"
+      ],
+      "properties": {
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "isError": {
+          "type": "boolean"
+        },
+        "ts": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "durationMs": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "i",
+        "kind"
+      ],
+      "properties": {
+        "i": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Stable 0-based index; deep link is #ev-<i>."
+        },
+        "kind": {
+          "$ref": "#/$defs/eventKind"
+        },
+        "ts": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "ISO-8601; may be absent on meta events."
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool": {
+          "$ref": "#/$defs/tool"
+        },
+        "result": {
+          "$ref": "#/$defs/result"
+        },
+        "tokens": {
+          "$ref": "#/$defs/tokens"
+        },
+        "cost": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "durationMs": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "phase": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lane": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rawType": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "For fail-soft meta events: the original unrecognized record/part type."
+        },
+        "subtask": {
+          "type": "boolean",
+          "description": "This tool_call spawned a sub-agent."
+        },
+        "childSessionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Join key to the child trajectory."
+        }
+      }
+    },
+    "parse": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "adapter",
+        "adapterVersion",
+        "skippedByType",
+        "unrecognized",
+        "warnings"
+      ],
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "description": "Adapter name, e.g. claude-code."
+        },
+        "adapterVersion": {
+          "type": "string",
+          "description": "Adapter version, independent of CLI version."
+        },
+        "cliVersionRange": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "CLI version range the adapter's fixtures cover."
+        },
+        "unrecognized": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of records that became fail-soft meta events."
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "rawType": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "skippedByType": {
+          "type": "array",
+          "description": "Records that produced no event, counted per record type and SORTED by type. Sorted, and an array rather than an object, because object key order would be data-dependent and this output is compared byte for byte.",
+          "items": {
+            "type": "object",
+            "required": [
+              "type",
+              "count"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Source record type; '(no type)' when the record carries none."
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "link": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "fromSessionId",
+        "toSessionId",
+        "kind"
+      ],
+      "properties": {
+        "fromSessionId": {
+          "type": "string"
+        },
+        "toSessionId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "description": "e.g. spawn, campaign, reference."
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "stripEntry": {
+      "type": "object",
+      "description": "One compact entry per event in summary.json — a few bytes each so a 50k summary stays small. Positional fields mirror the event at the same index.",
+      "additionalProperties": true,
+      "required": [
+        "i",
+        "kind"
+      ],
+      "properties": {
+        "i": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "$ref": "#/$defs/eventKind"
+        },
+        "error": {
+          "type": "boolean"
+        },
+        "ts": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subtask": {
+          "type": "boolean"
+        },
+        "childSessionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "turnEnd": {
+          "type": "boolean",
+          "description": "Render a turn-boundary tick before/at this event."
+        },
+        "redacted": {
+          "type": "boolean",
+          "description": "True when thinking text is unavailable at source; render a non-color-only marker."
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Rough byte-size hint for the full event."
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional short label (e.g. tool name) for tooltip/index."
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "summary.json — everything the index page and strip need, without any chunk fetch.",
+      "additionalProperties": true,
+      "required": [
+        "schemaVersion",
+        "meta",
+        "totals",
+        "parse",
+        "strip"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 2,
+          "description": "Schema version. A consumer MUST refuse a document whose version it does not implement."
+        },
+        "meta": {
+          "$ref": "#/$defs/meta"
+        },
+        "totals": {
+          "$ref": "#/$defs/totals"
+        },
+        "parse": {
+          "$ref": "#/$defs/parse"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          }
+        },
+        "chunkSize": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Events per chunk (default 1000)."
+        },
+        "chunkCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "strip": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stripEntry"
+          }
+        }
+      }
+    },
+    "chunk": {
+      "type": "object",
+      "description": "chunks/NNN.json — full events for a fixed index range. Chunk N holds events N*chunkSize .. N*chunkSize+chunkSize-1.",
+      "additionalProperties": false,
+      "required": [
+        "chunk",
+        "events"
+      ],
+      "properties": {
+        "chunk": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event"
+          }
+        }
+      }
+    },
+    "index": {
+      "type": "object",
+      "description": "index.json at the cache root — the set of trajectories for the input, enough to render the index page from summaries.",
+      "additionalProperties": true,
+      "required": [
+        "schemaVersion",
+        "trajectories"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 2,
+          "description": "Schema version. A consumer MUST refuse a document whose version it does not implement."
+        },
+        "generatedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trajectories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "id",
+              "path"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Trajectory id (sessionId or a stable slug)."
+              },
+              "path": {
+                "type": "string",
+                "description": "Directory (relative to cache root) holding summary.json + chunks/."
+              }
+            }
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          }
+        }
+      }
+    }
+  }
+}

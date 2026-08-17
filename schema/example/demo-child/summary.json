@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 2,
+  "meta": {
+    "source": "claude-code",
+    "sessionId": "demo-child",
+    "parentSessionId": "demo-root",
+    "agentId": "demo-child",
+    "label": "Write README (general-purpose)",
+    "model": "claude-opus-4-8",
+    "cliVersion": "2.1.220",
+    "cwd": "/home/user/project",
+    "startedAt": "2026-08-01T00:00:10.500Z",
+    "endedAt": "2026-08-01T00:00:29.800Z",
+    "durationMs": 19300,
+    "cost": 0.0031
+  },
+  "totals": {
+    "events": 2,
+    "toolCalls": 1,
+    "toolErrors": 0,
+    "input": 300,
+    "output": 180,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "cost": 0.0031,
+    "costEstimated": true
+  },
+  "parse": {
+    "adapter": "claude-code",
+    "adapterVersion": "1.0.0",
+    "skippedByType": [],
+    "cliVersionRange": "2.1.x",
+    "unrecognized": 0,
+    "warnings": []
+  },
+  "links": [],
+  "chunkSize": 1000,
+  "chunkCount": 1,
+  "strip": [
+    {
+      "i": 0,
+      "kind": "assistant",
+      "error": false,
+      "ts": "2026-08-01T00:00:11.000Z",
+      "size": 60
+    },
+    {
+      "i": 1,
+      "kind": "tool_call",
+      "error": false,
+      "ts": "2026-08-01T00:00:12.000Z",
+      "label": "Write",
+      "size": 300
+    }
+  ]
+}

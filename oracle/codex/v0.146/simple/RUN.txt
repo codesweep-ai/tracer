@@ -1,0 +1,2 @@
+exit 0
+stdout: normalized 1 trajectory(s) to <OUT>

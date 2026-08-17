@@ -1,0 +1,102 @@
+# Build, test and gate on every push.
+#
+# cs-tracer is a single static binary with no runtime dependencies, so the
+# matrix is just the platforms it ships for, plus one job for the prose rules
+# and one for the publication rules.
+#
+# `make check` runs the whole gate list and skips what a runner cannot do: the
+# viewer sources need the design-system repository beside this checkout, and the
+# visual-parity gate needs a browser. Both report as skips, so the summary says
+# what was checked rather than implying more.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: build-test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # make check-version compares the stamp to git describe
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # gofmt, vet, the build, the version stamp, the Go suite, both linters:
+      # the same target a contributor runs before pushing (CONTRIBUTING.md).
+      # The two tools the Go gates in scripts/check.sh shell out to.
+      # golangci-lint is pinned because it gains checks between releases:
+      # unpinned, somebody else's release becomes a red build on a pull
+      # request that touched nothing.
+      - name: linters
+        run: |
+          set -euo pipefail
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+          go install golang.org/x/tools/cmd/deadcode@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: make check
+        run: make check
+
+      # Schema only: this validates the manifest, and does not prove a release
+      # can be cut.
+      - name: goreleaser check
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          version: "~> v2"
+          args: check
+
+  # Its own job because it needs no Go toolchain and no matrix, so it answers
+  # in seconds and answers even when the tests are failing. `make check` runs
+  # it too, for the contributor who runs one command before pushing.
+  docs:
+    name: docs prose
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - run: make docs
+
+  # The publication rules. fetch-depth: 0 because half of them read the
+  # history, and a shallow checkout would let them pass by seeing nothing.
+  oss:
+    name: open-source readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: make oss
+
+  # The ledger's freshness gate. CONTRIBUTING.md asks for a render and a check
+  # before every commit that touches ledger/, and `make check` skips it where
+  # cs-ledger is not installed — so CI installs it and makes the gate real.
+  ledger:
+    name: ledger check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: install cs-ledger
+        run: go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest
+      - run: cs-ledger check ledger

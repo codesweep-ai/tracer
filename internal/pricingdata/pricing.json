@@ -1,0 +1,459 @@
+{
+  "_doc": [
+    "USD per million tokens; substring matched against model names.",
+    "Null or missing prices produce no estimate.",
+    "ENTRY SHAPE: a model value is either one entry object or an ARRAY of them. An entry may carry an optional \"provider\" (absent = matches any document, including one whose provider is unknown; a provider-scoped entry is preferred over a provider-less one at the same key), optional dated \"rates\", optional \"modes\", and optional \"geoMultipliers\". A bare rate object at the entry level remains valid shorthand for \"always\".",
+    "Keys are resolved LONGEST-MATCH-FIRST: 'gpt-5.4' is a substring of 'gpt-5.4-mini'/'-nano'/'-pro'/'-cyber'; 'gpt-5.5' of 'gpt-5.5-pro'. ONLY the longest matching key is considered — there is NO fall-through to shorter keys. If the longest key has no entry matching the document's provider, the result is NO estimate, never the price of a shorter key.",
+    "DATED RATES: a model value may carry rates: [{from?, through?, ...}] instead of a bare rate object; from/through are INCLUSIVE ISO dates matched against the UTC date of meta.startedAt. claude-sonnet-5's 2026-09-01 reprice ($2/$10 intro -> $3/$15) is represented this way and needs no calendar reminder — no calendar reminder is needed. A session whose date no period covers produces NO estimate; a session with NO date prices only if the entry has exactly one period.",
+    "CACHE WRITES: cacheWrite is the Anthropic 5-minute-TTL rate; cacheWrite1h is the 1-hour rate, = 2x that period's base input. Both are represented and both are billed: the claude adapter reports totals.cacheWrite5m/cacheWrite1h and the estimator charges each bucket at its own rate. A document with 1h writes whose resolved rates carry no numeric cacheWrite1h produces NO estimate — it never falls back to the 5m rate. Only the claude adapter emits a TTL split, so non-Anthropic entries carry no cacheWrite1h key.",
+    "MODES AND GEO: modes.fast (Opus 5 / Opus 4.8, the quoted $10 in / $50 out tier) and geoMultipliers are represented and are applied ONLY when the transcript records meta.speed / meta.inferenceGeo. A mode rate set REPLACES the period's rates wholesale rather than scaling them. A recorded speed or geo naming no key produces NO estimate; inference_geo 'not_available' is captured as absence, so it neither selects nor suppresses.",
+    "OpenAI models before the GPT-5.6 family have no cache-write fee; cacheWrite is 0, not null.",
+    "cachedIncludedInInput: documents the provider's RAW usage accounting. Anthropic reports cache_read_input_tokens separately from input_tokens (false). OpenAI reports cached_tokens nested inside prompt_tokens_details, i.e. a subset of prompt tokens (true). The codex adapter normalizes cache-inclusive input to the schema's disjoint buckets at parse time, so the estimator always bills totals.input at face value and never subtracts — a true flag no longer changes the arithmetic; it remains as raw-accounting provenance.",
+    "cachedIncludedInInput null = the host's cache accounting is UNKNOWN (Fireworks). Sessions that used cache tokens under a null-flag model produce NO estimate rather than a wrong one; cache-free sessions estimate normally.",
+    "NO FALLBACK: this file is the only source of rates. If it is missing or unreadable, sessions get no estimate ('unavailable'), never a hard-coded number.",
+    "Fireworks rows are Standard serverless tier. cacheWrite: 0 is a high-confidence inference from the docs' exhaustive three-dimension billing claim, not a quoted rate.",
+    "HOST AMBIGUITY: kimi/deepseek/glm/qwen/minimax/gpt-oss weights are served by many hosts at different prices. Those 16 rows are therefore scoped \"provider\": \"fireworks-ai\" and match only a document whose meta.provider says fireworks-ai — the same weights on another host, or on an unknown host, now produce NO estimate rather than a Fireworks-priced guess. claude-* and gpt-* rows are deliberately NOT provider-scoped: claude transcripts record no provider at all, so scoping them would make every claude session unpriceable, and the audit found no host ambiguity for OpenAI models.",
+    "DOCUMENTED-UNREPRESENTABLE — rev 4 built every dimension the transcripts can answer; the following are recorded with the specific reason they cannot be, and are NOT open warnings awaiting a table change.",
+    "UNREPRESENTABLE, OpenAI context tiers: GPT-5.6-family models price in two tiers (long-context = 2x input/read/write, 1.5x output). The token threshold separating them is UNPUBLISHED upstream, so a transcript's token counts cannot be mapped to a tier. Blocked on the provider, not on this table. Values below are the SHORT-context standard tier.",
+    "UNREPRESENTABLE, OpenAI batch and flex: per-request service modes. No field in any codex rollout records which mode a request used, so there is nothing to key a rate off. Not a table problem — the data is not in the transcript.",
+    "UNREPRESENTABLE, Anthropic batch (-50%): same reason. Batch submission is a property of the API call and no claude transcript field records it.",
+    "UNREPRESENTABLE, Fireworks Priority: service_tier is a per-request flag carrying varying multipliers (1.2x-1.6x) on the same model id. opencode exports do not carry it, so the tier a request ran under is unknowable from the transcript.",
+    "UNREPRESENTABLE, Fireworks size-tier fallback pricing: derived from a model's parameter count, which a model string does not give us. Sessions priced that way correctly produce no estimate rather than a guess at the tier.",
+    "UNREPRESENTABLE, per-period mode rates: modes and geoMultipliers are entry-level, not dated. No evidence exists that fast-mode or geo rates reprice on their own schedule; a dated structure with nothing to put in it would be scaffolding, not information."
+  ],
+  "_provenance": {
+    "retrievalDate": "2026-08-03",
+    "method": "LLM web-research audit against provider pages only; discrepancy table and confidence notes recorded in the ledger",
+    "anthropic": [
+      "https://claude.com/pricing",
+      "https://platform.claude.com/docs/en/about-claude/pricing",
+      "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
+      "https://platform.claude.com/docs/en/about-claude/model-deprecations"
+    ],
+    "openai": [
+      "https://developers.openai.com/api/docs/pricing",
+      "https://developers.openai.com/api/docs/guides/prompt-caching",
+      "https://developers.openai.com/codex/models"
+    ],
+    "ruleDerived": "cacheWrite1h is quoted from the provider pages for fable-5/mythos-5 (20), opus-5/4-8/4-7/4-6/4-5 (10), sonnet-5 (4 intro, 6 from 2026-09-01), sonnet-4-6/4-5/4 (6) and haiku-4-5 (2). Values DERIVED from the documented rules rather than separately quoted: claude-opus-4-1-20250805 cacheWrite1h 30 and claude-opus-4-20250514 cacheWrite1h 30 and claude-3-5-haiku-20241022 cacheWrite1h 1.6 (2x base input); and, within the two modes.fast rate sets, cacheRead 1 (0.1x), cacheWrite 12.5 (1.25x) and cacheWrite1h 20 (2x) off the quoted $10 fast input. All three fast cache rates come from the same documented ratios — deriving some but not others would make an Opus-5 fast session with 1h writes unpriceable through an authoring omission rather than through missing information."
+  },
+  "models": {
+    "claude-fable-5": {
+      "input": 10,
+      "output": 50,
+      "cacheRead": 1,
+      "cacheWrite": 12.5,
+      "cacheWrite1h": 20,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-mythos-5": {
+      "input": 10,
+      "output": 50,
+      "cacheRead": 1,
+      "cacheWrite": 12.5,
+      "cacheWrite1h": 20,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-opus-5": {
+      "input": 5,
+      "output": 25,
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "cacheWrite1h": 10,
+      "cachedIncludedInInput": false,
+      "modes": {
+        "fast": {
+          "input": 10,
+          "output": 50,
+          "cacheRead": 1,
+          "cacheWrite": 12.5,
+          "cacheWrite1h": 20
+        }
+      },
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-opus-4-8": {
+      "input": 5,
+      "output": 25,
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "cacheWrite1h": 10,
+      "cachedIncludedInInput": false,
+      "modes": {
+        "fast": {
+          "input": 10,
+          "output": 50,
+          "cacheRead": 1,
+          "cacheWrite": 12.5,
+          "cacheWrite1h": 20
+        }
+      },
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-opus-4-7": {
+      "input": 5,
+      "output": 25,
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "cacheWrite1h": 10,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-opus-4-6": {
+      "input": 5,
+      "output": 25,
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "cacheWrite1h": 10,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-opus-4-5": {
+      "input": 5,
+      "output": 25,
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "cacheWrite1h": 10,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-opus-4-1-20250805": {
+      "input": 15,
+      "output": 75,
+      "cacheRead": 1.5,
+      "cacheWrite": 18.75,
+      "cacheWrite1h": 30,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-opus-4-20250514": {
+      "input": 15,
+      "output": 75,
+      "cacheRead": 1.5,
+      "cacheWrite": 18.75,
+      "cacheWrite1h": 30,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-sonnet-5": {
+      "rates": [
+        {
+          "through": "2026-08-31",
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.2,
+          "cacheWrite": 2.5,
+          "cacheWrite1h": 4
+        },
+        {
+          "from": "2026-09-01",
+          "input": 3,
+          "output": 15,
+          "cacheRead": 0.3,
+          "cacheWrite": 3.75,
+          "cacheWrite1h": 6
+        }
+      ],
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-sonnet-4-6": {
+      "input": 3,
+      "output": 15,
+      "cacheRead": 0.3,
+      "cacheWrite": 3.75,
+      "cacheWrite1h": 6,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-sonnet-4-5-20250929": {
+      "input": 3,
+      "output": 15,
+      "cacheRead": 0.3,
+      "cacheWrite": 3.75,
+      "cacheWrite1h": 6,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-sonnet-4-20250514": {
+      "input": 3,
+      "output": 15,
+      "cacheRead": 0.3,
+      "cacheWrite": 3.75,
+      "cacheWrite1h": 6,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-haiku-4-5": {
+      "input": 1,
+      "output": 5,
+      "cacheRead": 0.1,
+      "cacheWrite": 1.25,
+      "cacheWrite1h": 2,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "claude-3-5-haiku-20241022": {
+      "input": 0.8,
+      "output": 4,
+      "cacheRead": 0.08,
+      "cacheWrite": 1,
+      "cacheWrite1h": 1.6,
+      "cachedIncludedInInput": false,
+      "geoMultipliers": {
+        "us": 1.1
+      }
+    },
+    "gpt-5.6-sol": {
+      "input": 5,
+      "output": 30,
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.6-terra": {
+      "input": 2,
+      "output": 12,
+      "cacheRead": 0.2,
+      "cacheWrite": 2.5,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.6-luna": {
+      "input": 0.2,
+      "output": 1.2,
+      "cacheRead": 0.02,
+      "cacheWrite": 0.25,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.5-pro": {
+      "input": 30,
+      "output": 180,
+      "cacheRead": null,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.5": {
+      "input": 5,
+      "output": 30,
+      "cacheRead": 0.5,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.4-pro": {
+      "input": 30,
+      "output": 180,
+      "cacheRead": null,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.4-mini": {
+      "input": 0.75,
+      "output": 4.5,
+      "cacheRead": 0.075,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.4-nano": {
+      "input": 0.2,
+      "output": 1.25,
+      "cacheRead": 0.02,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.4-cyber": {
+      "input": null,
+      "output": null,
+      "cacheRead": null,
+      "cacheWrite": null,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.4": {
+      "input": 2.5,
+      "output": 15,
+      "cacheRead": 0.25,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": true
+    },
+    "gpt-5.3-codex": {
+      "input": 1.75,
+      "output": 14,
+      "cacheRead": 0.175,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": true
+    },
+    "chat-latest": {
+      "input": 5,
+      "output": 30,
+      "cacheRead": 0.5,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": true
+    },
+    "kimi-k3": {
+      "provider": "fireworks-ai",
+      "input": 3,
+      "output": 15,
+      "cacheRead": 0.3,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "kimi-k2p7-code": {
+      "provider": "fireworks-ai",
+      "input": 0.95,
+      "output": 4,
+      "cacheRead": 0.19,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "kimi-k2p6-turbo": {
+      "provider": "fireworks-ai",
+      "input": 2,
+      "output": 8,
+      "cacheRead": 0.3,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "kimi-k2p6": {
+      "provider": "fireworks-ai",
+      "input": 0.95,
+      "output": 4,
+      "cacheRead": 0.16,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "deepseek-v4-pro": {
+      "provider": "fireworks-ai",
+      "input": 1.74,
+      "output": 3.48,
+      "cacheRead": 0.145,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "deepseek-v4-flash-0731": {
+      "provider": "fireworks-ai",
+      "input": 0.14,
+      "output": 0.28,
+      "cacheRead": 0.028,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "deepseek-v4-flash": {
+      "provider": "fireworks-ai",
+      "input": 0.14,
+      "output": 0.28,
+      "cacheRead": 0.028,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "glm-5p2": {
+      "provider": "fireworks-ai",
+      "input": 1.4,
+      "output": 4.4,
+      "cacheRead": 0.14,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "glm-5p1-fast": {
+      "provider": "fireworks-ai",
+      "input": 2.8,
+      "output": 8.8,
+      "cacheRead": 0.52,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "glm-5p1": {
+      "provider": "fireworks-ai",
+      "input": 1.4,
+      "output": 4.4,
+      "cacheRead": 0.26,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "qwen3p7-plus": {
+      "provider": "fireworks-ai",
+      "input": 0.4,
+      "output": 1.6,
+      "cacheRead": 0.08,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "minimax-m3": {
+      "provider": "fireworks-ai",
+      "input": 0.3,
+      "output": 1.2,
+      "cacheRead": 0.06,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "minimax-m2p7": {
+      "provider": "fireworks-ai",
+      "input": 0.3,
+      "output": 1.2,
+      "cacheRead": 0.06,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "gpt-oss-120b": {
+      "provider": "fireworks-ai",
+      "input": 0.15,
+      "output": 0.6,
+      "cacheRead": 0.015,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "gpt-oss-20b": {
+      "provider": "fireworks-ai",
+      "input": 0.07,
+      "output": 0.3,
+      "cacheRead": 0.035,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    },
+    "nemotron-3-ultra-nvfp4": {
+      "provider": "fireworks-ai",
+      "input": 0.6,
+      "output": 2.4,
+      "cacheRead": 0.12,
+      "cacheWrite": 0,
+      "cachedIncludedInInput": null
+    }
+  },
+  "_provenance_fireworks": {
+    "retrievalDate": "2026-08-03",
+    "urls": [
+      "https://docs.fireworks.ai/serverless/pricing",
+      "https://docs.fireworks.ai/serverless/priority-and-fast"
+    ],
+    "note": "Fireworks hosting rates for open-weight models. Not applicable to the same weights served by DeepSeek, Moonshot, Z.ai, Together, Groq, or self-hosted deployments."
+  }
+}

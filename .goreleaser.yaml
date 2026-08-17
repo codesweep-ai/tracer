@@ -1,0 +1,103 @@
+# goreleaser config for cs-tracer: a CGO_ENABLED=0 static multi-arch binary,
+# checksummed + SBOM'd + cosign-signed releases (supply chain).
+#
+#   goreleaser check                                  # validate this file
+#   goreleaser build --single-target --snapshot --clean --output bin/cs-tracer
+#   goreleaser release --snapshot --clean             # full local dry-run (dist/)
+#   goreleaser release --clean                        # tagged release (needs a git tag)
+#
+# The viewer is NOT built here. Its artifacts under internal/cli/viewer are
+# committed, so a release cuts from the tree as it stands and needs no Node
+# toolchain. `make viewer-build` is what refreshes them, and it runs before the
+# tag is pushed, not after.
+version: 2
+
+project_name: cs-tracer
+
+before:
+  hooks:
+    - go mod tidy
+    - go vet ./...
+    - go test ./...
+
+builds:
+  - id: cs-tracer
+    main: ./cmd/cs-tracer
+    binary: cs-tracer
+    env:
+      - CGO_ENABLED=0 # static, no cgo
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/codesweep-ai/tracer/internal/cli.version={{ .Version }}
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: "{{ .CommitTimestamp }}" # reproducible builds
+
+archives:
+  - id: cs-tracer
+    ids:
+      - cs-tracer
+    formats:
+      - tar.gz
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    # What somebody holding only the binary needs. CONTRIBUTING.md and
+    # AGENTS.md are for working on the tool, and stay in the repository.
+    files:
+      - README.md
+      - INSTALL.md
+      - MANUAL.md
+      - SPEC.md
+      - LICENSE
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+# Software bill of materials per archive (supply chain). Requires cyclonedx-gomod:
+#   go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
+sboms:
+  - id: archive
+    artifacts: archive
+    documents:
+      - "{{ .ArtifactName }}.sbom.json"
+    cmd: cyclonedx-gomod
+    args: ["app", "-json", "-output", "$document", "-main", "cmd/cs-tracer", "../../.."]
+
+# Keyless cosign signing of the checksums (supply chain). Requires cosign; runs
+# in release mode. Uses ambient OIDC (CI) — set COSIGN_EXPERIMENTAL=1 locally.
+signs:
+  - id: cosign
+    cmd: cosign
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-signature=${signature}"
+      - "--output-certificate=${certificate}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot-{{ .ShortCommit }}"
+
+changelog:
+  sort: asc
+  use: git
+
+release:
+  draft: true
+  name_template: "cs-tracer {{ .Tag }}"
+  header: |
+    ## cs-tracer {{ .Tag }}
+
+    Turn AI coding-CLI session transcripts into a self-contained trace viewer.
+    Static `CGO_ENABLED=0` binaries; verify with `checksums.txt` (+ cosign `.sig`).

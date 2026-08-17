@@ -1,0 +1,16 @@
+{
+  "id": "TRC-001",
+  "title": "Initial implementation",
+  "type": "improvement",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "the repository's first commit",
+  "opened": "2026-08-16",
+  "resolved": null,
+  "stint": null,
+  "evidence": { "commits": [], "integrated": [], "verified": null },
+  "resolution": null,
+  "details": "Turn the session transcripts your AI coding CLI leaves on disk into one self-contained HTML page you can read, keep, mail or publish.",
+  "notes": [],
+  "links": []
+}
