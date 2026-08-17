@@ -50,7 +50,6 @@ exits `0`, so a run reporting skips has not verified everything.
 | prose | the writing rules below, over every document in the set | never |
 | open-source readiness | the licence, the document set, what must never reach a public commit, and what a stranger's clone can do | never |
 | leakcheck | no tracked file carries a home path, a mail address or a user name | node is not installed, and CI still runs it |
-| ledger | the issue records validate, and `ledger.html` is not stale | `cs-ledger` is not installed |
 
 **The viewer gates skip rather than fail without npm.** `apps/viewer` resolves
 `@codesweep-ai/ui` from `vendor/`, so no second checkout is involved, but rebuilding it still needs
@@ -182,20 +181,9 @@ A **fixture** is a captured session under `fixtures/`, and the gates run every o
 
 ## Issues
 
-This repo keeps a **ledger** of open issues in `ledger/`. Read [`ledger/AGENTS.md`](ledger/AGENTS.md)
-before you start work and follow it. File records before building, close only with verified
-evidence, keep `ledger/queue.json` current, and run `cs-ledger check ledger` green before every
-commit that touches `ledger/`. The rendered page humans read is `ledger/ledger.html`.
-
-Open records are the behaviours [SPEC.md](SPEC.md) deliberately leaves unspecified, plus the gaps
-the gates do not cover. They are tracked there rather than in prose so they can be closed rather
-than merely edited.
-
-`cs-ledger` is a separate install, so its gate skips when the tool is absent:
-
-```sh
-go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest
-```
+This repo keeps a **ledger** of open issues in `ledger/`. Read
+[`ledger/AGENTS.md`](ledger/AGENTS.md) before you start work, and follow it as you go. A commit
+that touches `ledger/` needs `cs-ledger render ledger && cs-ledger check ledger` to pass first.
 
 ## Commits
 
@@ -232,9 +220,6 @@ Sort skippedByType by record type
 
 Keep the `Co-Authored-By:` trailer when an agent wrote the change. Drop any trailer linking to the
 agent's session or transcript — private to whoever ran it, dead to everyone else.
-
-A commit that touches `ledger/` needs `cs-ledger check ledger` to pass in the same commit, because
-the freshness gate compares the committed page against the records beside it.
 
 ## Docs
 

@@ -333,7 +333,7 @@ determinism, and parity.
 ## Unspecified behaviour
 
 Places where the format genuinely does not say. **Do not infer intent from the current
-implementation.** Each is tracked in `ledger/` and readable at `ledger/ledger.html`.
+implementation.** Each is tracked as an open record, so it can be closed rather than merely edited.
 
 - **Invalid UTF-8 and lone surrogates** are unspecified, and no fixture exercises them, so no gate
   catches a divergence.
