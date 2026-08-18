@@ -15,9 +15,27 @@ LDFLAGS    := -s -w -X github.com/codesweep-ai/tracer/internal/cli.version=$(VER
 GO_FILES   := $(shell git ls-files '*.go')
 VIEWER_OUT := internal/cli/viewer
 
+# Coverage is not a separate mode: the test target below writes Go binary
+# coverage data into its own tier directory under $(COVERDIR), and `make
+# coverage` merges whichever tiers are present. Separate tier directories are
+# what would let a second tier aggregate with this one rather than overwrite
+# it. scripts/coverage.sh documents the layout.
+# -test.gocoverdir must be absolute: `go test` runs each package's test binary
+# with that package's directory as its working directory, so a relative path
+# would scatter the data one directory per package.
+COVERDIR   ?= .coverage
+COVER_ABS  := $(abspath $(COVERDIR))
+# node_modules/flatted ships Go under a directory `go list ./...` walks like any
+# other, so -coverpkg=./... would instrument a vendored JavaScript dependency
+# and mix its statements into this repo's number. Naming the packages instead
+# also makes the number the same on a machine that has run `npm ci` and one that
+# has not. Recursive `=`, so `go list` runs only for the targets that use it.
+COVERPKG    = $(shell go list ./... | grep -v '/node_modules/' | paste -sd, -)
+COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
+
 GORELEASER ?= goreleaser
 
-.PHONY: help build viewer viewer-build test check check-version vet fmt fmt-check docs oss lint deadcode install uninstall snapshot release release-check clean
+.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check check-version vet fmt fmt-check docs oss lint deadcode install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -65,7 +83,25 @@ build: viewer
 
 ## test: Go tests only — NOT the full suite. Use `make check` before pushing.
 test: viewer
-	go test ./...
+	@scripts/coverage.sh reset unit
+	go test $(COVERFLAGS) ./... -args -test.gocoverdir=$(COVER_ABS)/unit
+
+## coverage: merge every tier present under $(COVERDIR) and print the report
+coverage:
+	@scripts/coverage.sh report
+
+## coverage-check: report, then fail if a package .coverage-baseline records as
+## covered has stopped being reached. It checks presence, never a percentage:
+## what it exists to catch is a suite that quietly stopped running.
+coverage-check: coverage
+	@scripts/coverage.sh check
+
+## coverage-baseline: re-record .coverage-baseline. Records every tier present
+## by default; pass BASELINE_TIERS to restrict it to the tiers CI actually runs,
+## e.g. `make coverage-baseline BASELINE_TIERS="unit race smoke"`. Recording a
+## tier CI never runs commits a promise nothing keeps.
+coverage-baseline:
+	@scripts/coverage.sh baseline $(BASELINE_TIERS)
 
 ## check: the full local gate — every check CI runs (scripts/check.sh)
 check:
@@ -161,4 +197,4 @@ release-check:
 
 ## clean: remove build output
 clean:
-	rm -rf bin dist
+	rm -rf bin dist $(COVERDIR)

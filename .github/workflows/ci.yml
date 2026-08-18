@@ -53,6 +53,18 @@ jobs:
       - name: make check
         run: make check
 
+      # `make check` already merged the tiers, printed the aggregate to the job
+      # summary and ran the gate — every test this repo has runs in this one
+      # job, so there is nothing on another machine to merge with. The profile
+      # is kept so a run's coverage can be opened line by line afterwards.
+      - name: keep the coverage profile
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-profile
+          path: .coverage/coverage.txt
+          if-no-files-found: error
+          retention-days: 7
+
       # Schema only: this validates the manifest, and does not prove a release
       # can be cut.
       - name: goreleaser check

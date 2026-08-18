@@ -1,0 +1,8 @@
+# Packages each test tier is known to reach, as "<tier> <package>".
+# Regenerate with `make coverage-baseline` after running the tiers you
+# want recorded; `make coverage-check` fails when a listed package stops
+# being reached. Percentages are deliberately not recorded.
+unit github.com/codesweep-ai/tracer/internal/cli
+unit github.com/codesweep-ai/tracer/internal/normalizer
+unit github.com/codesweep-ai/tracer/internal/oracletest
+unit github.com/codesweep-ai/tracer/internal/trajectory

@@ -66,7 +66,11 @@ run "golangci-lint"                        make lint
 run "deadcode (whole-program)"             make deadcode
 run "build (viewer + embed + binary)"      make build
 run "version stamp == git describe"        make check-version
-run "go tests"                             go test ./... -count=1
+# Through `make test` rather than a bare `go test`, so this suite writes its
+# coverage tier like every other entry point does. A bare invocation here would
+# leave the gate below judging whatever the last local run happened to leave.
+run "go tests"                             make test
+run "coverage (aggregate + no lost suite)" make coverage-check
 
 if [ "$VIEWER_SOURCES" = 1 ]; then
   run "eslint (viewer src + scripts)"      npm run lint

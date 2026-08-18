@@ -134,9 +134,8 @@ regenerated golden agrees with whatever the tool now does, correct or not.
 
 ## Prefer fixing the fixture over loosening the gate
 
-A gate relaxed to pass is a gate that no longer tests anything. Coverage disappeared here once
-because a guard referenced deleted code: the oracle tests skipped, and every test command reported
-green.
+A gate relaxed to pass is a gate that no longer tests anything. A guard that skips instead of
+failing is the same thing more quietly.
 
 ## Code you should not "simplify"
 
@@ -156,9 +155,12 @@ way to rediscover a documented reason.
 
 ## Tests are part of the change
 
+Every behavior change ships with test coverage. A change with no test is only acceptable when the
+behavior genuinely cannot be observed in a test — say so in the PR.
+
 The gates compare whole trees: they tell you **that** something differs, never **where**. Unit tests
-exist to localise. The useful question is not "what percentage is covered" but *"if this breaks,
-will a test name the bug in seconds?"*
+exist to localise. So the question to ask of a new test is not what percentage it moves but *"if
+this breaks, will a test name the bug in seconds?"*
 
 Concentrate coverage where a byte diff cannot help. Serialization order, encoding edge cases, chunk
 boundaries, re-run merging, flag parsing and destination semantics all qualify. An assertion that
@@ -171,6 +173,16 @@ exist, and they are all the same shape. `--help` must name every flag, the usage
 every command, and doclint requires [MANUAL.md](MANUAL.md) to document every flag. `manual` was
 added to the full help and missed in the short usage precisely because that third assertion did not
 exist yet.
+
+### Coverage
+
+Every test target writes coverage into its own tier under `.coverage/`, so running several
+aggregates rather than overwrites. `make coverage` merges what is there and prints the report.
+
+`make coverage-check` runs inside `make check` and in CI. It fails when a package
+`.coverage-baseline` lists stops being reached — presence, not a percentage. What it catches is a
+suite that stopped running while the tests still report green. When a package is meant to lose its
+coverage, rerun `make coverage-baseline` and commit the result.
 
 ### Adding a fixture
 
