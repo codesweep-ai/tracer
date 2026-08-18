@@ -102,6 +102,10 @@ docs:
 oss:
 	python3 scripts/lint-oss.py
 
+## walkthrough: check the docs against the binary, the code and the build
+walkthrough: build
+	python3 scripts/lint-walkthrough.py
+
 ## lint: golangci-lint (if installed)
 ## lint: the Go rules from .golangci.yml (see that file for what is on and why)
 ## node_modules is excluded for the same reason as deadcode below: flatted ships

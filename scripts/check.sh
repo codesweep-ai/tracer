@@ -115,6 +115,11 @@ run "prose (lint-docs)" make docs
 # what a stranger's clone can do with it.
 run "open-source readiness (lint-oss)" make oss
 
+# The claims the documents make, against the binary built above: every command
+# they name, every command it carries, the settings the code reads, and every
+# sample output re-run now.
+run "docs against the binary (lint-walkthrough)" python3 scripts/lint-walkthrough.py
+
 # Host-identifying data must never reach a commit. Fixtures are captured from
 # real sessions, goldens derive from them, and issue records quote paths and
 # findings — all of it checked in. A manual scrub needed six passes to get clean.
