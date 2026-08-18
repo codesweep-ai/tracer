@@ -84,8 +84,11 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 	}
 	if len(result.Documents) == 0 {
 		if len(files) > 0 && result.Skipped == len(files) {
-			result.Diagnostics = append(result.Diagnostics, fmt.Sprintf("0 sessions normalized (%d file(s) skipped, reported above)", result.Skipped))
+			// Sort the skip lines for a stable order, then add the summary,
+			// which says "reported above" and has to follow them. Sorting the
+			// summary in with them put it first, because "0" sorts before "s".
 			sort.Strings(result.Diagnostics)
+			result.Diagnostics = append(result.Diagnostics, fmt.Sprintf("0 sessions normalized (%d file(s) skipped, reported above)", result.Skipped))
 			return result, nil
 		}
 		return result, errors.New("no supported session files found")

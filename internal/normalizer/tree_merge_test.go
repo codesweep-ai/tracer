@@ -44,6 +44,31 @@ func TestAllSkippedStillCreatesOutputDir(t *testing.T) {
 	}
 }
 
+// The all-skipped summary says "reported above", so it has to print after the
+// skip lines it counts. Sorting it in with them put it first, because "0" sorts
+// before "skipping".
+func TestAllSkippedSummaryFollowsTheLinesItCounts(t *testing.T) {
+	in := t.TempDir()
+	for _, name := range []string{"a.jsonl", "b.jsonl"} {
+		if err := os.WriteFile(filepath.Join(in, name), []byte("{bad json\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	res, err := NormalizeDirectory(in, filepath.Join(t.TempDir(), "out"), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Diagnostics) != 3 {
+		t.Fatalf("want two skip lines and one summary, got %q", res.Diagnostics)
+	}
+	if !strings.HasPrefix(res.Diagnostics[0], "skipping ") || !strings.HasPrefix(res.Diagnostics[1], "skipping ") {
+		t.Errorf("the skip lines must come first: %q", res.Diagnostics)
+	}
+	if !strings.Contains(res.Diagnostics[2], "0 sessions normalized (2 file(s) skipped, reported above)") {
+		t.Errorf("the summary must come last: %q", res.Diagnostics)
+	}
+}
+
 func TestNoCandidateFilesIsAnError(t *testing.T) {
 	in := t.TempDir()
 	_, err := NormalizeDirectory(in, filepath.Join(t.TempDir(), "out"), "")
