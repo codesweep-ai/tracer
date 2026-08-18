@@ -20,8 +20,17 @@ runs, so the two lists cannot drift apart. Since that script covers `make docs` 
 prose linter and the publication linter both run before you push rather than in review.
 
 **`make test` runs Go tests only**, and it is not the suite, despite the name. Read the summary
-`make check` prints, not just its exit code. A gate that cannot run here reports **SKIP** and still
-exits `0`, so a run reporting skips has not verified everything.
+`make check` prints, not just its exit code. A gate whose toolchain is missing reports **SKIP** and
+still exits `0`, so a run reporting skips has not verified everything.
+
+The two Go linters are the exception: they **FAIL** rather than skip, because both are one
+`go install` away on a machine that already has Go. Install them once, pinning `golangci-lint` to
+the version CI runs:
+
+```sh
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+go install golang.org/x/tools/cmd/deadcode@latest
+```
 
 ## The three that matter most
 
@@ -184,6 +193,11 @@ A **fixture** is a captured session under `fixtures/`, and the gates run every o
 This repo keeps a **ledger** of open issues in `ledger/`. Read
 [`ledger/AGENTS.md`](ledger/AGENTS.md) before you start work, and follow it as you go. A commit
 that touches `ledger/` needs `cs-ledger render ledger && cs-ledger check ledger` to pass first.
+That tool is a sibling project, and `make check` skips its gate when it is absent:
+
+```sh
+go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest
+```
 
 ## Commits
 
