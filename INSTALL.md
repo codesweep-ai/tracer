@@ -106,9 +106,11 @@ Export it. The size line goes to stderr on every run, and the confirmation to st
 
 ```console
 $ cs-tracer /tmp/demo-session -o /tmp/demo.html
-/tmp/demo.html will be 391.8 KB (1 traces, 2 events)
-wrote /tmp/demo.html (391.8 KB) in 0.0s
+/tmp/demo.html will be … KB (1 traces, 2 events)
+wrote /tmp/demo.html (… KB) in 0.0s
 ```
+
+The size is elided because it is mostly the compiled viewer, and it moves whenever the viewer does.
 
 Open `/tmp/demo.html` in a browser. You should see one trajectory with two events, and the page
 should work with no network connection, because everything it needs is inside the file.
