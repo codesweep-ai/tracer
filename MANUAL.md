@@ -98,7 +98,7 @@ Prints the version and exits. `--version` does the same thing.
 | `--single` | export | One self-contained `.html` file, everything inlined. The default. |
 | `--split` | export | A directory of pages plus shared assets. |
 | `-o <dest>` | export | Where to write: a **file** for `--single`, a **directory** for `--split`. |
-| `--force` | export | Overwrite a destination directory that carries no manifest of ours. |
+| `--force` | export | Overwrite a destination directory that carries no manifest of this tool's. |
 | `--links <file>` | both | Merge a `links.json`. Export joins the sessions in its index; a bare `normalize` attaches the links to every document instead. |
 | `--out <dir>` | `normalize` | Where to write the shard tree. |
 | `--help`, `-h` | all | Print the full help, with examples. |
@@ -133,7 +133,7 @@ merge into the index:
 cs-tracer ./session --links ./session/links.json -o trace.html
 ```
 
-**If a session has one and you omit it, the export is quietly incomplete.** The index simply lacks
+**If a session has one and you omit it, the export is quietly incomplete.** The index lacks
 the links, and nothing errors. Check for a `links.json` beside the session before you export it.
 
 A malformed entry is dropped with a warning rather than failing the run, and `--links` accepts one
@@ -243,7 +243,7 @@ file at all. A directory whose files all parse to nothing exits `0` instead, wit
 each of them.
 
 **`error: not a cs-tracer output directory; use --force`** (exit 1) — the `--split` destination is
-non-empty and carries no manifest of ours. Pass `--force` if you mean to overwrite it.
+non-empty and carries no manifest of this tool's. Pass `--force` if you mean to overwrite it.
 
 **`error: --split writes a directory`** (exit 1) — `-o` named a `.html` file while `--split` was
 given.
