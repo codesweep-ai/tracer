@@ -1,0 +1,22 @@
+{
+  "id": "TRC-002",
+  "title": "The all-skipped summary says \"reported above\" and printed before the lines it counts",
+  "type": "defect",
+  "severity": "low",
+  "status": "closed",
+  "foundBy": "session agent, following README.md and INSTALL.md as a first-time reader",
+  "opened": "2026-08-17",
+  "resolved": "2026-08-17",
+  "stint": "2026-08-17 documentation walkthrough",
+  "evidence": {
+    "commits": [
+      "385a334"
+    ],
+    "integrated": [],
+    "verified": "TestAllSkippedSummaryFollowsTheLinesItCounts normalizes a directory of two unparseable files and asserts the two skip lines come first. Against the previous code it fails, printing the summary at index 0."
+  },
+  "resolution": null,
+  "details": "A directory whose files hold no conversation prints, on stderr, in this order:\n\n```\n0 sessions normalized (1 file(s) skipped, reported above)\nskipping zero-events/notasession.json: normalized to zero events (adapter: claude-code) \u2014 not a session file\n```\n\nThe summary refers to lines that follow it. `internal/normalizer/tree.go` appended the summary to the diagnostics and then sorted the slice, and \"0\" sorts before \"skipping\".",
+  "notes": [],
+  "links": []
+}

@@ -1,0 +1,22 @@
+{
+  "id": "TRC-004",
+  "title": "The verification step in INSTALL quoted an export size 12 KB out of date",
+  "type": "defect",
+  "severity": "low",
+  "status": "closed",
+  "foundBy": "session agent, following README.md and INSTALL.md as a first-time reader",
+  "opened": "2026-08-17",
+  "resolved": "2026-08-17",
+  "stint": "2026-08-17 documentation walkthrough",
+  "evidence": {
+    "commits": [
+      "38ebb03"
+    ],
+    "integrated": [],
+    "verified": "Ran the block verbatim: the binary printed 379.7 KB where the page said 391.8 KB. The sample now elides the size and says why."
+  },
+  "resolution": null,
+  "details": "INSTALL.md \u00a72 walks a two-line demo session end to end and shows `will be 391.8 KB` and `wrote /tmp/demo.html (391.8 KB)`. The current binary prints 379.7 KB for that same session.\n\nThe number is almost entirely the compiled viewer, so it moves whenever the viewer does, and a reader comparing their output against the page sees a mismatch on the step whose whole job is to confirm the install worked.",
+  "notes": [],
+  "links": []
+}
