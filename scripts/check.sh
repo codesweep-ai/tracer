@@ -42,16 +42,6 @@ if [ -d apps/viewer ] && command -v npm >/dev/null 2>&1; then
   VIEWER_SOURCES=1
 fi
 
-# doclint and leakcheck are node scripts and need nothing else, so they are
-# tracked separately from the viewer build. Without node they SKIP rather than
-# fail, for the same reason: a red gate a contributor cannot turn green teaches
-# them to stop reading the summary. CI installs node, so both always run there,
-# and leakcheck blocks a merge even when nobody ran it locally.
-HAVE_NODE=0
-if command -v node >/dev/null 2>&1; then
-  HAVE_NODE=1
-fi
-
 # --- gates -------------------------------------------------------------------
 # Formatting and vet run FIRST: they are the cheapest gates, and a vet failure
 # usually means a language-version mismatch that makes everything after it
@@ -102,36 +92,24 @@ fi
 # normalize every fixture and compare against oracle/ — a hand-edited golden
 # fails there already.
 
-# Docs rot silently: nothing fails when a path stops existing or a count drifts.
-# Both have happened here repeatedly, so they are checked mechanically.
-if [ "$HAVE_NODE" = 1 ]; then
-  run "doclint" node scripts/doclint.mjs
-else
-  skip_gate "doclint" "node is not installed"
-fi
-
-# The prose rules from CONTRIBUTING.md. doclint above checks that the docs are
-# TRUE; this checks that they are readable, which nothing else does.
+# The prose rules from CONTRIBUTING.md: how the documents are written, and the
+# counts a sentence must not assert, which drifted three times in one session
+# before anything checked them.
 run "prose (cs-lint docs)" make docs
 
 # The rules a repository has to satisfy to be published: the licence, the
-# document set, what must never reach a public commit, the release path, and
-# what a stranger's clone can do with it.
+# document set, the release path, and what a stranger's clone can do with it.
+#
+# It also carries the leak scan, which is why this gate is the one that must
+# never be skipped. Fixtures are captured from real sessions, goldens derive
+# from them, and issue records quote paths and findings, all of it checked in.
+# A manual scrub needed six passes to get clean.
 run "open-source readiness (cs-lint oss)" make oss
 
 # The claims the documents make, against the binary built above: every command
-# they name, every command it carries, the settings the code reads, and every
-# sample output re-run now.
+# they name, every command it carries, the settings the code reads, the paths
+# and spec sections the source cites, and every sample output re-run now.
 run "docs against the binary (cs-lint walkthrough)" make walkthrough
-
-# Host-identifying data must never reach a commit. Fixtures are captured from
-# real sessions, goldens derive from them, and issue records quote paths and
-# findings — all of it checked in. A manual scrub needed six passes to get clean.
-if [ "$HAVE_NODE" = 1 ]; then
-  run "leakcheck" node scripts/leakcheck.mjs
-else
-  skip_gate "leakcheck" "node is not installed — CI runs it, and it blocks the merge"
-fi
 
 # The issue ledger validates with its own tool, which is a separate install.
 if command -v cs-ledger >/dev/null 2>&1; then

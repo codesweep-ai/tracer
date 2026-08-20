@@ -59,10 +59,9 @@ the same way, so a check it gains reaches you on the day it lands.
 | eslint | the viewer sources and its build scripts are clean | npm is not installed |
 | viewer tests + schema conformance | the React app behaves, and output validates against the schema, both the committed goldens **and** output produced fresh by the current binary | as above |
 | visual parity | `--single` and `--split` render identically: DOM digest, full-page pixels, interaction end-state across a chunk boundary | as above, or no browser |
-| doclint | the docs name only real paths, assert no countable numbers, cite only real spec sections, and the embedded manual matches the file | node is not installed |
-| prose | the writing rules below, over every document in the set | never |
-| open-source readiness | the licence, the document set, what must never reach a public commit, and what a stranger's clone can do | never |
-| leakcheck | no tracked file carries a home path, a mail address or a user name | node is not installed, and CI still runs it |
+| prose | the writing rules below, and that no sentence asserts a count the repo counts itself | never |
+| open-source readiness | the licence, the document set, that no tracked file carries a home path, a mail address or a user name, and what a stranger's clone can do | never |
+| docs against the binary | every documented command exists, the paths and spec sections the docs and the source cite resolve, and the manual the binary prints is the manual in the tree | never |
 
 **The viewer gates skip rather than fail without npm.** `apps/viewer` resolves
 `@codesweep-ai/ui` from `vendor/`, so no second checkout is involved, but rebuilding it still needs
@@ -71,9 +70,9 @@ clone and the binary builds with Go alone.
 
 Rebuilding needs **Node 20 or newer**, and `make build` takes that path whenever `npm` is on your
 PATH. It runs `npm ci` and the Vite builds first, because `//go:embed` reads the artifacts at
-compile time. A full `make check` needs npm for the viewer gates, and node for doclint and
-leakcheck, so install both before you push. Re-run `make build` after you edit `apps/viewer`, which
-is what keeps the committed artifacts matching the sources.
+compile time. A full `make check` needs npm for the viewer gates, so install it before you push.
+Re-run `make build` after you edit `apps/viewer`, which is what keeps the committed artifacts
+matching the sources.
 
 Visual parity needs npm **and** a browser. It finds `/usr/bin/chromium-browser` by itself, and
 `CS_TRACER_CHROMIUM` names one anywhere else.
@@ -174,9 +173,9 @@ holds independently of the goldens is worth more than one that does not.
 an output format each has somewhere it must be described, and prose describing code drifts the
 moment nobody is looking. Assert the link instead of remembering it. Three such assertions already
 exist, and they are all the same shape. `--help` must name every flag, the usage strings must list
-every command, and doclint requires [MANUAL.md](MANUAL.md) to document every flag. `manual` was
-added to the full help and missed in the short usage precisely because that third assertion did not
-exist yet.
+every command, and `cs-lint walkthrough` requires [MANUAL.md](MANUAL.md) to document every flag.
+`manual` was added to the full help and missed in the short usage precisely because that third
+assertion did not exist yet.
 
 ### Coverage
 
@@ -266,15 +265,16 @@ has one job, so a fact lives in exactly one of them and the others link to it.
 | Where an agent working in this repository looks first | `AGENTS.md` |
 
 `MANUAL.md` is embedded in the binary through `//go:embed` in `assets.go`, and `cs-tracer manual`
-prints it. Do not move or rename it. doclint compares the copy inside `bin/cs-tracer` against the
-file, so run `make build` after editing it. Without that, the gate reports a mismatch you did not
-cause.
+prints it. Do not move or rename it. `cs-lint walkthrough` compares the copy inside
+`bin/cs-tracer` against the file, so run `make build` after editing it. Without that, the gate
+reports a mismatch you did not cause.
 
 `AGENTS.md` carries nothing of its own. It is the filename agent harnesses discover by themselves,
 so it routes to the documents above and holds no knowledge that could go stale against them.
 
-A comment or a document citing a spec section by number, as `§3.1`, is checked by doclint against
-the numbered sections of [SPEC.md](SPEC.md). Renumbering one breaks every citation into it at once.
+A comment or a document citing a spec section by number, as `§3.1`, is checked by `cs-lint
+walkthrough` against the numbered sections of [SPEC.md](SPEC.md). Renumbering one breaks every
+citation into it at once.
 
 ## Writing
 

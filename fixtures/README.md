@@ -68,8 +68,8 @@ captured, with `/home/user/synth-project` paths throughout.
 
 Real sessions, run against throwaway tasks, then put through
 `scripts/scrub-fixtures.mjs`, which rewrites host paths, usernames, e-mail
-addresses, session identifiers and conversation prose. `make check`'s leakcheck
-gate refuses to let host-identifying data reach a commit.
+addresses, session identifiers and conversation prose. The readiness gate in
+`make check` refuses to let host-identifying data reach a commit.
 
 **Scrubbing preserves hazards.** Some cases exist to pin byte sequences that live
 *inside* prose — raw U+2028/U+2029, a literal `<`, a raw `</script>`, emoji.
