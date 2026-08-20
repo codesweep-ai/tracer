@@ -86,7 +86,7 @@ First, check that the binary runs and knows its own version:
 
 ```console
 $ cs-tracer version
-a1cb275-dirty
+cs-tracer a1cb275-dirty (linux/amd64, go1.26.2)
 ```
 
 A tagged build prints the tag. A source build from an untagged clone prints what `git describe`

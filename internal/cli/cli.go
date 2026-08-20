@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"runtime/debug"
 	"strings"
 
@@ -126,7 +127,7 @@ func Main(args []string, stdout, stderr io.Writer) int {
 	}
 	switch args[0] {
 	case "version", "--version": // --version aliases the version subcommand
-		fmt.Fprintln(stdout, buildVersion())
+		fmt.Fprintf(stdout, "cs-tracer %s (%s/%s, %s)\n", buildVersion(), runtime.GOOS, runtime.GOARCH, runtime.Version())
 		return 0
 	case "help", "--help", "-h":
 		fmt.Fprintln(stdout, usage)
@@ -142,7 +143,7 @@ func Main(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintln(stdout, usage)
 			return 0
 		case errors.Is(err, errVersion):
-			fmt.Fprintln(stdout, buildVersion())
+			fmt.Fprintf(stdout, "cs-tracer %s (%s/%s, %s)\n", buildVersion(), runtime.GOOS, runtime.GOARCH, runtime.Version())
 			return 0
 		}
 		fmt.Fprintln(stderr, err)

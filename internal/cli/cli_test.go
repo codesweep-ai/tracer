@@ -131,12 +131,13 @@ func TestMainHelpAndVersion(t *testing.T) {
 		t.Fatalf("code=%d err=%q", code, stderr.String())
 	}
 	stdout.Reset()
-	if code := Main([]string{"version"}, &stdout, &stderr); code != 0 || strings.TrimSpace(stdout.String()) != version {
-		t.Fatalf("code=%d out=%q want %q", code, stdout.String(), version)
+	want := "cs-tracer " + buildVersion() + " ("
+	if code := Main([]string{"version"}, &stdout, &stderr); code != 0 || !strings.HasPrefix(stdout.String(), want) {
+		t.Fatalf("code=%d out=%q want prefix %q", code, stdout.String(), want)
 	}
 	stdout.Reset()
 	// --version is an alias for the version subcommand.
-	if code := Main([]string{"--version"}, &stdout, &stderr); code != 0 || strings.TrimSpace(stdout.String()) != version {
+	if code := Main([]string{"--version"}, &stdout, &stderr); code != 0 || !strings.HasPrefix(stdout.String(), want) {
 		t.Fatalf("code=%d out=%q", code, stdout.String())
 	}
 }
