@@ -77,8 +77,21 @@ viewer-build:
 	npm run build:split --workspace apps/viewer
 	npm run assert:builds --workspace apps/viewer
 
-## build: host binary at bin/cs-tracer (use this, never plain `go build`)
+## build: host binary at bin/cs-tracer via goreleaser (single target; use this,
+## never plain `go build`). viewer stays a prerequisite rather than a goreleaser
+## hook: its artifacts are committed so a release needs no Node toolchain, and
+## only a build from this tree should refresh them.
 build: viewer
+	@mkdir -p $(dir $(BIN))
+	@if command -v $(GORELEASER) >/dev/null 2>&1; then \
+		VERSION='$(VERSION)' $(GORELEASER) build --single-target --snapshot --clean --output $(BIN); \
+	else \
+		echo "goreleaser not found; using go build (run 'make build-go' explicitly to force)"; \
+		$(MAKE) build-go; \
+	fi
+
+## build-go: bin/cs-tracer straight from go build, no goreleaser
+build-go: viewer
 	@mkdir -p $(dir $(BIN))
 	CGO_ENABLED=0 go build -trimpath -ldflags '$(LDFLAGS)' -o $(BIN) $(PKG)
 
