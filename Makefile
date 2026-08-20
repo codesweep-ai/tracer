@@ -108,10 +108,13 @@ coverage-baseline:
 check:
 	@scripts/check.sh
 
-## check-version: assert the binary's stamp equals git describe
+## check-version: assert the binary's stamp equals git describe. `version`
+## prints "cs-tracer <stamp> (os/arch, go)", so compare the stamp field alone,
+## and read it in the recipe: $(shell) would run the binary before build made it.
 check-version: build
-	@test "$(shell $(BIN) version)" = "$(VERSION)" \
-		|| { echo "version mismatch: binary says '$$($(BIN) version)', git says '$(VERSION)'" >&2; exit 1; }
+	@stamp="$$($(BIN) version | awk '{print $$2}')"; \
+	test "$$stamp" = "$(VERSION)" \
+		|| { echo "version mismatch: binary says '$$stamp', git says '$(VERSION)'" >&2; exit 1; }
 	@echo "version OK: $(VERSION)"
 
 ## vet: go vet
