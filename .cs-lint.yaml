@@ -33,6 +33,20 @@ docs:
 
   projectVerbs: []
 
+  # The things this repository counts for itself. Prose that states one of these
+  # numbers is right the day it is written and wrong by the next commit, and
+  # nothing fails when it drifts. The fixture and document counts drifted three
+  # times in one working session before this was a gate.
+  countable:
+    - fixtures?
+    - fixture directories
+    - directories of real sessions
+    - oracle documents
+    - documents
+    - sessions
+    - goldens?
+    - baselines
+
 oss:
   project: cs-tracer
   githubRepo: codesweep-ai/tracer
