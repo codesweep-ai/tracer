@@ -42,8 +42,8 @@ const excerpt = (line, index) => {
 };
 
 // Logins that are a placeholder or the account an image ships under, rather
-// than a person. Kept in step with HOME_ALLOW in scripts/lint-oss.config.py,
-// which allows the same four for the same reason. CI is why the set has to be
+// than a person. Kept in step with oss.homeAllow in .cs-lint.yaml, which
+// allows the same four for the same reason. CI is why the set has to be
 // more than "user": a GitHub-hosted runner logs in as `runner`, so the runtime
 // pattern below turned every ordinary use of that word — "what a runner cannot
 // do", node_modules/@vitest/runner — into a leak, and the gate failed on a
