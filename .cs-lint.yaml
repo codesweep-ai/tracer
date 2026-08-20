@@ -1,0 +1,71 @@
+# The knobs cs-lint reads for this repository.
+#
+# The linters carry no project knowledge. Everything that differs between
+# repositories lives here, so a fix to a check reaches every project without
+# carrying one project's exceptions into the next.
+#
+# Run `cs-lint <linter> --explain` to read what each rule wants. Tune until
+# every reported problem is a real one: a check that cries wolf is worse than
+# no check.
+
+docs:
+  # The domain terms a reader of this project cannot infer. Each must be
+  # introduced where a document first uses it: glossed on the spot, defined in a
+  # glossary table, or linked to the page that defines it.
+  #
+  # Leave out any term that collides with a common verb: the check cannot tell
+  # the noun "pin" from "pins" and would fire on every ordinary use of the
+  # latter.
+  glossary:
+    - trajectory
+    - oracle
+    - golden
+    - shard
+    - fixture
+    - normalizer
+    - parity
+
+  # The project's own command name, which starts sentences in lower case.
+  # Without it the splitter reads "Nothing prompts. cs-tracer exits 1." as one
+  # six-word sentence and reports a length that is not real.
+  lowercaseStarters:
+    - cs-tracer
+
+  projectVerbs: []
+
+oss:
+  project: cs-tracer
+  githubRepo: codesweep-ai/tracer
+
+  # True once the repository is public. Published history cannot be rewritten,
+  # so the history rules report as warnings from that point on. Flip this in the
+  # same commit that makes the repository public.
+  published: false
+
+  docSet:
+    - README.md
+    - INSTALL.md
+    - MANUAL.md
+    - SPEC.md
+    - CONTRIBUTING.md
+    - AGENTS.md
+
+  requiredTargets: ["build", "test", "check", "lint", "docs", "oss", "clean"]
+  expectedTargets: ["help", "install", "uninstall", "fmt", "fmt-check", "vet", "deadcode"]
+
+walkthrough:
+  tool: cs-tracer
+  toolPath: bin/cs-tracer
+
+  envPrefix: CS_TRACER_
+
+  # Read-only, offline, and safe to run in a checkout on every gate. A verb that
+  # writes belongs nowhere near this list: a checker that writes can mask the
+  # staleness another gate exists to catch.
+  safeVerbs:
+    - version
+
+  sampleSkip:
+    "cs-tracer version": "the sample is a git describe of one build, and INSTALL.md says every build reads differently"
+
+  placeholderOK: ["/my-project"]

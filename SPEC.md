@@ -1,4 +1,4 @@
-# tracer — behaviour specification
+# The cs-tracer specification
 
 `cs-tracer` reads the session transcripts an AI coding CLI leaves on disk and writes a browsable
 trace viewer. This document states what the output must be, byte for byte, and how the binary that
@@ -108,7 +108,7 @@ trajectory's events under `chunks/`.
 **R15.** A chunk **MUST** hold at most 1000 events, the count `normalizer.ChunkSize` carries. *The
 `large-session` fixture holds 1,366 events, so it produces two chunks, and the second holds 366.*
 
-## 3. JSON serialization — the byte-level rules
+## 3. JSON serialization: the byte-level rules
 
 This format specifies **bytes**, not merely data. Two documents carrying identical information are
 not interchangeable. Ordering keys differently, or rendering the same number with a different digit,

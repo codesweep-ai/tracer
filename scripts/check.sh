@@ -112,17 +112,17 @@ fi
 
 # The prose rules from CONTRIBUTING.md. doclint above checks that the docs are
 # TRUE; this checks that they are readable, which nothing else does.
-run "prose (lint-docs)" make docs
+run "prose (cs-lint docs)" make docs
 
 # The rules a repository has to satisfy to be published: the licence, the
 # document set, what must never reach a public commit, the release path, and
 # what a stranger's clone can do with it.
-run "open-source readiness (lint-oss)" make oss
+run "open-source readiness (cs-lint oss)" make oss
 
 # The claims the documents make, against the binary built above: every command
 # they name, every command it carries, the settings the code reads, and every
 # sample output re-run now.
-run "docs against the binary (lint-walkthrough)" python3 scripts/lint-walkthrough.py
+run "docs against the binary (cs-lint walkthrough)" make walkthrough
 
 # Host-identifying data must never reach a commit. Fixtures are captured from
 # real sessions, goldens derive from them, and issue records quote paths and

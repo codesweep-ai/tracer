@@ -16,21 +16,25 @@ make check
 ```
 
 One command, every gate, non-zero on any failure. It runs `scripts/check.sh`, which is also what CI
-runs, so the two lists cannot drift apart. Since that script covers `make docs` and `make oss`, the
-prose linter and the publication linter both run before you push rather than in review.
+runs, so the two lists cannot drift apart. That script covers `make docs`, `make oss` and `make
+walkthrough`, so all three of `cs-lint`'s linters run before you push rather than in review.
 
 **`make test` runs Go tests only**, and it is not the suite, despite the name. Read the summary
 `make check` prints, not just its exit code. A gate whose toolchain is missing reports **SKIP** and
 still exits `0`, so a run reporting skips has not verified everything.
 
-The two Go linters are the exception: they **FAIL** rather than skip, because both are one
-`go install` away on a machine that already has Go. Install them once, pinning `golangci-lint` to
-the version CI runs:
+The three Go-installable tools are the exception: they **FAIL** rather than skip, because each is
+one `go install` away on a machine that already has Go. Install them once, pinning `golangci-lint`
+to the version CI runs:
 
 ```sh
 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 go install golang.org/x/tools/cmd/deadcode@latest
+go install github.com/codesweep-ai/lint/cmd/cs-lint@latest
 ```
+
+`cs-lint` is deliberately not pinned. It is this family's own linter, and CI installs it from source
+the same way, so a check it gains reaches you on the day it lands.
 
 ## The three that matter most
 
@@ -142,11 +146,11 @@ failing is the same thing more quietly.
 Three places look more complicated than necessary and are not. Each replaces an obvious
 implementation that is wrong, and each carries a comment explaining why:
 
-- `internal/trajectory` — the ordered-object model. Go maps cannot reproduce insertion-order
+- `internal/trajectory`: the ordered-object model. Go maps cannot reproduce insertion-order
   semantics, including keys first declared with `undefined` that still occupy their slot.
-- `internal/normalizer/value.go` — coercion rules mirroring JavaScript property access on
+- `internal/normalizer/value.go`: coercion rules mirroring JavaScript property access on
   primitives.
-- `internal/cli/assemble.go` — the byte-level escaping pass. A decode and re-encode corrupts raw
+- `internal/cli/assemble.go`: the byte-level escaping pass. A decode and re-encode corrupts raw
   U+2028/U+2029 and a literal `<` in source text. `fixtures/claude/v2.1/hazard-text` is the
   fixture that catches you.
 
@@ -156,7 +160,7 @@ way to rediscover a documented reason.
 ## Tests are part of the change
 
 Every behavior change ships with test coverage. A change with no test is only acceptable when the
-behavior genuinely cannot be observed in a test — say so in the PR.
+behavior genuinely cannot be observed in a test. Say so in the PR.
 
 The gates compare whole trees: they tell you **that** something differs, never **where**. Unit tests
 exist to localise. So the question to ask of a new test is not what percentage it moves but *"if
@@ -180,7 +184,7 @@ Every test target writes coverage into its own tier under `.coverage/`, so runni
 aggregates rather than overwrites. `make coverage` merges what is there and prints the report.
 
 `make coverage-check` runs inside `make check` and in CI. It fails when a package
-`.coverage-baseline` lists stops being reached — presence, not a percentage. What it catches is a
+`.coverage-baseline` lists stops being reached: presence, not a percentage. What it catches is a
 suite that stopped running while the tests still report green. When a package is meant to lose its
 coverage, rerun `make coverage-baseline` and commit the result.
 
@@ -216,10 +220,10 @@ go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest
 Keep one idea per commit. If a change will not fit that shape, it is doing more than one thing, so
 split it.
 
-**Subject** — always. Under 60 characters, imperative, no trailing period, completing *"If applied,
+**Subject**, always. Under 60 characters, imperative, no trailing period, completing *"If applied,
 this commit will …"*. Say what the change does.
 
-**Body** — only when the subject leaves a real question. Use bullets, one line each, under 60
+**Body**, only when the subject leaves a real question. Use bullets, one line each, under 60
 characters, describing the design: the shape the change takes, or the constraint that ruled out the
 obvious alternative. Do not describe the diff, and do not describe how you arrived at it.
 
@@ -245,7 +249,7 @@ Sort skippedByType by record type
 ```
 
 Keep the `Co-Authored-By:` trailer when an agent wrote the change. Drop any trailer linking to the
-agent's session or transcript — private to whoever ran it, dead to everyone else.
+agent's session or transcript: private to whoever ran it, dead to everyone else.
 
 ## Docs
 
@@ -275,7 +279,26 @@ the numbered sections of [SPEC.md](SPEC.md). Renumbering one breaks every citati
 ## Writing
 
 The docs drift into a style that reads as terse and knowing rather than clear. These rules push
-back. `scripts/lint-docs.py` enforces the mechanical ones, and `make check` runs it.
+back. [`cs-lint`](https://github.com/codesweep-ai/lint) enforces the mechanical ones. It carries
+three linters, and `make check` runs all three:
+
+| Command | Target | What it checks |
+|---|---|---|
+| `cs-lint docs` | `make docs` | How the documents are written. |
+| `cs-lint oss` | `make oss` | What this repository owes a reader as a published project. |
+| `cs-lint walkthrough` | `make walkthrough` | Whether the documents still describe the software. |
+
+The third checks the claims rather than the prose. Every command the docs name goes against the
+binary's help tree, every setting against the code that reads it, and every sample output against
+the command re-run now. `--run` lists every command the documents tell a reader to run, in reading
+order, and `--review` prints the half that needs a reader.
+
+Read what a rule wants with `--explain`, which prints the guidance behind each one rather than
+leaving you to argue with the tool:
+
+```bash
+cs-lint oss --explain
+```
 
 1. **Write to the reader, in second person.** "Run `make check` before you push", not "the check
    should be run before pushing".
@@ -284,8 +307,8 @@ back. `scripts/lint-docs.py` enforces the mechanical ones, and `make check` runs
    for the first time needs it introduced. Give a definition on the spot, an entry in a glossary
    table, or a link to the page that defines it.
 
-3. **One em-dash per paragraph at most.** Two or three read as a writer who will not commit to a
-   sentence. A colon or a full stop nearly always works better.
+3. **No em-dash.** The aside one introduces is a full stop, a comma, or a cut. It is also the
+   first punctuation a model reaches for, so a page full of them reads as unedited whoever wrote it.
 
 4. **Sentences under 30 words.** Longer than that and a sentence is carrying two ideas. A list of
    ordered steps belongs in a numbered list, not in one sentence separated by semicolons.
@@ -325,30 +348,23 @@ back. `scripts/lint-docs.py` enforces the mechanical ones, and `make check` runs
 Run the linter on its own while you write:
 
 ```bash
-python3 scripts/lint-docs.py            # check
-python3 scripts/lint-docs.py --stats    # per-file measurements
-python3 scripts/lint-docs.py --list     # which files are checked
+cs-lint docs              # check
+cs-lint docs --stats      # per-file measurements
+cs-lint docs --list       # which files are checked
+cs-lint docs --explain    # what each rule wants, and the guidance behind it
 ```
 
-The knobs live beside it in `scripts/lint-docs.config.py`: `GLOSSARY`, `SKIP_EXTRA`,
-`LOWERCASE_STARTERS` and `PROJECT_VERBS`. When a real sentence trips the verb check, add the verb.
-When a report is noise, fix the check. A linter that cries wolf gets ignored, and then it protects
-nothing.
+Every knob lives in [`.cs-lint.yaml`](.cs-lint.yaml) at the repository root, one section per
+linter. The `docs` section carries `glossary`, `skipExtra`, `lowercaseStarters` and `projectVerbs`.
+When a real sentence trips the verb check, add the verb. When a report is noise, fix the config. A
+linter that cries wolf gets ignored, and then it protects nothing.
 
-The linter itself is vendored and stays byte-identical across projects. A fix to a check belongs in
-the shared copy, and comes back here the next time it is copied out.
+A rule turned off for this repository is a waiver: a rule identifier and the reason it was traded
+away, under `allow`. The reason is required, and it is printed with the finding, because a waiver
+nobody can review is a rule deleted in private.
 
-`scripts/lint-oss.py` is its sibling, and `make oss` runs it. It checks what this repository has to
-satisfy as a published project, and `--explain` lists every rule it applies. Its knobs live beside
-it in `scripts/lint-oss.config.py`.
-
-`scripts/lint-walkthrough.py` is the third, and `make walkthrough` runs it. It checks the claims
-rather than the prose. Every command the docs name goes against the binary's help tree, every
-setting against the code that reads it, and every sample output against the command re-run now.
-Its knobs live beside it in `scripts/lint-walkthrough.config.py`: `SAFE_VERBS` says which commands
-it may run, and `SAMPLE_SKIP` says which samples belong to another machine. `--run` lists every
-command the documents tell a reader to run, in reading order, and `--review` prints the half that
-needs a reader.
+The linter is a project of its own, shared across this family. A fix to a check belongs there, and
+reaches this repository the next time somebody installs it.
 
 ## Style
 

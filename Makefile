@@ -4,6 +4,7 @@
 # artifacts. `make check` runs every gate; `make test` runs Go tests only.
 # Follows the cs-ledger Makefile conventions.
 
+CS_LINT    ?= cs-lint
 BIN        := bin/cs-tracer
 PKG        := ./cmd/cs-tracer
 PREFIX     ?= $(HOME)/.local
@@ -35,7 +36,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check check-version vet fmt fmt-check docs oss lint deadcode install uninstall snapshot release release-check clean
+.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check check-version vet fmt fmt-check docs oss walkthrough cs-lint-installed lint deadcode install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -131,16 +132,25 @@ fmt-check:
 	fi
 
 ## docs: the prose rules from CONTRIBUTING.md, over every doc in the set
-docs:
-	python3 scripts/lint-docs.py
+docs: cs-lint-installed
+	$(CS_LINT) docs
 
 ## oss: check that this repo is in a shape it can be published in
-oss:
-	python3 scripts/lint-oss.py
+oss: cs-lint-installed
+	$(CS_LINT) oss
 
 ## walkthrough: check the docs against the binary, the code and the build
-walkthrough: build
-	python3 scripts/lint-walkthrough.py
+walkthrough: build cs-lint-installed
+	$(CS_LINT) walkthrough
+
+# The three targets above are one shared tool: github.com/codesweep-ai/lint.
+# Its knobs for this repo live in .cs-lint.yaml, and `cs-lint <linter> --explain`
+# says what each rule wants.
+cs-lint-installed:
+	@command -v $(CS_LINT) >/dev/null 2>&1 || { \
+		echo "cs-lint is not installed: go install github.com/codesweep-ai/lint/cmd/cs-lint@latest" >&2; \
+		exit 2; \
+	}
 
 ## lint: golangci-lint (if installed)
 ## lint: the Go rules from .golangci.yml (see that file for what is on and why)

@@ -1,4 +1,4 @@
-# tracer — installation
+# Installing cs-tracer
 
 `cs-tracer` is a single static binary with no runtime dependencies. The viewer it writes is compiled
 into it, so nothing else has to be on the machine: no Node, no browser engine, no configuration

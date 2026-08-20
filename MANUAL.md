@@ -1,8 +1,8 @@
-# cs-tracer — manual
+# The cs-tracer manual
 
 ## Name
 
-`cs-tracer` — turn AI coding-CLI session transcripts into a self-contained, browsable trace viewer.
+`cs-tracer`: turn AI coding-CLI session transcripts into a self-contained, browsable trace viewer.
 
 ## Synopsis
 
@@ -38,7 +38,7 @@ open trace.html
 
 ## Commands
 
-### `cs-tracer <path>` — export
+### `cs-tracer <path>`: export
 
 The default action, and the one most people ever run. It normalizes every session under `<path>` and
 writes a viewer. `--single` (the default) writes one HTML file with the viewer, its styles and all
@@ -54,7 +54,7 @@ cs-tracer ./session --single -o trace.html
 cs-tracer ./session --split  -o ./trace-site
 ```
 
-### `cs-tracer normalize <path>` — the JSON underneath
+### `cs-tracer normalize <path>`: the JSON underneath
 
 Writes the intermediate JSON rather than a viewer. Use it to inspect what the tool extracted, or to
 feed another program.
@@ -149,7 +149,7 @@ file: repeating it is an error.
 | Destination | Behaviour |
 |---|---|
 | missing or empty | create and write |
-| holds our manifest | delete what the manifest lists, regenerate — no flag needed |
+| holds our manifest | delete what the manifest lists, regenerate; no flag needed |
 | non-empty, no manifest | refuse; pass `--force` if you mean it |
 
 `--force` never means `rm -rf`. It removes only `index.html`, `traces/` and `assets/`, which are the
@@ -218,50 +218,74 @@ An export prints the size to stderr on every run, not only when the output is la
 
 Every message below is what the tool actually prints, with the exit code it leaves.
 
-**`expected a session path, got --single`** (exit 1) — flags come after the path. Write
-`cs-tracer ./session --single`, not `cs-tracer --single ./session`.
+**`expected a session path, got --single`** (exit 1)
 
-**`unknown option: --nope`** (exit 1) — a flag the parser does not accept. `cs-tracer --help` lists
-every one.
+Flags come after the path. Write `cs-tracer ./session --single`, not `cs-tracer --single ./session`.
 
-**`normalize uses --out <directory>, not -o`** (exit 1) — and the mirror image,
-`export uses -o <destination>, not --out`. The two flags are not interchangeable.
+**`unknown option: --nope`** (exit 1)
 
-**`--single and --split are mutually exclusive`** (exit 1) — pick one export mode.
+A flag the parser does not accept. `cs-tracer --help` lists every one.
 
-**`normalize does not accept --single, --split or --force`** (exit 1) — those are export flags.
+**`normalize uses --out <directory>, not -o`** (exit 1)
 
-**`--links is not repeatable`** (exit 1) — pass one links file.
+The mirror image is `export uses -o <destination>, not --out`. The two flags are not
+interchangeable.
 
-**`--links requires a JSON file`** (exit 1) — the flag was last on the command line, with no value
-after it.
+**`--single and --split are mutually exclusive`** (exit 1)
 
-**`error: stat /nowhere: no such file or directory`** (exit 1) — the input path does not exist.
+Pick one export mode.
 
-**`error: no supported session files found`** (exit 1) — the directory holds no `.json` or `.jsonl`
-file at all. A directory whose files all parse to nothing exits `0` instead, with a skip line for
-each of them.
+**`normalize does not accept --single, --split or --force`** (exit 1)
 
-**`error: not a cs-tracer output directory; use --force`** (exit 1) — the `--split` destination is
-non-empty and carries no manifest of this tool's. Pass `--force` if you mean to overwrite it.
+Those are export flags.
 
-**`error: --split writes a directory`** (exit 1) — `-o` named a `.html` file while `--split` was
-given.
+**`--links is not repeatable`** (exit 1)
 
-**`error: <dir> is an existing directory; without --split, -o must be a file path`** (exit 1) — the
-mirror image of the one above.
+Pass one links file.
+
+**`--links requires a JSON file`** (exit 1)
+
+The flag was last on the command line, with no value after it.
+
+**`error: stat /nowhere: no such file or directory`** (exit 1)
+
+The input path does not exist.
+
+**`error: no supported session files found`** (exit 1)
+
+The directory holds no `.json` or `.jsonl` file at all. A directory whose files all parse to nothing
+exits `0` instead, with a skip line for each of them.
+
+**`error: not a cs-tracer output directory; use --force`** (exit 1)
+
+The `--split` destination is non-empty and carries no manifest of this tool's. Pass `--force` if you
+mean to overwrite it.
+
+**`error: --split writes a directory`** (exit 1)
+
+`-o` named a `.html` file while `--split` was given.
+
+**`error: <dir> is an existing directory; without --split, -o must be a file path`** (exit 1)
+
+This is the mirror image of the message above.
 
 **`skipping <file>: normalized to zero events (adapter: claude-code) — not a session file`**
-(exit 0) — the file parsed but held no conversation. That is common, and usually correct.
+(exit 0)
 
-**`skipping <file>: file contains no recognizable records`** (exit 0) — no adapter claimed the file.
-A `links.json` beside a session produces this line, which is expected.
+The file parsed but held no conversation. That is common, and usually correct.
 
-**`warning: could not read links file <path>`** (exit 0) — the export continues without the links.
+**`skipping <file>: file contains no recognizable records`** (exit 0)
 
-**`warning: skipping invalid links entry 3 in <path>`** (exit 0) — that entry lacks one of
-`fromSessionId`, `toSessionId` or `kind`, or carries a `label` or `evidence` that is not a string.
-The rest are merged.
+No adapter claimed the file. A `links.json` beside a session produces this line, which is expected.
+
+**`warning: could not read links file <path>`** (exit 0)
+
+The export continues without the links.
+
+**`warning: skipping invalid links entry 3 in <path>`** (exit 0)
+
+That entry lacks one of `fromSessionId`, `toSessionId` or `kind`, or carries a `label` or `evidence`
+that is not a string. The rest are merged.
 
 **The page says the trace uses a different schema version.** The export carries a document version
 the viewer embedded beside it does not implement. Re-export the session with the binary you are
@@ -326,7 +350,7 @@ cs-tracer ./normalized -o trace.html
 
 ## See also
 
-- [README.md](README.md) — what this is, and the shortest path to a working page.
-- [INSTALL.md](INSTALL.md) — how to get the binary, and how to check it works.
-- [SPEC.md](SPEC.md) — what the output must be, byte for byte, and how the binary is built.
-- [CONTRIBUTING.md](CONTRIBUTING.md) — working on `cs-tracer` itself.
+- [README.md](README.md): what this is, and the shortest path to a working page.
+- [INSTALL.md](INSTALL.md): how to get the binary, and how to check it works.
+- [SPEC.md](SPEC.md): what the output must be, byte for byte, and how the binary is built.
+- [CONTRIBUTING.md](CONTRIBUTING.md): working on `cs-tracer` itself.

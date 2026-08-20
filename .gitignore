@@ -19,9 +19,6 @@ dist-split/
 # Local credentials and env config
 /.env
 
-# Python bytecode, written when anything imports a script under scripts/
-__pycache__/
-
 *.log
 
 # Editor state. A vim swap file was committed once: leakcheck cannot inspect a
