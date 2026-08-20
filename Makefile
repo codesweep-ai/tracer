@@ -194,7 +194,7 @@ uninstall:
 ## snapshot: local release dry-run into dist/ (all platforms, archives, checksums).
 ## Skips SBOM + cosign signing (those need cyclonedx-gomod + cosign; run in CI/release).
 snapshot:
-	$(GORELEASER) release --snapshot --clean --skip=sbom,sign
+	VERSION='$(VERSION)' $(GORELEASER) release --snapshot --clean --skip=sbom,sign
 
 ## release: tagged release (needs a pushed git tag + credentials). For a full
 ## signed+SBOM release install: go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest and cosign.
