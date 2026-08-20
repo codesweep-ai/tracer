@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 
 	"github.com/codesweep-ai/tracer"
@@ -22,7 +23,25 @@ import (
 // wrong path there yields a successful build with an empty version string.
 // Verify with `cs-tracer version` against `git describe --tags --always
 // --dirty` — never by observing that the build succeeded.
-var version = "dev"
+// devVersion marks a binary that carried no release stamp.
+const devVersion = "dev"
+
+var version = devVersion
+
+// buildVersion reports the stamp when the Makefile set one, and otherwise the
+// module version the toolchain recorded. A binary installed straight from the
+// module path carries no stamp, so without this it would answer "dev" and
+// leave you guessing which revision produced a trajectory.
+func buildVersion() string {
+	if version != devVersion {
+		return version
+	}
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info.Main.Version == "" || info.Main.Version == "(devel)" {
+		return version
+	}
+	return info.Main.Version
+}
 
 // usageShort is what an error prints: enough to correct a mistake, not a wall
 // of text. Full help comes from `cs-tracer --help`.
@@ -107,7 +126,7 @@ func Main(args []string, stdout, stderr io.Writer) int {
 	}
 	switch args[0] {
 	case "version", "--version": // --version aliases the version subcommand
-		fmt.Fprintln(stdout, version)
+		fmt.Fprintln(stdout, buildVersion())
 		return 0
 	case "help", "--help", "-h":
 		fmt.Fprintln(stdout, usage)
@@ -123,7 +142,7 @@ func Main(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintln(stdout, usage)
 			return 0
 		case errors.Is(err, errVersion):
-			fmt.Fprintln(stdout, version)
+			fmt.Fprintln(stdout, buildVersion())
 			return 0
 		}
 		fmt.Fprintln(stderr, err)
