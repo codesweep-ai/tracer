@@ -1,4 +1,4 @@
-# Contributing
+# Contributing to cs-tracer
 
 These rules apply to **humans and coding agents alike**. If you are an agent working in this repo,
 read this file before you change anything and follow it.
@@ -344,6 +344,31 @@ cs-lint oss --explain
     to do, what was tried and dropped, and numbers from a run someone did once. The reason a rule
     exists belongs beside the rule in [SPEC.md](SPEC.md); the investigation that found it belongs in
     the pull request.
+
+15. **State the point first, then qualify it.** Opening with the qualifier makes the reader decode
+    the sentence backwards. "Byte for byte, so a golden diff means a real change" names its subject
+    last. Start with the output, and let the consequence follow it.
+
+16. **Do not explain a design by contrast with a worse one.** "A directory, so a change reads as a
+    diff rather than as one unreadable line" asks the reader to picture a format nobody proposed.
+    Say what it is and what you get.
+
+17. **A walkthrough is steps that work.** Put the reasons somewhere else. A reader working through
+    one wants commands that run, not an account of which flag the exporter used to spell
+    differently.
+
+18. **Do not make the reader hold two halves of a sentence apart.** "What a shell printed may
+    differ; what the model was asked may not" is a puzzle. Name the subject in each clause.
+
+19. **Do not write in the register a model defaults to.** Untouched model output has a signature
+    readers now recognise and discount. `cs-lint docs --explain` lists the words this house
+    declines and what to write instead, so the table lives in one place rather than here. Two
+    shapes matter as much as the words. Negative parallelism sets up a contrast nobody asked for.
+    The rule of three is a rhythm rather than an argument, and a reader stops counting the third
+    item as information.
+
+These rules are about mechanics, and this project's voice is a strength: concrete, opinionated, and
+free of padding. Where a rule fights the voice, the voice wins. Say so in the PR when it does.
 
 Run the linter on its own while you write:
 
