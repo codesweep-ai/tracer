@@ -9,6 +9,24 @@ This page is about working on `cs-tracer` itself. For using it, see [MANUAL.md](
 Bug reports and pull requests are welcome. For a security issue, use GitHub's private
 vulnerability reporting on this repository's Security tab, rather than opening a public issue.
 
+## How a change gets in
+
+File a bug or an idea as a GitHub issue on this repository. For a fix that stands on its own, a pull
+request on its own is enough. For anything that changes behaviour a user can see, open an issue
+first, so the design gets settled before you write it.
+
+1. Fork the repository, and create a branch off `main`.
+2. Make the change, with its test.
+3. Run `make check`, which is the same gate CI runs.
+4. Open a pull request against `main`, and say what the change does and why.
+
+Review asks four questions. Does the change hold the invariants below? Does a test fail without it?
+Does every user-visible change land in exactly one document? Does the history read the way this file
+describes? Expect comments rather than silence, and expect a small change to move quickly.
+
+By opening a pull request you agree that your contribution ships under the
+[Apache 2.0 licence](LICENSE) this project is released under.
+
 ## Before you push
 
 ```sh
@@ -43,123 +61,16 @@ the same way, so a check it gains reaches you on the day it lands.
 2. **Never regenerate a golden to make a gate pass.** A **golden** is committed expected output, and
    `oracle/` holds one per fixture. Since the goldens are produced by the tool they test, "make it
    pass" is always available, which is why this is a rule and not a preference.
+   [`SPEC.md`](SPEC.md#testing) states what each gate proves and what to do when output should
+   change.
 3. **A green run is not proof.** The oracle diff catches *change*, not *wrongness*, and the parity
    gate proves the two export modes agree rather than that either is correct. Weight the checks
    that hold independently of the goldens.
 
-## The gates, and what each one proves
-
-| Gate | Proves | Skips when |
-|---|---|---|
-| gofmt | every tracked Go file is formatted | never |
-| go vet | no vet findings, including a language-version mismatch between `go.mod` and the APIs in use | never |
-| build | the binary links, and where the viewer sources resolve, both Vite builds emit and their artifact assertions hold | never |
-| version stamp | the binary's version equals `git describe`, which catches a plain `go build` | never |
-| Go tests | the unit tier, plus the oracle, invocation and determinism gates | never |
-| eslint | the viewer sources and its build scripts are clean | npm is not installed |
-| viewer tests + schema conformance | the React app behaves, and output validates against the schema, both the committed goldens **and** output produced fresh by the current binary | as above |
-| visual parity | `--single` and `--split` render identically: DOM digest, full-page pixels, interaction end-state across a chunk boundary | as above, or no browser |
-| prose | the writing rules below, and that no sentence asserts a count the repo counts itself | never |
-| open-source readiness | the licence, the document set, that no tracked file carries a home path, a mail address or a user name, and what a stranger's clone can do | never |
-| docs against the binary | every documented command exists, the paths and spec sections the docs and the source cite resolve, and the manual the binary prints is the manual in the tree | never |
-
-**The viewer gates skip rather than fail without npm.** `apps/viewer` resolves
-`@codesweep-ai/ui` from `vendor/`, so no second checkout is involved, but rebuilding it still needs
-a Node toolchain. The compiled viewer assets are committed, so every Go gate above runs in any
-clone and the binary builds with Go alone.
-
-Rebuilding needs **Node 20 or newer**, and `make build` takes that path whenever `npm` is on your
-PATH. It runs `npm ci` and the Vite builds first, because `//go:embed` reads the artifacts at
-compile time. A full `make check` needs npm for the viewer gates, so install it before you push.
-Re-run `make build` after you edit `apps/viewer`, which is what keeps the committed artifacts
-matching the sources.
-
-Visual parity needs npm **and** a browser. It finds `/usr/bin/chromium-browser` by itself, and
-`CS_TRACER_CHROMIUM` names one anywhere else.
-
-`oracle/` earns its place by catching what nothing else does. A change can alter output BYTES
-without altering meaning: keys emitted in a different order, or a number rendered differently.
-Semantic tests and schema validation both pass such a change, and the tree diff does not.
-Byte-exactness is the contract (SPEC.md §3), so it needs a check that compares bytes.
-
-There is no separate "goldens reproduce" gate. The Go tests already normalize every fixture and
-diff against `oracle/`, so a hand-edited golden fails there.
-
-`oracle/` holds committed expected output, one tree per fixture. Beside each tree sits a `RUN.txt`
-recording the exit code, then each stdout line with the destination normalised to `<OUT>`, then
-sorted stderr. `RUN.txt` is a harness artifact, because the tool emits no record of its own
-invocation. It is excluded from the tree diff and checked by running the tool and comparing.
-
-**Read the oracle diff for what it is.** It compares output against `oracle/`, which `cs-tracer`
-produced. That makes it a **regression** test rather than a correctness test: it catches unintended
-change. It cannot tell you the implementation is wrong, only that it changed, and regenerating
-makes it agree with whatever you did.
-
-The checks that survive that weakness are the ones not anchored to a golden:
-`internal/normalizer/invariants_test.go`, schema conformance against fresh output, determinism, and
-parity. Weight those accordingly, and treat a green tree diff as a net rather than a proof. If your
-change makes only the golden diff go green, you have not verified it.
-
-Parity likewise proves the two transports **agree**, not that either is **correct**. Both could be
-wrong identically. The `file://` smoke check, where React mounts with zero page errors, is the
-remaining backstop.
-
-## The one rule
-
-**Never regenerate a golden to make a gate pass.**
-
-`oracle/` is not test scaffolding. It is the specification, expressed as expected bytes. When a gate
-fails, exactly one of two things is true:
-
-1. **Your change is wrong.** Fix the code.
-2. **The specification changed.** That is a deliberate act, and it deserves its own commit and its
-   own review.
-
-The failure this prevents is easy and quiet. A gate goes red, you regenerate, everything goes green,
-and a real regression is now baked into the expected output where nobody will ever see it.
-
-### The golden-update ritual
-
-When output *should* change:
-
-1. Make the code change. Let the gates fail.
-2. Regenerate with `scripts/gen-goldens.sh`, in a **commit that changes nothing else**.
-3. State in that commit what changed in the output, and why.
-4. **Review the golden diff.** That diff *is* the specification change, so it is the most important
-   thing in the review rather than a mechanical byproduct.
-5. Update [SPEC.md](SPEC.md) if a documented rule moved.
-
-Bundled with the change that motivated it, the diff can no longer distinguish intended output
-changes from accidental ones.
-
-Nothing outside this repository verifies the goldens, so this review is the only check there is. A
-regenerated golden agrees with whatever the tool now does, correct or not.
-
-## Prefer fixing the fixture over loosening the gate
-
-A gate relaxed to pass is a gate that no longer tests anything. A guard that skips instead of
-failing is the same thing more quietly.
-
-## Code you should not "simplify"
-
-Three places look more complicated than necessary and are not. Each replaces an obvious
-implementation that is wrong, and each carries a comment explaining why:
-
-- `internal/trajectory`: the ordered-object model. Go maps cannot reproduce insertion-order
-  semantics, including keys first declared with `undefined` that still occupy their slot.
-- `internal/normalizer/value.go`: coercion rules mirroring JavaScript property access on
-  primitives.
-- `internal/cli/assemble.go`: the byte-level escaping pass. A decode and re-encode corrupts raw
-  U+2028/U+2029 and a literal `<` in source text. `fixtures/claude/v2.1/hazard-text` is the
-  fixture that catches you.
-
-The gates will catch you, but they report "bytes differ" across a whole tree, which is an expensive
-way to rediscover a documented reason.
-
 ## Tests are part of the change
 
 Every behavior change ships with test coverage. A change with no test is only acceptable when the
-behavior genuinely cannot be observed in a test. Say so in the PR.
+behavior genuinely cannot be observed in a test. Say so in the pull request.
 
 The gates compare whole trees: they tell you **that** something differs, never **where**. Unit tests
 exist to localise. So the question to ask of a new test is not what percentage it moves but *"if
@@ -171,11 +82,12 @@ holds independently of the goldens is worth more than one that does not.
 
 **When you add a user-facing surface, add the test that keeps it documented.** A flag, a command or
 an output format each has somewhere it must be described, and prose describing code drifts the
-moment nobody is looking. Assert the link instead of remembering it. Three such assertions already
-exist, and they are all the same shape. `--help` must name every flag, the usage strings must list
-every command, and `cs-lint walkthrough` requires [MANUAL.md](MANUAL.md) to document every flag.
-`manual` was added to the full help and missed in the short usage precisely because that third
-assertion did not exist yet.
+moment nobody is looking. Assert the link instead of remembering it. `--help` must name every flag,
+the usage strings must list every command, and `cs-lint walkthrough` requires
+[MANUAL.md](MANUAL.md) to document every flag.
+
+[`SPEC.md`](SPEC.md#testing) holds the gate list, what each gate proves, how a golden is updated,
+and how a fixture is added. Read it before you touch `oracle/` or `fixtures/`.
 
 ### Coverage
 
@@ -186,22 +98,6 @@ aggregates rather than overwrites. `make coverage` merges what is there and prin
 `.coverage-baseline` lists stops being reached: presence, not a percentage. What it catches is a
 suite that stopped running while the tests still report green. When a package is meant to lose its
 coverage, rerun `make coverage-baseline` and commit the result.
-
-### Adding a fixture
-
-A **fixture** is a captured session under `fixtures/`, and the gates run every one of them.
-
-1. Add the session under `fixtures/<cli>/<version>/<name>/`.
-2. Run `scripts/scrub-fixtures.mjs --dir fixtures/<cli>/<version>/<name>` over it. Pass `--dir`,
-   which is the only safe form: run bare it refuses, and `--all` rewrites the whole corpus. A
-   scrubbed id is still id-shaped, so a second pass remaps every fixture and regenerates every
-   golden. Scrubbing alone does not clear a captured session for publication.
-3. Generate its golden with `scripts/gen-goldens.sh` and review the diff.
-4. Confirm it exercises something no existing fixture does. Near-identical fixtures cost runtime and
-   prove one thing.
-5. If it pins a byte-level hazard, say so in a comment on the relevant test. Unusual encoding,
-   embedded markup and an awkward float are the three that recur. Without the comment, a later
-   cleanup quietly removes the property under test.
 
 ## Issues
 
@@ -220,14 +116,22 @@ Keep one idea per commit. If a change will not fit that shape, it is doing more 
 split it.
 
 **Subject**, always. Under 60 characters, imperative, no trailing period, completing *"If applied,
-this commit will …"*. Say what the change does.
+this commit will …"*. Say what the change does, in plain English rather than in this project's
+internal shorthand. Use no conventional-commit prefix: `fix(proxy):` names a category rather than a
+change, and the category is already in the diff.
 
-**Body**, only when the subject leaves a real question. Use bullets, one line each, under 60
-characters, describing the design: the shape the change takes, or the constraint that ruled out the
-obvious alternative. Do not describe the diff, and do not describe how you arrived at it.
+**Body**, only when the subject leaves a real question a reader would otherwise have to open the
+diff to answer. Write the answer in plain English, in whole sentences, addressed to somebody who was
+not there. Wrap it at 72 columns. Most commits need no body at all.
 
-Write as many bullets as there are points and no more. Most commits need none, one is common, and
-three is the rare maximum.
+Say what the change does and what constrained it. Leave out how the work was scheduled, how it was
+tested, and what prompted it. A rule's reason belongs beside the rule in [`SPEC.md`](SPEC.md), and
+the investigation that found it belongs in the pull request.
+
+Where a body carries more than one independent point, one line each reads better than a paragraph.
+Never reach for another point to fill the shape. A line that restates the subject in different words
+is worse than no body, and a body written to a length is the commonest way a message stops being
+read.
 
 ```
 Fix the asset path a split trace page points at
@@ -236,8 +140,8 @@ Fix the asset path a split trace page points at
 ```
 Compare the pixels the parity gate says it compares
 
-- Buffer.compare over a PNG reports on the compressor.
-- The first page in a fresh browser rasterises differently.
+Buffer.compare over a PNG reports on the compressor, and the
+first page in a fresh browser rasterises differently.
 ```
 
 ```
@@ -248,7 +152,8 @@ Sort skippedByType by record type
 ```
 
 Keep the `Co-Authored-By:` trailer when an agent wrote the change. Drop any trailer linking to the
-agent's session or transcript: private to whoever ran it, dead to everyone else.
+agent's session or transcript. Such a link is private to whoever ran it and dead to everyone else,
+and it cannot be fixed after publication.
 
 ## Docs
 
@@ -278,9 +183,25 @@ citation into it at once.
 
 ## Writing
 
-The docs drift into a style that reads as terse and knowing rather than clear. These rules push
-back. [`cs-lint`](https://github.com/codesweep-ai/lint) enforces the mechanical ones. It carries
-three linters, and `make check` runs all three:
+Six principles carry the voice. Read them before you write a document, and apply them when you edit
+one:
+
+1. **Introduce a term where you first use it**, in the same sentence, or link to the page that
+   defines it. A reader should never meet a word the docs have not explained.
+2. **State the point first, then qualify it.** Opening with the qualifier makes the reader decode
+   the sentence backwards.
+3. **Give every sentence a subject and a verb.** "Two version numbers, one verdict, one remedy"
+   reads as knowing rather than clear. Say what the thing is.
+4. **A walkthrough is steps that work.** Put the reasons somewhere else. A reader working through
+   one wants commands that run.
+5. **Describe what the software does, not how it came to do it.** Leave out what the project used
+   to do, what was tried and dropped, and numbers from a run somebody did once.
+6. **Do not explain a design by contrast with a worse one.** Say what it is and what you get,
+   rather than asking the reader to picture a design nobody proposed.
+
+The mechanical rules are enforced rather than restated here.
+[`cs-lint`](https://github.com/codesweep-ai/lint) carries them, and `make check` runs all three of
+its linters over this repository:
 
 | Command | Target | What it checks |
 |---|---|---|
@@ -288,111 +209,43 @@ three linters, and `make check` runs all three:
 | `cs-lint oss` | `make oss` | What this repository owes a reader as a published project. |
 | `cs-lint walkthrough` | `make walkthrough` | Whether the documents still describe the software. |
 
-The third checks the claims rather than the prose. Every command the docs name goes against the
-binary's help tree, every setting against the code that reads it, and every sample output against
-the command re-run now. `--run` lists every command the documents tell a reader to run, in reading
-order, and `--review` prints the half that needs a reader.
-
-Read what a rule wants with `--explain`, which prints the guidance behind each one rather than
-leaving you to argue with the tool:
+`--explain` prints what each rule wants and the guidance behind it:
 
 ```bash
-cs-lint oss --explain
+cs-lint docs --explain
 ```
 
-1. **Write to the reader, in second person.** "Run `make check` before you push", not "the check
-   should be run before pushing".
+That listing is the authority. Where this section and the linter disagree, the linter is right and
+this section is a bug. Every knob lives in [`.cs-lint.yaml`](.cs-lint.yaml), and a check that
+reports noise is a check to fix rather than a report to work around.
 
-2. **Introduce a term where you first use it.** A reader meeting *trajectory*, *shard* or *golden*
-   for the first time needs it introduced. Give a definition on the spot, an entry in a glossary
-   table, or a link to the page that defines it.
+A check turned off here is a waiver, written under `allow` as an identifier and the reason it was
+traded away. The reason is required, and it is printed with the finding, because a waiver nobody can
+review is a rule deleted in private.
 
-3. **No em-dash.** The aside one introduces is a full stop, a comma, or a cut. It is also the
-   first punctuation a model reaches for, so a page full of them reads as unedited whoever wrote it.
-
-4. **Sentences under 30 words.** Longer than that and a sentence is carrying two ideas. A list of
-   ordered steps belongs in a numbered list, not in one sentence separated by semicolons.
-
-5. **Every sentence has a verb.** "One commit per idea" is an epigram, not a sentence. It sounds
-   knowing and tells the reader nothing.
-
-6. **Delete the frame.** "It is worth noting that", "put simply", "in other words", "to be clear".
-   Each one comments on the writing instead of getting on with it. Say the thing.
-
-7. **Do not say a thing twice in one sentence.** A sentence that circles back on its own subject
-   lands nowhere.
-
-8. **Show a file before running it.** A block that runs `./build.sh` has to have shown the reader
-   what is in `build.sh`.
-
-9. **Explain the case, or leave it out.** If a walkthrough has two shapes, walk through both fully,
-   or pick one. Half an explanation, hedged, is worse than either.
-
-10. **Do not mention what does not happen.** "The `--force` flag is ignored here" makes a reader
-    wonder why they were told. Cut it.
-
-11. **Do not document the absence of a feature** as a section of its own. Non-goals belong in the
-    spec, where a reader is looking for the boundary.
-
-12. **Prefer a concrete example to a general statement.** A runnable block teaches a flag faster
-    than a paragraph about it.
-
-13. **Say what it costs.** If a flag needs a browser, makes output uncommittable, or is Linux-only,
-    say so where the reader meets it.
-
-14. **Describe what the software does, not how it came to do it.** Leave out what the project used
-    to do, what was tried and dropped, and numbers from a run someone did once. The reason a rule
-    exists belongs beside the rule in [SPEC.md](SPEC.md); the investigation that found it belongs in
-    the pull request.
-
-15. **State the point first, then qualify it.** Opening with the qualifier makes the reader decode
-    the sentence backwards. "Byte for byte, so a golden diff means a real change" names its subject
-    last. Start with the output, and let the consequence follow it.
-
-16. **Do not explain a design by contrast with a worse one.** "A directory, so a change reads as a
-    diff rather than as one unreadable line" asks the reader to picture a format nobody proposed.
-    Say what it is and what you get.
-
-17. **A walkthrough is steps that work.** Put the reasons somewhere else. A reader working through
-    one wants commands that run, not an account of which flag the exporter used to spell
-    differently.
-
-18. **Do not make the reader hold two halves of a sentence apart.** "What a shell printed may
-    differ; what the model was asked may not" is a puzzle. Name the subject in each clause.
-
-19. **Do not write in the register a model defaults to.** Untouched model output has a signature
-    readers now recognise and discount. `cs-lint docs --explain` lists the words this house
-    declines and what to write instead, so the table lives in one place rather than here. Two
-    shapes matter as much as the words. Negative parallelism sets up a contrast nobody asked for.
-    The rule of three is a rhythm rather than an argument, and a reader stops counting the third
-    item as information.
-
-These rules are about mechanics, and this project's voice is a strength: concrete, opinionated, and
-free of padding. Where a rule fights the voice, the voice wins. Say so in the PR when it does.
-
-Run the linter on its own while you write:
-
-```bash
-cs-lint docs              # check
-cs-lint docs --stats      # per-file measurements
-cs-lint docs --list       # which files are checked
-cs-lint docs --explain    # what each rule wants, and the guidance behind it
-```
-
-Every knob lives in [`.cs-lint.yaml`](.cs-lint.yaml) at the repository root, one section per
-linter. The `docs` section carries `glossary`, `skipExtra`, `lowercaseStarters` and `projectVerbs`.
-When a real sentence trips the verb check, add the verb. When a report is noise, fix the config. A
-linter that cries wolf gets ignored, and then it protects nothing.
-
-A rule turned off for this repository is a waiver: a rule identifier and the reason it was traded
-away, under `allow`. The reason is required, and it is printed with the finding, because a waiver
-nobody can review is a rule deleted in private.
-
-The linter is a project of its own, shared across this family. A fix to a check belongs there, and
-reaches this repository the next time somebody installs it.
+**What not to change.** This project's voice is a strength: concrete, opinionated, free of
+marketing padding. These rules are about mechanics. Where one of them fights the voice, the voice
+wins, and the exception is worth a sentence in the pull request.
 
 ## Style
 
 Match the file you are editing: dense, comment-light code with occasional long explanatory comments
 where something is genuinely non-obvious. Keep those. Every one marks a place where the obvious
 implementation is wrong.
+
+## AI-assisted contributions
+
+An agent wrote most of this repository, and you are welcome to use one. The standard is the same
+either way: you are responsible for what you submit.
+
+Point your tool at [`AGENTS.md`](AGENTS.md), which routes it to the documents that hold the
+conventions, and check three things before you open the pull request:
+
+- You understand every line, and can answer a question about it without going back to the tool.
+- You ran `make check` and it passed.
+- You cut what the tool added to fill space. A model pads a commit body to the shape it was shown,
+  and comments that restate the code around them. Both read as noise to a maintainer, and both are
+  yours to remove.
+
+Keep the `Co-Authored-By:` trailer, which is how the work is disclosed. An unattended agent must not
+open pull requests or comment on this repository.
