@@ -73,31 +73,18 @@ Ship a test with your change. Where a behaviour genuinely cannot be observed in 
 the pull request.
 
 The gates compare whole trees: they tell you **that** something differs, never **where**. Unit tests
-exist to localise. So the question to ask of a new test is not what percentage it moves but *"if
-this breaks, will a test name the bug in seconds?"*
-
-Concentrate coverage where a byte diff cannot help. Serialization order, encoding edge cases, chunk
-boundaries, re-run merging, flag parsing and destination semantics all qualify. An assertion that
-holds independently of the goldens is worth more than one that does not.
+exist to localise. Ask of a new test not what percentage it moves, but *"if this breaks, will a test
+name the bug in seconds?"* Concentrate coverage where a byte diff cannot
+help: serialization order, encoding edge cases, chunk boundaries, re-run merging, flag parsing and
+destination semantics.
 
 **When you add a user-facing surface, add the test that keeps it documented.** A flag, a command or
 an output format each has somewhere it must be described, and prose describing code drifts the
-moment nobody is looking. Assert the link instead of remembering it. `--help` must name every flag,
-the usage strings must list every command, and `cs-lint walkthrough` requires
-[MANUAL.md](MANUAL.md) to document every flag.
+moment nobody is looking. Assert the link instead of remembering it.
 
-[`SPEC.md`](SPEC.md#testing) holds the gate list, what each gate proves, how a golden is updated,
-and how a fixture is added. Read it before you touch `oracle/` or `fixtures/`.
-
-### Coverage
-
-Every test target writes coverage into its own tier under `.coverage/`, so running several
-aggregates rather than overwrites. `make coverage` merges what is there and prints the report.
-
-`make coverage-check` runs inside `make check` and in CI. It fails when a package
-`.coverage-baseline` lists stops being reached: presence, not a percentage. What it catches is a
-suite that stopped running while the tests still report green. When a package is meant to lose its
-coverage, rerun `make coverage-baseline` and commit the result.
+Never lower a coverage baseline to make a run green. [`SPEC.md`](SPEC.md#testing) holds the gate
+list, what each gate proves, how a golden is updated, how a fixture is added, and how coverage is
+measured. Read it before you touch `oracle/` or `fixtures/`.
 
 ## Issues
 

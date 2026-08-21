@@ -447,6 +447,16 @@ A **fixture** is a captured session under `fixtures/`, and the gates run every o
    embedded markup and an awkward float are the three that recur. Without the comment, a later
    cleanup quietly removes the property under test.
 
+### Coverage
+
+Every test target writes coverage into its own tier under `.coverage/`, so running several
+aggregates rather than overwrites. `make coverage` merges what is there and prints the report.
+
+`make coverage-check` runs inside `make check` and in CI. It fails when a package
+`.coverage-baseline` lists stops being reached: presence, not a percentage. What it catches is a
+suite that stopped running while the tests still report green. When a package is meant to lose its
+coverage, rerun `make coverage-baseline` and commit the result.
+
 ## Conformance
 
 An implementation conforms when it satisfies **R1**-**R55**. The gate list above is the reference,
