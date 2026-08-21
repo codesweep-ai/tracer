@@ -316,10 +316,141 @@ output bytes, across every fixture at once, and says only that something moved. 
 localize: serialization order, coercion rules, chunk boundaries, flag parsing and destination
 semantics each have a test that names the bug rather than the tree.
 
+## Testing
+
+The gate list is here rather than in [CONTRIBUTING.md](CONTRIBUTING.md), because what a gate proves
+is a property of the software. `make check` runs every one of them, and CONTRIBUTING says when to
+run it.
+
+### The gates, and what each one proves
+
+| Gate | Proves | Skips when |
+|---|---|---|
+| gofmt | every tracked Go file is formatted | never |
+| go vet | no vet findings, including a language-version mismatch between `go.mod` and the APIs in use | never |
+| build | the binary links, and where the viewer sources resolve, both Vite builds emit and their artifact assertions hold | never |
+| version stamp | the binary's version equals `git describe`, which catches a plain `go build` | never |
+| Go tests | the unit tier, plus the oracle, invocation and determinism gates | never |
+| eslint | the viewer sources and its build scripts are clean | npm is not installed |
+| viewer tests + schema conformance | the React app behaves, and output validates against the schema, both the committed goldens **and** output produced fresh by the current binary | as above |
+| visual parity | `--single` and `--split` render identically: DOM digest, full-page pixels, interaction end-state across a chunk boundary | as above, or no browser |
+| prose | the writing rules below, and that no sentence asserts a count the repo counts itself | never |
+| open-source readiness | the licence, the document set, that no tracked file carries a home path, a mail address or a user name, and what a stranger's clone can do | never |
+| docs against the binary | every documented command exists, the paths and spec sections the docs and the source cite resolve, and the manual the binary prints is the manual in the tree | never |
+
+**The viewer gates skip rather than fail without npm.** `apps/viewer` resolves
+`@codesweep-ai/ui` from `vendor/`, so no second checkout is involved, but rebuilding it still needs
+a Node toolchain. The compiled viewer assets are committed, so every Go gate above runs in any
+clone and the binary builds with Go alone.
+
+Rebuilding needs **Node 20 or newer**, and `make build` takes that path whenever `npm` is on your
+PATH. It runs `npm ci` and the Vite builds first, because `//go:embed` reads the artifacts at
+compile time. A full `make check` needs npm for the viewer gates, so install it before you push.
+Re-run `make build` after you edit `apps/viewer`, which is what keeps the committed artifacts
+matching the sources.
+
+Visual parity needs npm **and** a browser. It finds `/usr/bin/chromium-browser` by itself, and
+`CS_TRACER_CHROMIUM` names one anywhere else.
+
+`oracle/` earns its place by catching what nothing else does. A change can alter output BYTES
+without altering meaning: keys emitted in a different order, or a number rendered differently.
+Semantic tests and schema validation both pass such a change, and the tree diff does not.
+Byte-exactness is the contract (SPEC.md §3), so it needs a check that compares bytes.
+
+There is no separate "goldens reproduce" gate. The Go tests already normalize every fixture and
+diff against `oracle/`, so a hand-edited golden fails there.
+
+`oracle/` holds committed expected output, one tree per fixture. Beside each tree sits a `RUN.txt`
+recording the exit code, then each stdout line with the destination normalised to `<OUT>`, then
+sorted stderr. `RUN.txt` is a harness artifact, because the tool emits no record of its own
+invocation. It is excluded from the tree diff and checked by running the tool and comparing.
+
+**Read the oracle diff for what it is.** It compares output against `oracle/`, which `cs-tracer`
+produced. That makes it a **regression** test rather than a correctness test: it catches unintended
+change. It cannot tell you the implementation is wrong, only that it changed, and regenerating
+makes it agree with whatever you did.
+
+The checks that survive that weakness are the ones not anchored to a golden:
+`internal/normalizer/invariants_test.go`, schema conformance against fresh output, determinism, and
+parity. Weight those accordingly, and treat a green tree diff as a net rather than a proof. If your
+change makes only the golden diff go green, you have not verified it.
+
+Parity likewise proves the two transports **agree**, not that either is **correct**. Both could be
+wrong identically. The `file://` smoke check, where React mounts with zero page errors, is the
+remaining backstop.
+
+### A golden is never regenerated to make a gate pass
+
+**Never regenerate a golden to make a gate pass.**
+
+`oracle/` is not test scaffolding. It is the specification, expressed as expected bytes. When a gate
+fails, exactly one of two things is true:
+
+1. **Your change is wrong.** Fix the code.
+2. **The specification changed.** That is a deliberate act, and it deserves its own commit and its
+   own review.
+
+The failure this prevents is easy and quiet. A gate goes red, you regenerate, everything goes green,
+and a real regression is now baked into the expected output where nobody will ever see it.
+
+#### When output should change
+
+When output *should* change:
+
+1. Make the code change. Let the gates fail.
+2. Regenerate with `scripts/gen-goldens.sh`, in a **commit that changes nothing else**.
+3. State in that commit what changed in the output, and why.
+4. **Review the golden diff.** That diff *is* the specification change, so it is the most important
+   thing in the review rather than a mechanical byproduct.
+5. Update [SPEC.md](SPEC.md) if a documented rule moved.
+
+Bundled with the change that motivated it, the diff can no longer distinguish intended output
+changes from accidental ones.
+
+Nothing outside this repository verifies the goldens, so this review is the only check there is. A
+regenerated golden agrees with whatever the tool now does, correct or not.
+
+### A gate is fixed, never loosened
+
+A gate relaxed to pass is a gate that no longer tests anything. A guard that skips instead of
+failing is the same thing more quietly.
+
+### Code that is not as complicated as it looks
+
+Three places look more complicated than necessary and are not. Each replaces an obvious
+implementation that is wrong, and each carries a comment explaining why:
+
+- `internal/trajectory`: the ordered-object model. Go maps cannot reproduce insertion-order
+  semantics, including keys first declared with `undefined` that still occupy their slot.
+- `internal/normalizer/value.go`: coercion rules mirroring JavaScript property access on
+  primitives.
+- `internal/cli/assemble.go`: the byte-level escaping pass. A decode and re-encode corrupts raw
+  U+2028/U+2029 and a literal `<` in source text. `fixtures/claude/v2.1/hazard-text` is the
+  fixture that catches you.
+
+The gates will catch you, but they report "bytes differ" across a whole tree, which is an expensive
+way to rediscover a documented reason.
+
+### Adding a fixture
+
+A **fixture** is a captured session under `fixtures/`, and the gates run every one of them.
+
+1. Add the session under `fixtures/<cli>/<version>/<name>/`.
+2. Run `scripts/scrub-fixtures.mjs --dir fixtures/<cli>/<version>/<name>` over it. Pass `--dir`,
+   which is the only safe form: run bare it refuses, and `--all` rewrites the whole corpus. A
+   scrubbed id is still id-shaped, so a second pass remaps every fixture and regenerates every
+   golden. Scrubbing alone does not clear a captured session for publication.
+3. Generate its golden with `scripts/gen-goldens.sh` and review the diff.
+4. Confirm it exercises something no existing fixture does. Near-identical fixtures cost runtime and
+   prove one thing.
+5. If it pins a byte-level hazard, say so in a comment on the relevant test. Unusual encoding,
+   embedded markup and an awkward float are the three that recur. Without the comment, a later
+   cleanup quietly removes the property under test.
+
 ## Conformance
 
-An implementation conforms when it satisfies **R1**–**R55**. The gate list in
-[CONTRIBUTING.md](CONTRIBUTING.md) is the reference, and four of its gates carry the load:
+An implementation conforms when it satisfies **R1**-**R55**. The gate list above is the reference,
+and four of its gates carry the load:
 
 1. Every fixture goes through the normalizer, and the tree is diffed against `oracle/`.
 2. Fresh output is validated against `schema/trajectory.v1.json`.
