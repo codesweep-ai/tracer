@@ -9,7 +9,7 @@ This page is about working on `cs-tracer` itself. For using it, see [MANUAL.md](
 Bug reports and pull requests are welcome. For a security issue, use GitHub's private
 vulnerability reporting on this repository's Security tab, rather than opening a public issue.
 
-## How a change gets in
+## Submitting a change
 
 File a bug or an idea as a GitHub issue on this repository. For a fix that stands on its own, a pull
 request on its own is enough. For anything that changes behaviour a user can see, open an issue
@@ -20,9 +20,9 @@ first, so the design gets settled before you write it.
 3. Run `make check`, which is the same gate CI runs.
 4. Open a pull request against `main`, and say what the change does and why.
 
-Review asks four questions. Does the change hold the invariants below? Does a test fail without it?
-Does every user-visible change land in exactly one document? Does the history read the way this file
-describes? Expect comments rather than silence, and expect a small change to move quickly.
+Expect comments rather than silence, and expect a small change to move quickly. A reviewer asks
+whether the change keeps the design rules below, whether a test fails without it, and where a reader
+would find it documented.
 
 By opening a pull request you agree that your contribution ships under the
 [Apache 2.0 licence](LICENSE) this project is released under.
@@ -51,10 +51,10 @@ go install golang.org/x/tools/cmd/deadcode@latest
 go install github.com/codesweep-ai/lint/cmd/cs-lint@latest
 ```
 
-`cs-lint` is deliberately not pinned. It is this family's own linter, and CI installs it from source
-the same way, so a check it gains reaches you on the day it lands.
+`cs-lint` is not pinned. CI installs it from source the same way you do, so a check it gains reaches
+you on the day it lands.
 
-## The three that matter most
+## Design rules
 
 1. **`make check` before every push.** Four of its gates skip on a machine that lacks what they
    need, and the summary says which. A skipped gate is not a passed one.
@@ -67,10 +67,10 @@ the same way, so a check it gains reaches you on the day it lands.
    gate proves the two export modes agree rather than that either is correct. Weight the checks
    that hold independently of the goldens.
 
-## Tests are part of the change
+## Tests
 
-Every behavior change ships with test coverage. A change with no test is only acceptable when the
-behavior genuinely cannot be observed in a test. Say so in the pull request.
+Ship a test with your change. Where a behaviour genuinely cannot be observed in a test, say so in
+the pull request.
 
 The gates compare whole trees: they tell you **that** something differs, never **where**. Unit tests
 exist to localise. So the question to ask of a new test is not what percentage it moves but *"if
@@ -112,26 +112,22 @@ go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest
 
 ## Commits
 
-Keep one idea per commit. If a change will not fit that shape, it is doing more than one thing, so
-split it.
+**Keep it short.** One idea per commit, and a message a reader takes in at a glance. If a change
+will not fit one idea, split it.
 
 **Subject**, always. Under 60 characters, imperative, no trailing period, completing *"If applied,
 this commit will …"*. Say what the change does, in plain English rather than in this project's
 internal shorthand. Use no conventional-commit prefix: `fix(proxy):` names a category rather than a
 change, and the category is already in the diff.
 
-**Body**, only when the subject leaves a real question a reader would otherwise have to open the
-diff to answer. Write the answer in plain English, in whole sentences, addressed to somebody who was
-not there. Wrap it at 72 columns. Most commits need no body at all.
+**Body**, rarely. Most commits need none. Add one only when the subject leaves a question a reader
+would otherwise have to open the diff to answer, and then answer that question. A sentence or two
+does it. Wrap it at 72 columns.
 
-Say what the change does and what constrained it. Leave out how the work was scheduled, how it was
-tested, and what prompted it. A rule's reason belongs beside the rule in [`SPEC.md`](SPEC.md), and
-the investigation that found it belongs in the pull request.
-
-Where a body carries more than one independent point, one line each reads better than a paragraph.
-Never reach for another point to fill the shape. A line that restates the subject in different words
-is worse than no body, and a body written to a length is the commonest way a message stops being
-read.
+Leave out how the work was scheduled, how you tested it, and what led you to it, and stop once the
+question is answered. A second paragraph usually means the message has turned into a report of the
+session. A rule's reason belongs beside the rule in [`SPEC.md`](SPEC.md), and the investigation that
+found it belongs in the pull request.
 
 ```
 Fix the asset path a split trace page points at
@@ -142,13 +138,6 @@ Compare the pixels the parity gate says it compares
 
 Buffer.compare over a PNG reports on the compressor, and the
 first page in a fresh browser rasterises differently.
-```
-
-```
-Sort skippedByType by record type
-
-- Key order would follow whichever type arrived first.
-- Output is compared byte for byte, so order is data.
 ```
 
 Keep the `Co-Authored-By:` trailer when an agent wrote the change. Drop any trailer linking to the
@@ -183,8 +172,8 @@ citation into it at once.
 
 ## Writing
 
-Six principles carry the voice. Read them before you write a document, and apply them when you edit
-one:
+Six principles do most of the work. Read them before you write a document, and apply them when you
+edit one:
 
 1. **Introduce a term where you first use it**, in the same sentence, or link to the page that
    defines it. A reader should never meet a word the docs have not explained.
@@ -200,32 +189,16 @@ one:
    rather than asking the reader to picture a design nobody proposed.
 
 The mechanical rules are enforced rather than restated here.
-[`cs-lint`](https://github.com/codesweep-ai/lint) carries them, and `make check` runs all three of
-its linters over this repository:
-
-| Command | Target | What it checks |
-|---|---|---|
-| `cs-lint docs` | `make docs` | How the documents are written. |
-| `cs-lint oss` | `make oss` | What this repository owes a reader as a published project. |
-| `cs-lint walkthrough` | `make walkthrough` | Whether the documents still describe the software. |
-
-`--explain` prints what each rule wants and the guidance behind it:
+[`cs-lint`](https://github.com/codesweep-ai/lint) carries them, and `make check` runs it over this
+repository. To read what a rule wants and the guidance behind it:
 
 ```bash
 cs-lint docs --explain
 ```
 
-That listing is the authority. Where this section and the linter disagree, the linter is right and
-this section is a bug. Every knob lives in [`.cs-lint.yaml`](.cs-lint.yaml), and a check that
-reports noise is a check to fix rather than a report to work around.
-
-A check turned off here is a waiver, written under `allow` as an identifier and the reason it was
-traded away. The reason is required, and it is printed with the finding, because a waiver nobody can
-review is a rule deleted in private.
-
-**What not to change.** This project's voice is a strength: concrete, opinionated, free of
-marketing padding. These rules are about mechanics. Where one of them fights the voice, the voice
-wins, and the exception is worth a sentence in the pull request.
+That listing is the authority. Where this section and the linter disagree, the linter is right.
+Turning a check off is a waiver: write it under `allow` in [`.cs-lint.yaml`](.cs-lint.yaml) with the
+reason, which is printed with the finding.
 
 ## Style
 
