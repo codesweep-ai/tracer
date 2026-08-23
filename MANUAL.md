@@ -350,7 +350,7 @@ cs-tracer ./normalized -o trace.html
 
 ## See also
 
-- [README.md](README.md): what this is, and the shortest path to a working page.
-- [INSTALL.md](INSTALL.md): how to get the binary, and how to check it works.
-- [SPEC.md](SPEC.md): what the output must be, byte for byte, and how the binary is built.
-- [CONTRIBUTING.md](CONTRIBUTING.md): working on `cs-tracer` itself.
+- [README.md](README.md) · what this is, and the shortest path to a working page.
+- [INSTALL.md](INSTALL.md) · how to get the binary, and how to check it works.
+- [SPEC.md](SPEC.md) · what the output must be, byte for byte, and how the binary is built.
+- [CONTRIBUTING.md](CONTRIBUTING.md) · working on `cs-tracer` itself.
