@@ -46,7 +46,7 @@ one `go install` away on a machine that already has Go. Install them once, pinni
 to the version CI runs:
 
 ```sh
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1
 go install golang.org/x/tools/cmd/deadcode@latest
 go install github.com/codesweep-ai/lint/cmd/cs-lint@latest
 ```
