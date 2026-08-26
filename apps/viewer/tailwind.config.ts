@@ -6,7 +6,7 @@ export default {
     path.resolve(__dirname, "index.html"),
     path.resolve(__dirname, "src/**/*.{ts,tsx}"),
     path.resolve(__dirname, "node_modules/@codesweep-ai/ui/src/**/*.{ts,tsx}"),
-    path.resolve(__dirname, "../../vendor/codesweep-ui/src/**/*.{ts,tsx}"),
+    path.resolve(__dirname, "../../ui/codesweep-ui/src/**/*.{ts,tsx}"),
   ],
   theme: { extend: {} },
   plugins: [],

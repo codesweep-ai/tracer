@@ -339,7 +339,7 @@ run it.
 | docs against the binary | every documented command exists, the paths and spec sections the docs and the source cite resolve, and the manual the binary prints is the manual in the tree | never |
 
 **The viewer gates skip rather than fail without npm.** `apps/viewer` resolves
-`@codesweep-ai/ui` from `vendor/`, so no second checkout is involved, but rebuilding it still needs
+`@codesweep-ai/ui` from `ui/`, so no second checkout is involved, but rebuilding it still needs
 a Node toolchain. The compiled viewer assets are committed, so every Go gate above runs in any
 clone and the binary builds with Go alone.
 

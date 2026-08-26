@@ -33,7 +33,7 @@ export default defineConfig({
       },
     },
   ],
-  resolve: { alias: { "@codesweep-ai/ui": path.resolve(root, "../../vendor/codesweep-ui/src"), react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
+  resolve: { alias: { "@codesweep-ai/ui": path.resolve(root, "../../ui/codesweep-ui/src"), react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
   build: {
     outDir: "../../internal/cli/viewer/split",
     emptyOutDir: true,

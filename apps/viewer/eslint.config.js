@@ -11,7 +11,7 @@ export default tseslint.config(js.configs.recommended, ...tseslint.configs.recom
   files: ["src/**/*.{ts,tsx}"],
   plugins: { react, "react-hooks": reactHooks, "@codesweep-ai": codesweep },
   settings: { react: { version: "18.3" } },
-  rules: { ...designRules, "@codesweep-ai/no-unknown-token": ["error", { tokenSource: "../../vendor/codesweep-ui/src/styles/tokens.css" }], "react/no-danger": "error", ...reactHooks.configs.recommended.rules },
+  rules: { ...designRules, "@codesweep-ai/no-unknown-token": ["error", { tokenSource: "../../ui/codesweep-ui/src/styles/tokens.css" }], "react/no-danger": "error", ...reactHooks.configs.recommended.rules },
 }, {
   // Plain-JS test files (assemble.test.mjs) run in vitest's jsdom environment;
   // `document`/`window` exist there and TS scoping rules do not apply.

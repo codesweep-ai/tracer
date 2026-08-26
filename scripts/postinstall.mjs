@@ -1,7 +1,7 @@
 // Makes `npm ci && npm run build && npm test` work from a fresh clone, by installing
 // the dependencies of the two sub-projects a root `npm ci` does NOT cover:
 //
-//  1. vendor/codesweep-ui — the design-system subset, consumed by apps/viewer as a
+//  1. ui/codesweep-ui — the design-system subset, consumed by apps/viewer as a
 //     `file:` dep. npm *links* a directory `file:` dep but does NOT install the linked
 //     package's own deps, and the subset ships raw TS importing react/lucide/clsx, so
 //     `npm run build` (which type-checks and bundles that source) needs it installed.
@@ -30,7 +30,7 @@ function ensureInstalled(dir, label, { required }) {
   if (res.status !== 0) console.warn(`[postinstall] ${label} install exited ${res.status}.`);
 }
 
-/** a root `npm ci` hoists apps/viewer's `file:../../vendor/codesweep-ui` deps to
+/** a root `npm ci` hoists apps/viewer's `file:../../ui/codesweep-ui` deps to
  * node_modules/@codesweep-ai/ but writes each symlink target relative to the WORKSPACE
  * dir, so the hoisted links dangle (one level short of the real target).
  * Vite/Vitest resolve the package by path and never consult the link; `npm run lint`
@@ -40,10 +40,10 @@ function ensureInstalled(dir, label, { required }) {
  * resolves a DANGLING symlink to ENOENT and returns success WITHOUT unlinking it, so
  * the following `symlinkSync` died with EEXIST and took `npm ci` down with it. */
 function repairScopedLinks() {
-  const vendor = path.join(repoRoot, "vendor");
+  const uiRoot = path.join(repoRoot, "ui");
   const links = {
-    ui: path.join(vendor, "codesweep-ui"),
-    "eslint-plugin": path.join(vendor, "codesweep-eslint-plugin"),
+    ui: path.join(uiRoot, "codesweep-ui"),
+    "eslint-plugin": path.join(uiRoot, "codesweep-eslint-plugin"),
   };
   for (const [name, target] of Object.entries(links)) {
     const link = path.join(repoRoot, "node_modules", "@codesweep-ai", name);
@@ -57,7 +57,7 @@ function repairScopedLinks() {
   }
 }
 
-ensureInstalled(path.join(repoRoot, "vendor", "codesweep-ui"), "design system (@codesweep-ai/ui)", { required: true });
+ensureInstalled(path.join(repoRoot, "ui", "codesweep-ui"), "design system (@codesweep-ai/ui)", { required: true });
 ensureInstalled(path.join(repoRoot, "fixtures", "test"), "fixtures test harness", { required: false });
 repairScopedLinks();
 process.exit(0);

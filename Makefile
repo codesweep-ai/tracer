@@ -58,7 +58,7 @@ help:
 #
 # The artifacts under internal/cli/viewer are COMMITTED, so a clone with no Node
 # toolchain still builds the binary. They are rebuilt from apps/viewer wherever
-# npm is available; the design system it imports is vendored under vendor/, so
+# npm is available; the design system it imports is vendored under ui/, so
 # no second checkout is involved.
 viewer:
 ifeq ($(and $(wildcard apps/viewer/package.json),$(shell command -v npm 2>/dev/null)),)

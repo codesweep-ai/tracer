@@ -14,12 +14,12 @@
     "lint": "eslint src scripts *.config.ts *.config.js --max-warnings 0"
   },
   "dependencies": {
-    "@codesweep-ai/ui": "file:../../vendor/codesweep-ui",
+    "@codesweep-ai/ui": "file:../../ui/codesweep-ui",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@codesweep-ai/eslint-plugin": "file:../../vendor/codesweep-eslint-plugin",
+    "@codesweep-ai/eslint-plugin": "file:../../ui/codesweep-eslint-plugin",
     "@eslint/js": "^9.17.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",

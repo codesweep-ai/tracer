@@ -26,7 +26,7 @@ export default defineConfig({
     // forbidden on an inline tag, and the build assertion checks it.
     { name: "strip-crossorigin", enforce: "post", transformIndexHtml(html) { return html.replace(/\s+crossorigin/g, ""); } },
   ],
-  resolve: { alias: { "@codesweep-ai/ui": path.resolve(root, "../../vendor/codesweep-ui/src"), react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
+  resolve: { alias: { "@codesweep-ai/ui": path.resolve(root, "../../ui/codesweep-ui/src"), react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
   build: {
     outDir: "../../internal/cli/viewer/single",
     emptyOutDir: true,

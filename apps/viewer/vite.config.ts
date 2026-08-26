@@ -30,5 +30,5 @@ function demoDataBlocks(): Plugin {
 
 export default defineConfig({
   plugins: [react(), demoDataBlocks()],
-  resolve: { alias: { "@codesweep-ai/ui": path.resolve(root, "../../vendor/codesweep-ui/src"), react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
+  resolve: { alias: { "@codesweep-ai/ui": path.resolve(root, "../../ui/codesweep-ui/src"), react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
 });
