@@ -6,8 +6,8 @@
 #
 # `make check` runs the whole gate list and skips what a runner cannot do: the
 # viewer sources need the design-system repository beside this checkout, and the
-# visual-parity gate needs a browser. Both report as skips, so the summary says
-# what was checked rather than implying more.
+# visual-parity gate needs a browser. Both report as skips where they run,
+# saying what was checked rather than implying more.
 name: ci
 
 on:

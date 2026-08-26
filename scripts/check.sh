@@ -1,30 +1,37 @@
 #!/usr/bin/env bash
-# Every gate, one command. Exits non-zero if any gate fails.
+# Every gate, one command. Exits non-zero on the first that fails.
 #
 # Deliberately provider-agnostic: CI calls this script rather than reimplementing
 # the gate list, so the gates cannot drift between "what CI runs" and "what a
 # developer runs".
 #
 # `make test` runs Go tests ONLY. It is not the suite. This is.
-set -uo pipefail
+set -euo pipefail
 cd "$(dirname "$0")/.."
 
-pass=0 fail=0 skip=0
-failed=()
-
-run() { # run <name> <command...>
-  local name="$1"; shift
-  printf '\n\033[1m==> %s\033[0m\n' "$name"
-  if "$@"; then
-    printf '    \033[32mPASS\033[0m %s\n' "$name"; pass=$((pass + 1))
+# say heads each gate, so a long run reads as a list rather than as a wall.
+# Bold where a terminal is reading it and plain where a pipe is, so
+# `make check > check.log` leaves a log somebody can read. The Makefiles in
+# this family carry the same shape.
+say() {
+  if [ -t 1 ]; then
+    printf '\n\033[1m==> %s\033[0m\n' "$1"
   else
-    printf '    \033[31mFAIL\033[0m %s\n' "$name"; fail=$((fail + 1)); failed+=("$name")
+    printf '\n==> %s\n' "$1"
   fi
 }
 
+run() { # run <name> <command...>
+  say "$1"; shift
+  "$@"
+}
+
+# A gate whose toolchain is absent says so and the run continues. That is not
+# the same as passing, and it is why the line is loud: a run reporting a skip
+# has not verified everything.
 skip_gate() { # skip_gate <name> <why>
-  printf '\n\033[1m==> %s\033[0m\n    \033[33mSKIP\033[0m %s\n' "$1" "$2"
-  skip=$((skip + 1))
+  say "$1"
+  printf '    SKIP %s\n' "$2"
 }
 
 # --- what this checkout can check --------------------------------------------
@@ -123,13 +130,3 @@ else
   skip_gate "ledger" \
     "cs-ledger is not installed: go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest"
 fi
-
-# --- summary -----------------------------------------------------------------
-printf '\n\033[1m─── summary ───\033[0m\n'
-printf '  passed: %d   failed: %d   skipped: %d\n' "$pass" "$fail" "$skip"
-if [ "$fail" -gt 0 ]; then
-  printf '\n  failed gates:\n'
-  printf '    - %s\n' "${failed[@]}"
-  exit 1
-fi
-printf '\n  \033[32mall gates green\033[0m\n'

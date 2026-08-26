@@ -37,9 +37,9 @@ One command, every gate, non-zero on any failure. It runs `scripts/check.sh`, wh
 runs, so the two lists cannot drift apart. That script covers `make prose`, `make refs`, `make oss`
 and `make surface`, so all four of `cs-lint`'s linters run before you push rather than in review.
 
-**`make test` runs Go tests only**, and it is not the suite, despite the name. Read the summary
-`make check` prints, not just its exit code. A gate whose toolchain is missing reports **SKIP** and
-still exits `0`, so a run reporting skips has not verified everything.
+**`make test` runs Go tests only**, and it is not the suite, despite the name. Read what
+`make check` prints, not just its exit code. A gate whose toolchain is missing reports **SKIP**
+where it runs and the run continues, so a run reporting skips has not verified everything.
 
 The three Go-installable tools are the exception: they **FAIL** rather than skip, because each is
 one `go install` away on a machine that already has Go. Install them once, pinning `golangci-lint`
@@ -57,7 +57,7 @@ you on the day it lands.
 ## Design rules
 
 1. **`make check` before every push.** Four of its gates skip on a machine that lacks what they
-   need, and the summary says which. A skipped gate is not a passed one.
+   need, and each says so where it runs. A skipped gate is not a passed one.
 2. **Never regenerate a golden to make a gate pass.** A **golden** is committed expected output, and
    `oracle/` holds one per fixture. Since the goldens are produced by the tool they test, "make it
    pass" is always available, which is why this is a rule and not a preference.
