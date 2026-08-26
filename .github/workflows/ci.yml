@@ -39,7 +39,7 @@ jobs:
 
       # gofmt, vet, the build, the version stamp, the Go suite, both linters:
       # the same target a contributor runs before pushing (CONTRIBUTING.md).
-      # The three tools the gates in scripts/check.sh shell out to.
+      # The three tools the gates under `make check` shell out to.
       # golangci-lint is pinned because it gains checks between releases:
       # unpinned, somebody else's release becomes a red build on a pull
       # request that touched nothing. cs-lint is deliberately not pinned: it is

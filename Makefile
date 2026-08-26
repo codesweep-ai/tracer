@@ -36,7 +36,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help build viewer viewer-build test coverage coverage-check ci coverage-baseline check check-version vet fmt fmt-check prose refs oss surface cs-lint-installed lint deadcode install uninstall snapshot release release-check clean
+.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity ledger cs-lint-installed lint deadcode install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -117,15 +117,63 @@ coverage-check: coverage
 coverage-baseline:
 	@scripts/coverage.sh baseline $(BASELINE_TIERS)
 
-## check: the full local gate — every check CI runs (scripts/check.sh)
-check:
-	@scripts/check.sh
+## viewer-lint: eslint over the viewer sources, where a Node toolchain is here
+##
+## The artifacts under internal/cli/viewer are committed, so a clone with no
+## npm builds and tests the binary all the same. This gate skips loudly there
+## rather than failing: a gate that fails for a reason unrelated to the change
+## teaches contributors to ignore it.
+viewer-lint:
+	@if [ -d apps/viewer ] && command -v npm >/dev/null 2>&1; then \
+		npm run lint; \
+	else \
+		echo "SKIP viewer-lint: npm is not installed, so the viewer sources cannot be built here"; \
+	fi
+
+## viewer-test: the viewer's own suite and its schema conformance
+viewer-test:
+	@if [ -d apps/viewer ] && command -v npm >/dev/null 2>&1; then \
+		npm test; \
+	else \
+		echo "SKIP viewer-test: npm is not installed, so the viewer sources cannot be built here"; \
+	fi
+
+## parity: visual parity of the viewer — DOM, pixels and interaction
+##
+## Needs the viewer sources and a browser. There is no Playwright cache in a
+## fresh checkout, so a machine without one skips rather than failing.
+parity:
+	@if [ ! -d apps/viewer ] || ! command -v npm >/dev/null 2>&1; then \
+		echo "SKIP parity: npm is not installed"; \
+	elif [ -z "$${CS_TRACER_CHROMIUM:-}" ] && [ ! -x /usr/bin/chromium-browser ]; then \
+		echo "SKIP parity: no browser, so set CS_TRACER_CHROMIUM=/path/to/chrome"; \
+	else \
+		npm run parity --workspace apps/viewer; \
+	fi
+
+## ledger: validate the issue records and prove ledger.html is current
+##
+## cs-ledger is a separate install, and a machine without it skips rather than
+## failing. CI installs it, so the gate is real where it counts.
+ledger:
+	@if command -v cs-ledger >/dev/null 2>&1; then \
+		cs-ledger check ledger; \
+	else \
+		echo "SKIP ledger: cs-ledger is not installed: go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest"; \
+	fi
+
+## check: the full local gate — every gate CI runs, in the order it runs them
+##
+## Formatting and vet come first: they are the cheapest, and a vet failure
+## usually means a language-version mismatch that makes everything after it
+## confusing. Four of these skip on a machine that lacks what they need, and
+## each says so where it runs. A skipped gate is not a passed one.
+check: fmt-check vet lint deadcode build check-version test coverage-check \
+       viewer-lint viewer-test parity prose refs oss surface ledger
 
 # say prints a heading above each gate, so a long run reads as a list rather
 # than as a wall. Bold where a terminal is reading it and plain where a pipe
-# is: `make ci > ci.log` should leave a log somebody can read. The escapes are
-# the same ones scripts/check.sh uses in tracer, which is where the shape came
-# from.
+# is: `make ci > ci.log` should leave a log somebody can read.
 define say
 @if [ -t 1 ]; then printf '\n\033[1m==> %s\033[0m\n' "$(1)"; else printf '\n==> %s\n' "$(1)"; fi
 endef
@@ -133,9 +181,9 @@ endef
 ## ci: every gate the CI workflow runs, on this machine
 ##
 ## One Linux leg of .github/workflows/ci.yml, in the order CI runs it, so a
-## red build is something you can see before you push rather than after. The
-## gate list lives in scripts/check.sh, which is what CI runs too, so the two
-## cannot drift apart. What this cannot reproduce it names on the way out.
+## red build is something you can see before you push rather than after. What
+## it cannot reproduce it names on the way out: a run that skipped a gate must
+## never read as a run that ran them all.
 ci:
 	$(call say,the gate a contributor runs before pushing)
 	@$(MAKE) --no-print-directory check

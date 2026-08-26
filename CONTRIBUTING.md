@@ -33,9 +33,13 @@ By opening a pull request you agree that your contribution ships under the
 make check
 ```
 
-One command, every gate, non-zero on any failure. It runs `scripts/check.sh`, which is also what CI
-runs, so the two lists cannot drift apart. That script covers `make prose`, `make refs`, `make oss`
-and `make surface`, so all four of `cs-lint`'s linters run before you push rather than in review.
+One command, every gate, and it stops at the first that fails. CI runs it too, so the two lists
+cannot drift apart. It covers `make prose`, `make refs`, `make oss` and `make surface`, so all four
+of `cs-lint`'s linters run before you push rather than in review.
+
+`make ci` is the wider one: `check`, and the jobs the workflow runs beside it. `cs-lint oss`
+compares the two, so a job added to the workflow and not to the target is reported rather than
+discovered after a push.
 
 **`make test` runs Go tests only**, and it is not the suite, despite the name. Read what
 `make check` prints, not just its exit code. A gate whose toolchain is missing reports **SKIP**
