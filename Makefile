@@ -36,7 +36,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check check-version vet fmt fmt-check prose refs oss surface cs-lint-installed lint deadcode install uninstall snapshot release release-check clean
+.PHONY: help build viewer viewer-build test coverage coverage-check ci coverage-baseline check check-version vet fmt fmt-check prose refs oss surface cs-lint-installed lint deadcode install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -120,6 +120,17 @@ coverage-baseline:
 ## check: the full local gate — every check CI runs (scripts/check.sh)
 check:
 	@scripts/check.sh
+
+## ci: every gate the CI workflow runs, on this machine
+##
+## One Linux leg of .github/workflows/ci.yml, in the order CI runs it, so a
+## red build is something you can see before you push rather than after. The
+## gate list lives in scripts/check.sh, which is what CI runs too, so the two
+## cannot drift apart. What this cannot reproduce it names on the way out.
+ci:
+	@$(MAKE) --no-print-directory check
+	@$(MAKE) --no-print-directory release-check
+	@printf '\nci: every gate ran. Not reproduced here: build-test on macOS.\n'
 
 ## check-version: assert the binary's stamp equals git describe. `version`
 ## prints "cs-tracer <stamp> (os/arch, go)", so compare the stamp field alone,
