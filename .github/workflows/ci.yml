@@ -42,15 +42,14 @@ jobs:
       # The three tools the gates under `make check` shell out to.
       # golangci-lint is pinned because it gains checks between releases:
       # unpinned, somebody else's release becomes a red build on a pull
-      # request that touched nothing. cs-lint is deliberately not pinned: it is
-      # this family's own linter, and a check it gains has to reach here on the
-      # day it lands.
+      # request that touched nothing. cs-lint and cs-ledger need no install
+      # step: they are pinned in go.mod and the make targets run them with
+      # `go tool`, so CI and a laptop use the same builds.
       - name: linters
         run: |
           set -euo pipefail
           go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1
           go install golang.org/x/tools/cmd/deadcode@latest
-          go install github.com/codesweep-ai/lint/cmd/cs-lint@latest
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: make check
@@ -90,10 +89,6 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-      - name: cs-lint
-        run: |
-          go install github.com/codesweep-ai/lint/cmd/cs-lint@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: make prose
 
   # The publication rules. fetch-depth: 0 because half of them read the
@@ -110,10 +105,6 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-      - name: cs-lint
-        run: |
-          go install github.com/codesweep-ai/lint/cmd/cs-lint@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: make refs
 
   # The publication rules. fetch-depth: 0 because half of them read the
@@ -129,10 +120,6 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-      - name: cs-lint
-        run: |
-          go install github.com/codesweep-ai/lint/cmd/cs-lint@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: make oss
 
   # The documented interface against the real one: every command they name
@@ -149,10 +136,6 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - name: cs-lint
-        run: |
-          go install github.com/codesweep-ai/lint/cmd/cs-lint@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: make surface
 
   # The ledger's freshness gate. CONTRIBUTING.md asks for a render and a check
@@ -168,6 +151,4 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - name: install cs-ledger
-        run: go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest
-      - run: cs-ledger check ledger
+      - run: make ledger

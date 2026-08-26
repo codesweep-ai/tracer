@@ -4,7 +4,7 @@
 # artifacts. `make check` runs every gate; `make test` runs Go tests only.
 # Follows the cs-ledger Makefile conventions.
 
-CS_LINT    ?= cs-lint
+CS_LINT    ?= go tool cs-lint
 BIN        := bin/cs-tracer
 PKG        := ./cmd/cs-tracer
 PREFIX     ?= $(HOME)/.local
@@ -36,7 +36,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity ledger cs-lint-installed lint deadcode install uninstall snapshot release release-check clean
+.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity ledger lint deadcode install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -153,14 +153,10 @@ parity:
 
 ## ledger: validate the issue records and prove ledger.html is current
 ##
-## cs-ledger is a separate install, and a machine without it skips rather than
-## failing. CI installs it, so the gate is real where it counts.
+## cs-ledger is pinned in go.mod and run with `go tool`, so this gate is real on
+## every machine rather than skipping where the binary was never installed.
 ledger:
-	@if command -v cs-ledger >/dev/null 2>&1; then \
-		cs-ledger check ledger; \
-	else \
-		echo "SKIP ledger: cs-ledger is not installed: go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest"; \
-	fi
+	go tool cs-ledger check ledger
 
 ## check: the full local gate — every gate CI runs, in the order it runs them
 ##
@@ -218,31 +214,28 @@ fmt-check:
 	fi
 
 ## prose: check how this repository's documents are written
-prose: cs-lint-installed
+prose:
 	$(CS_LINT) prose
 
 ## refs: check that everything the documents point at is there
-refs: cs-lint-installed
+refs:
 	$(CS_LINT) refs
 
 ## oss: check that this repo is in a shape it can be published in
-oss: cs-lint-installed
+oss:
 	$(CS_LINT) oss
 
 ## surface: check the docs against the binary, the code and the build
-surface: build cs-lint-installed
+surface: build
 	$(CS_LINT) surface
 
-# The four targets above are one shared tool: github.com/codesweep-ai/lint.
-# prose and refs ask for no binary and run first; surface reads the one
-# build makes.
+# The four targets above are one shared tool: github.com/codesweep-ai/lint,
+# pinned in go.mod and run with `go tool`, so the gates use the version this
+# repo records rather than whatever a machine happens to have installed. `make
+# repin` moves that pin. prose and refs ask for no binary and run first;
+# surface reads the one build makes.
 # Its knobs for this repo live in .cs-lint.yaml, and `cs-lint <linter> --explain`
 # says what each rule wants.
-cs-lint-installed:
-	@command -v $(CS_LINT) >/dev/null 2>&1 || { \
-		echo "cs-lint is not installed: go install github.com/codesweep-ai/lint/cmd/cs-lint@latest" >&2; \
-		exit 2; \
-	}
 
 ## lint: golangci-lint (if installed)
 ## lint: the Go rules from .golangci.yml (see that file for what is on and why)
