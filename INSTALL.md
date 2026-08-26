@@ -45,7 +45,7 @@ prints `dev`.
 
 ### Or build from source
 
-Needs **Go 1.26 or newer**. The viewer's compiled assets are committed, so a clone with no Node
+Needs **Go 1.27 or newer**. The viewer's compiled assets are committed, so a clone with no Node
 toolchain still builds a complete binary:
 
 ```bash

@@ -121,6 +121,15 @@ coverage-baseline:
 check:
 	@scripts/check.sh
 
+# say prints a heading above each gate, so a long run reads as a list rather
+# than as a wall. Bold where a terminal is reading it and plain where a pipe
+# is: `make ci > ci.log` should leave a log somebody can read. The escapes are
+# the same ones scripts/check.sh uses in tracer, which is where the shape came
+# from.
+define say
+@if [ -t 1 ]; then printf '\n\033[1m==> %s\033[0m\n' "$(1)"; else printf '\n==> %s\n' "$(1)"; fi
+endef
+
 ## ci: every gate the CI workflow runs, on this machine
 ##
 ## One Linux leg of .github/workflows/ci.yml, in the order CI runs it, so a
@@ -128,7 +137,9 @@ check:
 ## gate list lives in scripts/check.sh, which is what CI runs too, so the two
 ## cannot drift apart. What this cannot reproduce it names on the way out.
 ci:
+	$(call say,the gate a contributor runs before pushing)
 	@$(MAKE) --no-print-directory check
+	$(call say,release manifest)
 	@$(MAKE) --no-print-directory release-check
 	@printf '\nci: every gate ran. Not reproduced here: build-test on macOS.\n'
 
