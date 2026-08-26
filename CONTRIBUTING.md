@@ -29,34 +29,37 @@ By opening a pull request you agree that your contribution ships under the
 
 ## Before you push
 
+One command:
+
 ```sh
-make check
+make ci
 ```
 
-One command, every gate, and it stops at the first that fails. CI runs it too, so the two lists
-cannot drift apart. It covers `make prose`, `make refs`, `make oss` and `make surface`, so all four
-of `cs-lint`'s linters run before you push rather than in review.
+That is every gate the CI workflow has, on this machine and in the order the workflow takes them,
+so a green run here is a green run there. `make check` is the faster subset to keep beside you
+while you work, and `make ci` is the one that has to pass.
 
-`make ci` is the wider one: `check`, and the jobs the workflow runs beside it. `cs-lint oss`
-compares the two, so a job added to the workflow and not to the target is reported rather than
-discovered after a push.
+It shells out to tools the Go distribution does not carry. Install them once:
 
-**`make test` runs Go tests only**, and it is not the suite, despite the name. Read what
-`make check` prints, not just its exit code. A gate whose toolchain is missing reports **SKIP**
-where it runs and the run continues, so a run reporting skips has not verified everything.
-
-The three Go-installable tools are the exception: they **FAIL** rather than skip, because each is
-one `go install` away on a machine that already has Go. Install them once, pinning `golangci-lint`
-to the version CI runs:
-
-```sh
+```bash
 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1
 go install golang.org/x/tools/cmd/deadcode@latest
 go install github.com/codesweep-ai/lint/cmd/cs-lint@latest
+go install github.com/codesweep-ai/ledger/cmd/cs-ledger@latest
 ```
 
-`cs-lint` is not pinned. CI installs it from source the same way you do, so a check it gains reaches
-you on the day it lands.
+`golangci-lint` is pinned to the version CI runs, so a release that gains checks reaches you when
+you move the pin rather than on an unrelated pull request. `cs-lint` is not pinned: CI installs it
+from source the same way you do, so a check it gains reaches you on the day it lands.
+
+**`make test` runs Go tests only**, and it is not the suite, despite the name. Read what the run
+prints, not just its exit code. A gate whose toolchain is missing reports **SKIP** where it runs
+and the run carries on, so a run reporting skips has not verified everything.
+
+This repository keeps a **ledger** of open issues in `ledger/`. Read
+[`ledger/AGENTS.md`](ledger/AGENTS.md) before you start work, and follow it as you go. A commit
+that touches `ledger/` needs `cs-ledger render && cs-ledger check` to pass first, and
+`make ledger` runs the check half.
 
 ## Design rules
 
