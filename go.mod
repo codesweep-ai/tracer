@@ -8,7 +8,7 @@ tool (
 )
 
 require (
-	github.com/codesweep-ai/ledger v0.0.0-20260826050307-2fe83ad3f8b2 // indirect
+	github.com/codesweep-ai/ledger v0.0.0-20260826052602-c645f1744ac6 // indirect
 	github.com/codesweep-ai/lint v0.0.0-20260826044750-ad09a633ab9d // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
