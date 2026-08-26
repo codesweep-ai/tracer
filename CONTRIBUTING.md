@@ -34,8 +34,8 @@ make check
 ```
 
 One command, every gate, non-zero on any failure. It runs `scripts/check.sh`, which is also what CI
-runs, so the two lists cannot drift apart. That script covers `make docs`, `make oss` and `make
-surface`, so all four of `cs-lint`'s linters run before you push rather than in review.
+runs, so the two lists cannot drift apart. That script covers `make prose`, `make refs`, `make oss`
+and `make surface`, so all four of `cs-lint`'s linters run before you push rather than in review.
 
 **`make test` runs Go tests only**, and it is not the suite, despite the name. Read the summary
 `make check` prints, not just its exit code. A gate whose toolchain is missing reports **SKIP** and

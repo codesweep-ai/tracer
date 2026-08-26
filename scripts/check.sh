@@ -94,9 +94,13 @@ fi
 
 # The prose rules from CONTRIBUTING.md: how the documents are written, and the
 # counts a sentence must not assert, which drifted three times in one session
-# before anything checked them. The same target resolves every reference the
-# documents make, which needs no binary either.
-run "prose and refs (cs-lint prose, cs-lint refs)" make docs
+# before anything checked them.
+run "prose (cs-lint prose)" make prose
+
+# Everything the documents point at, resolved against the tree: a path, a spec
+# section a comment cites, an issue identifier, a document the router owes a
+# line. It asks for no binary, so it answers before the build.
+run "references (cs-lint refs)" make refs
 
 # The rules a repository has to satisfy to be published: the licence, the
 # document set, the release path, and what a stranger's clone can do with it.
@@ -109,8 +113,7 @@ run "open-source readiness (cs-lint oss)" make oss
 
 # The documented interface against the binary built above: every command they
 # name, every command it carries, the settings the code reads, and every sample
-# output re-run now. The paths and spec sections the source cites are resolved
-# by `cs-lint refs`, which needs no binary and runs under `make docs`.
+# output re-run now.
 run "docs against the binary (cs-lint surface)" make surface
 
 # The issue ledger validates with its own tool, which is a separate install.
