@@ -13,7 +13,7 @@ import _ "embed"
 //
 // Embedded as a FILE rather than a Go string literal on purpose: the same bytes
 // are reviewable as markdown in the repository and shipped in the binary, so the
-// two cannot drift. A `cs-lint walkthrough` gate asserts the manual names every
+// two cannot drift. A `cs-lint surface` gate asserts the manual names every
 // flag the parser accepts, and that the copy the binary prints is this file.
 //
 // Named MANUAL.md, not AGENTS.md: this documents USING the tool, while AGENTS.md

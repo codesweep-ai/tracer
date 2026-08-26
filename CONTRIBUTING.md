@@ -35,7 +35,7 @@ make check
 
 One command, every gate, non-zero on any failure. It runs `scripts/check.sh`, which is also what CI
 runs, so the two lists cannot drift apart. That script covers `make docs`, `make oss` and `make
-walkthrough`, so all three of `cs-lint`'s linters run before you push rather than in review.
+surface`, so all four of `cs-lint`'s linters run before you push rather than in review.
 
 **`make test` runs Go tests only**, and it is not the suite, despite the name. Read the summary
 `make check` prints, not just its exit code. A gate whose toolchain is missing reports **SKIP** and
@@ -146,7 +146,7 @@ has one job, so a fact lives in exactly one of them and the others link to it.
 | Where an agent working in this repository looks first | `AGENTS.md` |
 
 `MANUAL.md` is embedded in the binary through `//go:embed` in `assets.go`, and `cs-tracer manual`
-prints it. Do not move or rename it. `cs-lint walkthrough` compares the copy inside
+prints it. Do not move or rename it. `cs-lint surface` compares the copy inside
 `bin/cs-tracer` against the file, so run `make build` after editing it. Without that, the gate
 reports a mismatch you did not cause.
 
@@ -154,7 +154,7 @@ reports a mismatch you did not cause.
 so it routes to the documents above and holds no knowledge that could go stale against them.
 
 A comment or a document citing a spec section by number, as `§3.1`, is checked by `cs-lint
-walkthrough` against the numbered sections of [SPEC.md](SPEC.md). Renumbering one breaks every
+refs` against the numbered sections of [SPEC.md](SPEC.md). Renumbering one breaks every
 citation into it at once.
 
 ## Writing
@@ -168,7 +168,7 @@ edit one:
    the sentence backwards.
 3. **Give every sentence a subject and a verb.** "Two version numbers, one verdict, one remedy"
    reads as knowing rather than clear. Say what the thing is.
-4. **A walkthrough is steps that work.** Put the reasons somewhere else. A reader working through
+4. **A how-to is steps that work.** Put the reasons somewhere else. A reader working through
    one wants commands that run.
 5. **Describe what the software does, not how it came to do it.** Leave out what the project used
    to do, what was tried and dropped, and numbers from a run somebody did once.
@@ -180,7 +180,7 @@ The mechanical rules are enforced rather than restated here.
 repository. To read what a rule wants and the guidance behind it:
 
 ```bash
-cs-lint docs --explain
+cs-lint prose --explain
 ```
 
 That listing is the authority. Where this section and the linter disagree, the linter is right.

@@ -36,7 +36,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check check-version vet fmt fmt-check docs oss walkthrough cs-lint-installed lint deadcode install uninstall snapshot release release-check clean
+.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check check-version vet fmt fmt-check docs oss surface cs-lint-installed lint deadcode install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -147,19 +147,21 @@ fmt-check:
 		exit 1; \
 	fi
 
-## docs: the prose rules from CONTRIBUTING.md, over every doc in the set
+## docs: the prose rules, and the references the documents make
 docs: cs-lint-installed
-	$(CS_LINT) docs
+	$(CS_LINT) prose
+	$(CS_LINT) refs
 
 ## oss: check that this repo is in a shape it can be published in
 oss: cs-lint-installed
 	$(CS_LINT) oss
 
-## walkthrough: check the docs against the binary, the code and the build
-walkthrough: build cs-lint-installed
-	$(CS_LINT) walkthrough
+## surface: check the docs against the binary, the code and the build
+surface: build cs-lint-installed
+	$(CS_LINT) surface
 
 # The three targets above are one shared tool: github.com/codesweep-ai/lint.
+# docs asks for no binary and runs first; surface reads the one build makes.
 # Its knobs for this repo live in .cs-lint.yaml, and `cs-lint <linter> --explain`
 # says what each rule wants.
 cs-lint-installed:
