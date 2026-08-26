@@ -30,7 +30,6 @@ builds:
       - -trimpath
     ldflags:
       - -s -w
-      - -X github.com/codesweep-ai/tracer/internal/cli.version={{ .Version }}
     goos:
       - linux
       - darwin

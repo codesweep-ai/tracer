@@ -9,10 +9,10 @@ BIN        := bin/cs-tracer
 PKG        := ./cmd/cs-tracer
 PREFIX     ?= $(HOME)/.local
 VERSION    := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-# The -X path names the module path exactly: the Go linker SILENTLY ignores an
-# -X naming a symbol that does not exist, so a wrong path builds fine and ships
-# an empty version. `make check-version` is the only real verification.
-LDFLAGS    := -s -w -X github.com/codesweep-ai/tracer/internal/cli.version=$(VERSION)
+# No -X version stamp: the version comes from the build info Go embeds itself,
+# so `make install`, `go install ...@latest` and `go tool` all report the same
+# string for the same commit. `make check-version` holds the binary to the tree.
+LDFLAGS    := -s -w
 GO_FILES   := $(shell git ls-files '*.go')
 VIEWER_OUT := internal/cli/viewer
 
@@ -187,14 +187,20 @@ ci:
 	@$(MAKE) --no-print-directory release-check
 	@printf '\nci: every gate ran. Not reproduced here: build-test on macOS.\n'
 
-## check-version: assert the binary's stamp equals git describe. `version`
-## prints "cs-tracer <stamp> (os/arch, go)", so compare the stamp field alone,
-## and read it in the recipe: $(shell) would run the binary before build made it.
+## check-version: assert the binary was built from this tree. `version` prints
+## "cs-tracer <stamp> (os/arch, go)", so compare the stamp field alone, and read
+## it in the recipe: $(shell) would run the binary before build made it.
+##
+## The stamp is Go's own build info, so it is the tag when HEAD carries one and
+## a pseudo-version carrying HEAD's commit otherwise. Match on whichever of the
+## two this tree is at; a stale binary names an older commit and fails.
 check-version: build
 	@stamp="$$($(BIN) version | awk '{print $$2}')"; \
-	test "$$stamp" = "$(VERSION)" \
-		|| { echo "version mismatch: binary says '$$stamp', git says '$(VERSION)'" >&2; exit 1; }
-	@echo "version OK: $(VERSION)"
+	want="$$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short=12 HEAD)"; \
+	case "$$stamp" in \
+		*"$$want"*) echo "version OK: $$stamp" ;; \
+		*) echo "version mismatch: binary says '$$stamp', tree is at $$want" >&2; exit 1 ;; \
+	esac
 
 ## vet: go vet
 vet:
@@ -269,10 +275,12 @@ deadcode:
 ## the Go toolchain, and whether a workspace is overriding the go.mod pins. Each
 ## line is read by asking that binary its own version. It deliberately depends on
 ## nothing and runs from source: reporting a version must not trigger a build.
+## -buildvcs=true because `go run` leaves out the VCS stamp by default, and that
+## stamp is the version now that nothing injects one with -X.
 .PHONY: versions
 versions:
-	@if out="$$(go run -ldflags '$(LDFLAGS)' $(PKG) version 2>&1)"; then \
-		printf '%-12s %-38s %s\n' '$(notdir $(BIN))' "$$(printf '%s\n' "$$out" | awk 'NR==1{print $$2}')" 'this repo'; \
+	@if out="$$(go run -buildvcs=true -ldflags '$(LDFLAGS)' $(PKG) version 2>&1)"; then \
+		printf '%-12s %-42s %s\n' '$(notdir $(BIN))' "$$(printf '%s\n' "$$out" | awk 'NR==1{print $$2}')" 'this repo'; \
 	else \
 		printf '%-12s %s\n' '$(notdir $(BIN))' "FAILED — $$(printf '%s\n' "$$out" | head -1)"; \
 	fi
