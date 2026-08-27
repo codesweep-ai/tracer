@@ -37,21 +37,14 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      # No linter install step: golangci-lint, deadcode and actionlint are pinned
+      # as Go tools, so the gates build them from the module cache at the
+      # versions this repository records. An unpinned linter would turn somebody
+      # else's release into a red build on a pull request that touched nothing.
+      # Nor are the cs- tools here: they are pinned in go.mod too.
+
       # gofmt, vet, the build, the version stamp, the Go suite, both linters:
       # the same target a contributor runs before pushing (CONTRIBUTING.md).
-      # The three tools the gates under `make check` shell out to.
-      # golangci-lint is pinned because it gains checks between releases:
-      # unpinned, somebody else's release becomes a red build on a pull
-      # request that touched nothing. cs-lint and cs-ledger need no install
-      # step: they are pinned in go.mod and the make targets run them with
-      # `go tool`, so CI and a laptop use the same builds.
-      - name: linters
-        run: |
-          set -euo pipefail
-          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1
-          go install golang.org/x/tools/cmd/deadcode@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-
       - name: make check
         run: make check
 
@@ -75,6 +68,22 @@ jobs:
         with:
           version: "~> v2"
           args: check
+
+  # An invalid workflow file fails the run with zero jobs and no annotation in
+  # the API, which is the least legible failure the forge produces. actionlint
+  # is pinned as a Go tool in go.mod, so a clean `make actionlint` on a laptop
+  # means a clean one here. Extra runner labels it does not know about live in
+  # .github/actionlint.yaml.
+  actionlint:
+    name: workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: make actionlint
 
   # Its own job because it needs no matrix and builds nothing of this
   # repository, so it answers in a minute and answers even when the tests are

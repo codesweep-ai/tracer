@@ -5,6 +5,12 @@
 # Follows the cs-ledger Makefile conventions.
 
 CS_LINT    ?= go tool cs-lint
+# The linters the gates shell out to, all pinned and all built from the module
+# cache, so a fresh checkout runs `make check` with nothing installed by hand.
+# deadcode and actionlint are `tool` directives in go.mod and run with `go tool`.
+# golangci-lint is one in go.golangci.mod, which says at its head why it needs a
+# module file of its own.
+GOLANGCI   := bin/tools/golangci-lint
 BIN        := bin/cs-tracer
 PKG        := ./cmd/cs-tracer
 PREFIX     ?= $(HOME)/.local
@@ -36,7 +42,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity ledger lint deadcode install uninstall snapshot release release-check clean
+.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity ledger lint deadcode actionlint install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -183,6 +189,8 @@ endef
 ci:
 	$(call say,the gate a contributor runs before pushing)
 	@$(MAKE) --no-print-directory check
+	$(call say,actionlint)
+	@$(MAKE) --no-print-directory actionlint
 	$(call say,release manifest)
 	@$(MAKE) --no-print-directory release-check
 	@printf '\nci: every gate ran. Not reproduced here: build-test on macOS.\n'
@@ -243,7 +251,17 @@ surface: build
 # Its knobs for this repo live in .cs-lint.yaml, and `cs-lint <linter> --explain`
 # says what each rule wants.
 
-## lint: golangci-lint (if installed)
+# Built rather than run with `go tool`, because -modfile is refused in workspace
+# mode. The build is the only step that reads go.golangci.mod, so only the build
+# turns the workspace off; the linter then runs with it back on, against the
+# checkouts a workspace is there to serve. A rebuild costs about a fifth of a
+# second once the binary is current, which is what lets it be a prerequisite
+# rather than a step somebody remembers.
+$(GOLANGCI): go.golangci.mod
+	@mkdir -p $(@D)
+	@GOWORK=off go build -modfile=go.golangci.mod -o $@ \
+		github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+
 ## lint: the Go rules from .golangci.yml (see that file for what is on and why)
 ## node_modules is excluded for the same reason as deadcode below: flatted ships
 ## a Go port beside its JavaScript, and linting somebody else's vendored code
@@ -251,51 +269,52 @@ surface: build
 ## not in .golangci.yml, which stays byte-identical across the family. Bare
 ## `golangci-lint run` looked clean only because CI installs node_modules AFTER
 ## this gate runs — every contributor who had built once saw the failure.
-lint:
-	@command -v golangci-lint >/dev/null 2>&1 || { \
-		echo "golangci-lint is not installed; see https://golangci-lint.run/welcome/install/" >&2; \
-		exit 2; \
-	}
-	@golangci-lint run $$(go list -f '{{.Dir}}' ./... | grep -v /node_modules/)
+lint: $(GOLANGCI)
+	@$(GOLANGCI) run $$(go list -f '{{.Dir}}' ./... | grep -v /node_modules/)
 
 ## deadcode: functions no entry point reaches. golangci-lint's `unused` cannot
 ## see this — it reasons one package at a time, so a function whose only caller
 ## lives in another package looks used. node_modules is excluded: flatted ships
 ## a Go port beside its JavaScript, and nothing here was ever meant to call it.
 deadcode:
-	@command -v deadcode >/dev/null 2>&1 || { \
-		echo "deadcode is not installed: go install golang.org/x/tools/cmd/deadcode@latest" >&2; \
-		exit 2; \
-	}
 	@pkgs="$$(go list ./... | grep -v /node_modules/)"; \
-	out="$$(deadcode -test $$pkgs)"; \
+	out="$$(go tool deadcode -test $$pkgs)"; \
 	if [ -n "$$out" ]; then echo "$$out"; exit 1; fi
 
+## actionlint: the workflow files, which the forge validates only by refusing to
+## run them. Extra runner labels it does not know about go in .github/actionlint.yaml.
+actionlint:
+	go tool actionlint
+
 ## versions: what this build is made of — this repo's binary, every pinned tool,
-## the Go toolchain, and whether a workspace is overriding the go.mod pins. Each
-## line is read by asking that binary its own version. It deliberately depends on
-## nothing and runs from source: reporting a version must not trigger a build.
+## the Go toolchain, and whether a workspace is overriding the go.mod pins. The
+## binary answers for itself; every tool is read out of the module file that
+## pins it, which is the one place a `go tool` run can get it from. It
+## deliberately depends on nothing and runs from source: reporting a version
+## must not trigger a build.
 ## -buildvcs=true because `go run` leaves out the VCS stamp by default, and that
 ## stamp is the version now that nothing injects one with -X.
 .PHONY: versions
 versions:
 	@if out="$$(go run -buildvcs=true -ldflags '$(LDFLAGS)' $(PKG) version 2>&1)"; then \
-		printf '%-12s %-42s %s\n' '$(notdir $(BIN))' "$$(printf '%s\n' "$$out" | awk 'NR==1{print $$2}')" 'this repo'; \
+		printf '%-14s %-42s %s\n' '$(notdir $(BIN))' "$$(printf '%s\n' "$$out" | awk 'NR==1{print $$2}')" 'this repo'; \
 	else \
-		printf '%-12s %s\n' '$(notdir $(BIN))' "FAILED — $$(printf '%s\n' "$$out" | head -1)"; \
+		printf '%-14s %s\n' '$(notdir $(BIN))' "FAILED — $$(printf '%s\n' "$$out" | head -1)"; \
 	fi
-	@for t in $$(go list tool 2>/dev/null); do \
-		if out="$$(go tool $$t version 2>&1)"; then \
-			printf '%-12s %s\n' "$$(basename $$t)" "$$(printf '%s\n' "$$out" | awk 'NR==1{print $$2}')"; \
-		else \
-			printf '%-12s %s\n' "$$(basename $$t)" "FAILED — $$(printf '%s\n' "$$out" | head -1)"; \
-		fi; \
+	@ver='{{with .Module}}{{if .Replace}}{{.Replace.Path}}{{else if .Version}}{{.Version}}{{else}}{{.Dir}}{{end}}{{end}}'; \
+	for t in $$(go list tool 2>/dev/null); do \
+		v="$$(go list -f "$$ver" $$t 2>/dev/null)"; \
+		printf '%-14s %s\n' "$$(basename $$t)" "$${v:-FAILED}"; \
+	done; \
+	for t in $$(GOWORK=off go list -modfile=go.golangci.mod tool 2>/dev/null); do \
+		v="$$(GOWORK=off go list -modfile=go.golangci.mod -f "$$ver" $$t 2>/dev/null)"; \
+		printf '%-14s %s\n' "$$(basename $$t)" "$${v:-FAILED}"; \
 	done
-	@printf '%-12s %s\n' 'go' "$$(go env GOVERSION)"
+	@printf '%-14s %s\n' 'go' "$$(go env GOVERSION)"
 	@w="$$(go env GOWORK)"; \
 	case "$$w" in \
-		''|off) printf '%-12s %s\n' 'workspace' 'off — versions above are go.mod pins' ;; \
-		*)      printf '%-12s %s\n' 'workspace' "$$w — local checkouts override the go.mod pins" ;; \
+		''|off) printf '%-14s %s\n' 'workspace' 'off — versions above are go.mod pins' ;; \
+		*)      printf '%-14s %s\n' 'workspace' "$$w — local checkouts override the go.mod pins" ;; \
 	esac
 
 ## repin: move every codesweep-ai tool pin to its branch tip, then report. Uses
