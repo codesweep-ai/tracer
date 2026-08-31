@@ -21,6 +21,43 @@ VERSION    := $(shell git describe --tags --always --dirty 2>/dev/null || echo d
 LDFLAGS    := -s -w
 GO_FILES   := $(shell git ls-files '*.go')
 VIEWER_OUT := internal/cli/viewer
+# The four artifacts //go:embed reaches for, and everything they are built from.
+# Real files with real prerequisites, so the Vite builds run when a viewer
+# source moves and not on every `make build`. Keep $(VIEWER_SRC) complete: it is
+# what stands between a viewer edit and a binary shipping the previous assets.
+# $(VIEWER_MAIN) stands for the set in the rules below: one command writes all
+# four, and make cannot say that portably. A grouped target (&:) says it
+# exactly, but it needs GNU make 4.3, and ci.yml builds on macOS, where make is
+# 3.81 and reads the `&` as a fifth target -- running the pair of Vite builds
+# once per artifact.
+VIEWER_MAIN := $(VIEWER_OUT)/single/index.html
+VIEWER_REST := $(VIEWER_OUT)/split/index.html \
+               $(VIEWER_OUT)/split/assets/app.js $(VIEWER_OUT)/split/assets/app.css
+VIEWER_ARTIFACTS := $(VIEWER_MAIN) $(VIEWER_REST)
+VIEWER_SRC := $(shell find apps/viewer/src apps/viewer/public apps/viewer/scripts ui \
+                    -name node_modules -prune -o -type f -print 2>/dev/null) \
+              $(wildcard apps/viewer/index.html apps/viewer/*.json apps/viewer/*.ts apps/viewer/*.js) \
+              package.json package-lock.json
+# npm writes this file as it installs, so it is the marker for "node_modules
+# already matches the lockfile" — the one thing `npm ci` needs to be re-run for.
+NODE_STAMP := node_modules/.package-lock.json
+
+# What $(BIN) is made of. It is a real target rather than a phony one, so make
+# skips the build when the binary is already newer than every input — which is
+# what stops `make install` from repeating the `make build` that just ran.
+#
+# `find` rather than $(GO_FILES): a source file that is new and not yet added to
+# the index is still an input. $(GIT_DIR)/HEAD is one because the version is the
+# VCS stamp Go embeds, so a commit changes the binary even when no source did.
+# The embedded files are listed because //go:embed makes them compile-time
+# inputs; add to the list when a new one is embedded.
+GIT_DIR    := $(shell git rev-parse --git-dir 2>/dev/null)
+EMBED_DEPS := MANUAL.md internal/pricingdata/pricing.json $(VIEWER_ARTIFACTS)
+# //go:embed inputs deliberately left out of $(EMBED_DEPS). Nothing belongs here
+# yet; `make embed-check` allows exactly this list and nothing else.
+EMBED_EXEMPT :=
+BUILD_DEPS := $(shell find . \( -name bin -o -name dist -o -name node_modules -o -name .git \) -prune -o -name '*.go' -print) \
+              go.mod go.sum .goreleaser.yaml Makefile $(EMBED_DEPS) $(wildcard $(GIT_DIR)/HEAD)
 
 # Coverage is not a separate mode: the test target below writes Go binary
 # coverage data into its own tier directory under $(COVERDIR), and `make
@@ -42,7 +79,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity ledger lint deadcode actionlint install uninstall snapshot release release-check clean
+.PHONY: help tidy-check embed-check build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity ledger lint deadcode actionlint install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -54,43 +91,77 @@ help:
 	@echo "  PREFIX=$(PREFIX) (install location; override with make install PREFIX=/usr/local)"
 
 # The viewer build is ordered STRICTLY before build: //go:embed needs the
-# artifacts inside the module tree at compile time.
+# artifacts inside the module tree at compile time. $(BIN) lists them as
+# prerequisites, so the ordering is the dependency graph rather than a
+# convention somebody has to remember.
 #
-# Both Vite builds AND their byte-level assertions run on every build, with no
-# stamp file short-circuiting them. An earlier stamp-based version had no
+# Both Vite builds AND their byte-level assertions run whenever a viewer source
+# is newer than the artifacts. An earlier stamp-based version had no
 # prerequisites and could silently retain STALE embedded assets — producing a
-# binary that passed every gate while shipping an old viewer. Do not reintroduce
-# a stamp here without prerequisites that actually track the viewer sources.
+# binary that passed every gate while shipping an old viewer; the version after
+# it had the opposite fault and rebuilt on every `make build`, `make test` and
+# `make install` alike, `npm ci` included. $(VIEWER_SRC) is what makes the check
+# honest, so nothing here may short-circuit without prerequisites that track it.
 #
 # The artifacts under internal/cli/viewer are COMMITTED, so a clone with no Node
 # toolchain still builds the binary. They are rebuilt from apps/viewer wherever
 # npm is available; the design system it imports is vendored under ui/, so
 # no second checkout is involved.
-viewer:
+viewer: $(VIEWER_ARTIFACTS)
 ifeq ($(and $(wildcard apps/viewer/package.json),$(shell command -v npm 2>/dev/null)),)
-	@test -f $(VIEWER_OUT)/single/index.html -a -f $(VIEWER_OUT)/split/index.html \
-		-a -f $(VIEWER_OUT)/split/assets/app.js -a -f $(VIEWER_OUT)/split/assets/app.css \
-		|| { echo "the embedded viewer artifacts are missing, and the sources cannot be built here" >&2; exit 1; }
 	@echo "viewer: building from the committed artifacts under $(VIEWER_OUT)"
+
+# Nothing here can produce an artifact, so this rule fires only for one that is
+# missing, and says why rather than letting make report a missing target.
+$(VIEWER_ARTIFACTS):
+	@echo "the embedded viewer artifacts are missing, and the sources cannot be built here" >&2
+	@exit 1
 else
-	$(MAKE) viewer-build
+
+$(VIEWER_MAIN): $(VIEWER_SRC) $(NODE_STAMP)
+	@$(MAKE) --no-print-directory viewer-build
+
+# Written by the same two Vite builds, and after $(VIEWER_MAIN), so they are
+# never the older. The guard covers the one thing the dependency cannot: one of
+# them deleted on its own while $(VIEWER_MAIN) is still current. It runs the
+# build at most once -- the second and third targets find their file there.
+$(VIEWER_REST): $(VIEWER_MAIN)
+	@test -f $@ || $(MAKE) --no-print-directory viewer-build
 endif
 
 ## viewer-build: run both Vite builds and assert the artifact constraints
-viewer-build:
-	npm ci
+viewer-build: $(NODE_STAMP)
 	npm run build:single --workspace apps/viewer
 	npm run build:split --workspace apps/viewer
 	npm run assert:builds --workspace apps/viewer
 
+# `npm ci` empties node_modules and repopulates it from the lockfile, which is
+# several seconds of nothing when the lockfile has not moved. Every target that
+# shells out to npm asks for this first, because none of them can now count on
+# a viewer build having just run one.
+$(NODE_STAMP): package.json package-lock.json
+	npm ci
+	@touch $@
+
 ## build: host binary at bin/cs-tracer via goreleaser (single target; use this,
-## never plain `go build`). viewer stays a prerequisite rather than a goreleaser
-## hook: its artifacts are committed so a release needs no Node toolchain, and
-## only a build from this tree should refresh them.
-build: viewer
-	@mkdir -p $(dir $(BIN))
+## never plain `go build`). The viewer stays a prerequisite rather than a
+## goreleaser hook: its artifacts are committed so a release needs no Node
+## toolchain, and only a build from this tree should refresh them.
+##
+## A phony alias for $(BIN), so the work sits on a file target and make can skip
+## it. `make build install`, and an `install` after a build, then copy what is
+## already there instead of building the same binary a second time.
+##
+## --skip=before, because .goreleaser.yaml's before hooks are `go mod tidy`,
+## `go vet ./...` and `go test ./...`: release gates that `make check` runs in
+## its own right, and that made every build pay for the whole suite and rewrite
+## go.mod as a side effect. `make snapshot` and `make release` still run them.
+build: viewer $(BIN)
+
+$(BIN): $(BUILD_DEPS)
+	@mkdir -p $(dir $@)
 	@if command -v $(GORELEASER) >/dev/null 2>&1; then \
-		VERSION='$(VERSION)' $(GORELEASER) build --single-target --snapshot --clean --output $(BIN); \
+		VERSION='$(VERSION)' $(GORELEASER) build --single-target --snapshot --clean --skip=before --output $@; \
 	else \
 		echo "goreleaser not found; using go build (run 'make build-go' explicitly to force)"; \
 		$(MAKE) build-go; \
@@ -131,6 +202,7 @@ coverage-baseline:
 ## teaches contributors to ignore it.
 viewer-lint:
 	@if [ -d apps/viewer ] && command -v npm >/dev/null 2>&1; then \
+		$(MAKE) --no-print-directory $(NODE_STAMP); \
 		npm run lint; \
 	else \
 		echo "SKIP viewer-lint: npm is not installed, so the viewer sources cannot be built here"; \
@@ -139,6 +211,7 @@ viewer-lint:
 ## viewer-test: the viewer's own suite and its schema conformance
 viewer-test:
 	@if [ -d apps/viewer ] && command -v npm >/dev/null 2>&1; then \
+		$(MAKE) --no-print-directory $(NODE_STAMP); \
 		npm test; \
 	else \
 		echo "SKIP viewer-test: npm is not installed, so the viewer sources cannot be built here"; \
@@ -154,6 +227,7 @@ parity:
 	elif [ -z "$${CS_TRACER_CHROMIUM:-}" ] && [ ! -x /usr/bin/chromium-browser ]; then \
 		echo "SKIP parity: no browser, so set CS_TRACER_CHROMIUM=/path/to/chrome"; \
 	else \
+		$(MAKE) --no-print-directory $(NODE_STAMP); \
 		npm run parity --workspace apps/viewer; \
 	fi
 
@@ -170,7 +244,7 @@ ledger:
 ## usually means a language-version mismatch that makes everything after it
 ## confusing. Four of these skip on a machine that lacks what they need, and
 ## each says so where it runs. A skipped gate is not a passed one.
-check: fmt-check vet lint deadcode build check-version test coverage-check \
+check: fmt-check tidy-check embed-check vet lint deadcode build check-version test coverage-check \
        viewer-lint viewer-test parity prose refs oss surface ledger
 
 # say prints a heading above each gate, so a long run reads as a list rather
@@ -226,6 +300,52 @@ fmt-check:
 		echo "$$unformatted"; \
 		exit 1; \
 	fi
+
+## tidy-check: go.mod and go.sum are what `go mod tidy` would write
+##
+## The build no longer runs `go mod tidy`. It used to, as a goreleaser before
+## hook, so every `make build` rewrote the module files as a side effect and
+## nothing ever reported the drift. This gate replaces it and is the stronger of
+## the two: it says what moved instead of quietly absorbing it, and it puts the
+## originals back before failing, so a red gate leaves the tree as it found it.
+## GOWORK=off, so a workspace serving local checkouts cannot make an untidy
+## go.mod look tidy.
+tidy-check:
+	@t="$$(mktemp -d)"; cp go.mod go.sum "$$t/"; \
+	GOWORK=off go mod tidy || { cp "$$t/go.mod" go.mod; cp "$$t/go.sum" go.sum; rm -rf "$$t"; exit 1; }; \
+	if cmp -s go.mod "$$t/go.mod" && cmp -s go.sum "$$t/go.sum"; then \
+		rm -rf "$$t"; echo "tidy: go.mod and go.sum are what \`go mod tidy\` writes"; \
+	else \
+		echo "go.mod/go.sum are not tidy; \`go mod tidy\` would apply:" >&2; \
+		diff -u "$$t/go.mod" go.mod >&2; diff -u "$$t/go.sum" go.sum >&2; \
+		cp "$$t/go.mod" go.mod; cp "$$t/go.sum" go.sum; rm -rf "$$t"; \
+		exit 1; \
+	fi
+
+## embed-check: every //go:embed input is a prerequisite of the binary
+##
+## $(EMBED_DEPS) is written by hand, and an embed added without a line there
+## leaves make holding a binary it calls current while the bytes inside it have
+## moved -- the one kind of staleness no other gate can see. `go list` resolves
+## the patterns itself, so this compares against what the toolchain actually
+## embeds rather than re-reading the directives and reimplementing their globs.
+embed-check:
+	@deps="$$(mktemp)"; embeds="$$(mktemp)"; raw="$$(mktemp)"; \
+	printf '%s\n' $(patsubst ./%,%,$(BUILD_DEPS)) $(EMBED_EXEMPT) | LC_ALL=C sort -u >"$$deps"; \
+	if ! go list -f '{{range .EmbedFiles}}{{$$.Dir}}/{{.}}{{"\n"}}{{end}}' ./... >"$$raw"; then \
+		rm -f "$$deps" "$$embeds" "$$raw"; \
+		echo "embed-check: go list failed, so the embed set is unknown" >&2; exit 1; \
+	fi; \
+	grep -v '/node_modules/' "$$raw" | sed "s|^$$PWD/||" | grep . | LC_ALL=C sort -u >"$$embeds"; \
+	missing="$$(LC_ALL=C comm -23 "$$embeds" "$$deps")"; n="$$(wc -l <"$$embeds")"; \
+	rm -f "$$deps" "$$embeds" "$$raw"; \
+	if [ -n "$$missing" ]; then \
+		echo "//go:embed reads these, and no prerequisite of $(BIN) covers them:" >&2; \
+		printf '  %s\n' $$missing >&2; \
+		echo "add each to EMBED_DEPS, or a change to one will not rebuild the binary" >&2; \
+		exit 1; \
+	fi; \
+	echo "embed: all $$n //go:embed inputs are prerequisites of $(notdir $(BIN))"
 
 ## prose: check how this repository's documents are written
 prose:

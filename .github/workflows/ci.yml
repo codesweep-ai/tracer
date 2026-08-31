@@ -147,6 +147,30 @@ jobs:
           cache: true
       - run: make surface
 
+  # The viewer's freshness gate, and the only one that can catch a stale
+  # artifact. The compiled viewer under internal/cli/viewer is COMMITTED and
+  # //go:embed reads it at compile time, so a binary can pass every other gate
+  # while shipping an old viewer. `make build` rebuilds it whenever a source
+  # under apps/viewer or ui/ is newer, but that check is a list of prerequisites
+  # somebody has to keep complete; this job needs no list. It rebuilds
+  # unconditionally and fails if the result differs from what is committed.
+  #
+  # The other jobs have no Node toolchain and take the committed-artifact path,
+  # which is what a clone without npm gets. This one installs Node on purpose.
+  viewer:
+    name: viewer artifacts are current
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20 # package.json says >=20; the floor is what CI proves
+          cache: npm
+      - run: make viewer-build
+      - name: the committed artifacts match the sources
+        run: git diff --exit-code -- internal/cli/viewer
+
   # The ledger's freshness gate. CONTRIBUTING.md asks for a render and a check
   # before every commit that touches ledger/, and `make check` skips it where
   # cs-ledger is not installed — so CI installs it and makes the gate real.

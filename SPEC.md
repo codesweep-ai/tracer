@@ -344,10 +344,11 @@ a Node toolchain. The compiled viewer assets are committed, so every Go gate abo
 clone and the binary builds with Go alone.
 
 Rebuilding needs **Node 20 or newer**, and `make build` takes that path whenever `npm` is on your
-PATH. It runs `npm ci` and the Vite builds first, because `//go:embed` reads the artifacts at
-compile time. A full `make check` needs npm for the viewer gates, so install it before you push.
-Re-run `make build` after you edit `apps/viewer`, which is what keeps the committed artifacts
-matching the sources.
+PATH and a source under `apps/viewer` or `ui/` is newer than the artifacts. It runs `npm ci` and
+the Vite builds first, because `//go:embed` reads the artifacts at compile time; when nothing has
+moved it skips both and embeds what is committed. A full `make check` needs npm for the viewer
+gates, so install it before you push. `make build` after an edit is what keeps the committed
+artifacts matching the sources.
 
 Visual parity needs npm **and** a browser. It finds `/usr/bin/chromium-browser` by itself, and
 `CS_TRACER_CHROMIUM` names one anywhere else.

@@ -54,16 +54,13 @@ make build         # -> bin/cs-tracer, version-stamped from `git describe`
 make install       # -> ~/.local/bin/cs-tracer (override with PREFIX=)
 ```
 
-**`make build` rebuilds the viewer whenever `npm` is on your PATH.** It runs `npm ci` and the Vite
-builds before the Go build, so on that path you also need **Node 20 or newer** and a network
-connection for `npm ci`. Skip that work and embed the committed artifacts instead:
-
-```bash
-make -o viewer build      # treat the viewer target as already up to date
-```
-
-Both routes produce the same binary from a clean checkout. Rebuild the viewer when you edit its
-sources under `apps/viewer`, which [CONTRIBUTING.md](CONTRIBUTING.md) covers.
+**`make build` rebuilds the viewer whenever `npm` is on your PATH and a viewer source is newer
+than the committed artifacts.** On that path you also need **Node 20 or newer**, and a network
+connection the first time, for `npm ci`. A clean checkout is already up to date, so the Vite
+builds do not run. The Go build then embeds the committed artifacts as they stand, which is what
+a clone with no Node toolchain gets too. Both routes produce the same binary. Editing anything
+under `apps/viewer` or `ui/` puts the viewer back in the build, which
+[CONTRIBUTING.md](CONTRIBUTING.md) covers.
 
 **Use `make build` rather than a plain `go build`.** The version is injected at link time, and the
 Go linker silently ignores an injection naming a symbol that does not exist. A plain `go build`
