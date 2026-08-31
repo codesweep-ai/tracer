@@ -16,7 +16,7 @@
     "verified": "`env PATH=/usr/bin:/bin:/usr/local/go/bin make check` reported `FAIL golangci-lint` beside `SKIP npm is not installed`. CONTRIBUTING.md now names both linters with the pinned version CI installs, and the cs-ledger install line beside the ledger paragraph."
   },
   "resolution": null,
-  "details": "CONTRIBUTING.md tells a contributor to run `make check`, and says \"A gate that cannot run here reports SKIP and still exits 0\". `scripts/check.sh` runs `golangci-lint` and `deadcode` beside gofmt and vet on purpose, with the comment \"a gate that quietly skips is one nobody notices has stopped running\", so a machine without them gets FAIL rather than SKIP. No document named either tool or how to install it.\n\nThe ledger gate is the documented behaviour: absent `cs-ledger`, the script skips it and prints the `go install` line. That line was in the script and in no document, so an agent routed to the ledger doctrine by AGENTS.md could not find where the tool comes from.",
+  "details": "CONTRIBUTING.md tells a contributor to run `make check`, and says \"A gate that cannot run here reports SKIP and still exits 0\". `scripts/check.sh` runs `golangci-lint` and `deadcode` beside gofmt and vet on purpose. Its comment says \"a gate that quietly skips is one nobody notices has stopped running\", so a machine without them gets FAIL rather than SKIP. No document named either tool or how to install it.\n\nThe ledger gate is the documented behaviour: absent `cs-ledger`, the script skips it and prints the `go install` line. That line was in the script and in no document, so an agent routed to the ledger doctrine by AGENTS.md could not find where the tool comes from.",
   "notes": [],
   "links": []
 }

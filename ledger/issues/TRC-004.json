@@ -16,7 +16,7 @@
     "verified": "Ran the block verbatim: the binary printed 379.7 KB where the page said 391.8 KB. The sample now elides the size and says why."
   },
   "resolution": null,
-  "details": "INSTALL.md \u00a72 walks a two-line demo session end to end and shows `will be 391.8 KB` and `wrote /tmp/demo.html (391.8 KB)`. The current binary prints 379.7 KB for that same session.\n\nThe number is almost entirely the compiled viewer, so it moves whenever the viewer does, and a reader comparing their output against the page sees a mismatch on the step whose whole job is to confirm the install worked.",
+  "details": "INSTALL.md \u00a72 walks a two-line demo session end to end and shows `will be 391.8 KB` and `wrote /tmp/demo.html (391.8 KB)`. The current binary prints 379.7 KB for that same session.\n\nThe number is almost entirely the compiled viewer, so it moves whenever the viewer does. A reader comparing their output against the page sees a mismatch on the step whose whole job is to confirm the install worked.",
   "notes": [],
   "links": []
 }
