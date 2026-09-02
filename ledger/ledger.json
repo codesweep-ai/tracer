@@ -3,6 +3,6 @@
   "idPrefix": "TRC",
   "schemaVersion": "issue.v1",
   "staleAfterDays": 90,
-  "toolVersion": "0.3.3",
+  "toolVersion": "0.6.1",
   "description": "cs-tracer: turns AI coding-CLI session transcripts into a self-contained browsable trace viewer. Open records are behaviours the format does not specify, and gaps the gates do not cover."
 }
