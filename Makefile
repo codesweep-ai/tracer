@@ -36,11 +36,14 @@ VIEWER_REST := $(VIEWER_OUT)/split/index.html \
 VIEWER_ARTIFACTS := $(VIEWER_MAIN) $(VIEWER_REST)
 VIEWER_SRC := $(shell find apps/viewer/src apps/viewer/public apps/viewer/scripts \
                     -name node_modules -prune -o -type f -print 2>/dev/null) \
-              $(wildcard apps/viewer/index.html apps/viewer/*.json apps/viewer/*.ts apps/viewer/*.js) \
-              package.json package-lock.json
+              $(wildcard apps/viewer/index.html apps/viewer/*.json apps/viewer/*.ts apps/viewer/*.js)
 # npm writes this file as it installs, so it is the marker for "node_modules
 # already matches the lockfile" — the one thing `npm ci` needs to be re-run for.
-NODE_STAMP := node_modules/.package-lock.json
+# There are two Node sub-projects and no workspace, so each installs its own.
+VIEWER_DIR    := apps/viewer
+FIXTEST_DIR   := fixtures/test
+VIEWER_STAMP  := $(VIEWER_DIR)/node_modules/.package-lock.json
+FIXTEST_STAMP := $(FIXTEST_DIR)/node_modules/.package-lock.json
 
 # What $(BIN) is made of. It is a real target rather than a phony one, so make
 # skips the build when the binary is already newer than every input — which is
@@ -118,7 +121,7 @@ $(VIEWER_ARTIFACTS):
 	@exit 1
 else
 
-$(VIEWER_MAIN): $(VIEWER_SRC) $(NODE_STAMP)
+$(VIEWER_MAIN): $(VIEWER_SRC) $(VIEWER_STAMP)
 	@$(MAKE) --no-print-directory viewer-build
 
 # Written by the same two Vite builds, and after $(VIEWER_MAIN), so they are
@@ -130,17 +133,20 @@ $(VIEWER_REST): $(VIEWER_MAIN)
 endif
 
 ## viewer-build: run both Vite builds and assert the artifact constraints
-viewer-build: $(NODE_STAMP)
-	npm run build:single --workspace apps/viewer
-	npm run build:split --workspace apps/viewer
-	npm run assert:builds --workspace apps/viewer
+viewer-build: $(VIEWER_STAMP)
+	cd $(VIEWER_DIR) && npm run build:single
+	cd $(VIEWER_DIR) && npm run build:split
+	cd $(VIEWER_DIR) && npm run assert:builds
 
 # `npm ci` empties node_modules and repopulates it from the lockfile, which is
 # several seconds of nothing when the lockfile has not moved. Every target that
 # shells out to npm asks for this first, because none of them can now count on
 # a viewer build having just run one.
-$(NODE_STAMP): package.json package-lock.json
-	npm ci
+$(VIEWER_STAMP): $(VIEWER_DIR)/package.json $(VIEWER_DIR)/package-lock.json
+	cd $(VIEWER_DIR) && npm ci
+
+$(FIXTEST_STAMP): $(FIXTEST_DIR)/package.json $(FIXTEST_DIR)/package-lock.json
+	cd $(FIXTEST_DIR) && npm ci
 	@touch $@
 
 ## build: host binary at bin/cs-tracer via goreleaser (single target; use this,
@@ -213,8 +219,8 @@ conventions:
 ## teaches contributors to ignore it.
 viewer-lint:
 	@if [ -d apps/viewer ] && command -v npm >/dev/null 2>&1; then \
-		$(MAKE) --no-print-directory $(NODE_STAMP); \
-		npm run lint; \
+		$(MAKE) --no-print-directory $(VIEWER_STAMP); \
+		cd $(VIEWER_DIR) && npm run lint; \
 	else \
 		echo "SKIP viewer-lint: npm is not installed, so the viewer sources cannot be built here"; \
 	fi
@@ -222,8 +228,8 @@ viewer-lint:
 ## viewer-test: the viewer's own suite and its schema conformance
 viewer-test:
 	@if [ -d apps/viewer ] && command -v npm >/dev/null 2>&1; then \
-		$(MAKE) --no-print-directory $(NODE_STAMP); \
-		npm test; \
+		$(MAKE) --no-print-directory $(VIEWER_STAMP) $(FIXTEST_STAMP); \
+		( cd $(VIEWER_DIR) && npm test ) && node $(FIXTEST_DIR)/schema-conformance.mjs; \
 	else \
 		echo "SKIP viewer-test: npm is not installed, so the viewer sources cannot be built here"; \
 	fi
@@ -238,8 +244,8 @@ parity:
 	elif [ -z "$${CS_TRACER_CHROMIUM:-}" ] && [ ! -x /usr/bin/chromium-browser ]; then \
 		echo "SKIP parity: no browser, so set CS_TRACER_CHROMIUM=/path/to/chrome"; \
 	else \
-		$(MAKE) --no-print-directory $(NODE_STAMP); \
-		npm run parity --workspace apps/viewer; \
+		$(MAKE) --no-print-directory $(VIEWER_STAMP); \
+		cd $(VIEWER_DIR) && npm run parity; \
 	fi
 
 ## ledger: validate the issue records and prove ledger.html is current
@@ -380,7 +386,7 @@ surface: build
 ## (CS_TRACER_CHROMIUM, or TRACER_FIXTURES_BROWSER). `--strict` and other
 ## flags pass through FIXTURES_ARGS.
 fixtures: build
-	npm run fixtures --workspace apps/viewer -- $(FIXTURES_ARGS)
+	cd $(VIEWER_DIR) && npm run fixtures -- $(FIXTURES_ARGS)
 
 # The four targets above are one shared tool: github.com/codesweep-ai/lint,
 # pinned in go.mod and run with `go tool`, so the gates use the version this

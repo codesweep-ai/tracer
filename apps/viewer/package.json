@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "dev": "vite",
     "build": "npm run build:single && npm run build:split && npm run assert:builds",
@@ -16,6 +19,7 @@
   },
   "dependencies": {
     "@codesweep-ai/ui": "0.2.1-dev.20260901200135.3160175",
+    "highlight.js": "^11.11.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
