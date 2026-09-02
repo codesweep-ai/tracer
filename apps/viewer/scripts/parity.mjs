@@ -137,19 +137,24 @@ function pngPixels(buffer) {
 // ---------------------------------------------------------------------------
 function normalizeDom(html, { split }) {
   let out = html;
-  if (split) {
+  // The U4 header nav-link hook carries the same address as its href, so both
+  // attributes are canonicalised with the same rules.
+  for (const attr of ["href", "data-header-nav-link"]) {
+    if (split) {
+      out = out
+        .replace(new RegExp(`${attr}="(?:\\.\\./)?index\\.html"`, "g"), `${attr}="ROUTE:index"`)
+        .replace(new RegExp(`${attr}="traces/([^"/]+)\\.html#ev-(\\d+)"`, "g"), `${attr}="ROUTE:trace:$1:ev-$2"`)
+        .replace(new RegExp(`${attr}="traces/([^"/]+)\\.html"`, "g"), `${attr}="ROUTE:trace:$1"`)
+        .replace(new RegExp(`${attr}="([^"/]+)\\.html#ev-(\\d+)"`, "g"), `${attr}="ROUTE:trace:$1:ev-$2"`)
+        .replace(new RegExp(`${attr}="([^"/]+)\\.html"`, "g"), `${attr}="ROUTE:trace:$1"`);
+    }
     out = out
-      .replace(/href="(?:\.\.\/)?index\.html"/g, 'href="ROUTE:index"')
-      .replace(/href="traces\/([^"/]+)\.html#ev-(\d+)"/g, 'href="ROUTE:trace:$1:ev-$2"')
-      .replace(/href="traces\/([^"/]+)\.html"/g, 'href="ROUTE:trace:$1"')
-      .replace(/href="([^"/]+)\.html#ev-(\d+)"/g, 'href="ROUTE:trace:$1:ev-$2"')
-      .replace(/href="([^"/]+)\.html"/g, 'href="ROUTE:trace:$1"');
+      .replaceAll(`${attr}="/"`, `${attr}="ROUTE:index"`)
+      .replace(new RegExp(`${attr}="\\?"`, "g"), `${attr}="ROUTE:index"`)
+      .replace(new RegExp(`${attr}="\\?trace=([^"&]+)#ev-(\\d+)"`, "g"), `${attr}="ROUTE:trace:$1:ev-$2"`)
+      .replace(new RegExp(`${attr}="\\?trace=([^"&]+)"`, "g"), `${attr}="ROUTE:trace:$1"`);
   }
-  return out
-    .replaceAll('href="/"', 'href="ROUTE:index"')
-    .replace(/href="\?"/g, 'href="ROUTE:index"')
-    .replace(/href="\?trace=([^"&]+)#ev-(\d+)"/g, 'href="ROUTE:trace:$1:ev-$2"')
-    .replace(/href="\?trace=([^"&]+)"/g, 'href="ROUTE:trace:$1"');
+  return out;
 }
 
 const chromiumExecutable = process.env.CS_TRACER_CHROMIUM || (existsSync("/usr/bin/chromium-browser") ? "/usr/bin/chromium-browser" : undefined);
@@ -205,15 +210,15 @@ async function interact(browser, url, { traceId, jumpEvent, query }) {
   await page.waitForSelector('[data-testid="trajectory-page"]');
   await page.waitForFunction(() => !document.querySelector('[aria-label^="Loading event"]'));
   await page.evaluate((target) => { location.hash = `#ev-${target}`; }, jumpEvent);
-  await page.waitForSelector(`[data-event-index="${jumpEvent}"]`);
+  await page.waitForSelector(`[data-card-index="${jumpEvent}"]`);
   const hashAfterJump = await page.evaluate(() => location.hash);
-  const box = page.getByPlaceholder("Filter event text or tool names");
+  const box = page.locator('[data-search-input]');
   await box.fill(query);
   // NOT locator.press("Enter"): the debounced auto-search re-renders on fill, and
   // press() retries against one resolved handle forever if React replaces the
   // node mid-actionability. Dispatch on the live node instead.
   await page.evaluate(() => {
-    const input = document.querySelector('input[placeholder="Filter event text or tool names"]');
+    const input = document.querySelector('[data-search-input]');
     input?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
   });
   await page.waitForFunction(() => !document.querySelector('[aria-label^="Loading event"]'));
@@ -221,7 +226,7 @@ async function interact(browser, url, { traceId, jumpEvent, query }) {
   const state = await page.evaluate(() => ({
     hash: location.hash,
     matchText: document.body.innerText.match(/\d+ matches?/)?.[0] ?? "",
-    cards: [...document.querySelectorAll("[data-event-index]")].map((n) => Number(n.getAttribute("data-event-index"))).slice(0, 8),
+    cards: [...document.querySelectorAll("[data-card-index]")].map((n) => Number(n.getAttribute("data-card-index"))).slice(0, 8),
     dom: document.getElementById("root").innerHTML,
   }));
   await context.close();
@@ -232,7 +237,31 @@ async function interact(browser, url, { traceId, jumpEvent, query }) {
 if (!existsSync(binary)) fail(`no binary at ${binary} — run: make build`);
 
 const work = await mkdtemp(path.join(os.tmpdir(), "cs-tracer-parity-"));
-const browser = await chromium.launch({ executablePath: chromiumExecutable, chromiumSandbox: false });
+// Deterministic rasterisation. The decode above removes the PNG *compressor* as
+// a source of false differences; this removes the *rasteriser*. Measured: the
+// gate failed on roughly 40% of runs, always as "single and split pixels
+// differ", always with the DOM digests equal, and on a different trace each
+// time — which reads like a race and is not one. Locating the pixels showed a
+// single pixel at (15,86), differing in the BLUE CHANNEL ONLY by 1..12/255, one
+// pixel to the left of the "← All trajectories" breadcrumb div at x=16. That is
+// LCD subpixel text antialiasing on a glyph edge, plus tile-boundary raster
+// noise; it is not a difference between the transports, and a gate that reports
+// it is reporting on the font rasteriser. With these flags: 0 pixel failures in
+// 26 runs, against 5 in 12 without.
+const browser = await chromium.launch({
+  executablePath: chromiumExecutable,
+  chromiumSandbox: false,
+  args: [
+    "--disable-lcd-text",                 // grayscale AA: no per-channel subpixel fringing
+    "--font-render-hinting=none",         // no hinting-dependent glyph rasterisation
+    "--disable-font-subpixel-positioning", // glyphs land on whole pixels
+    "--force-color-profile=srgb",         // no dependence on the host display profile
+    "--disable-gpu",
+    "--disable-gpu-rasterization",
+    "--disable-partial-raster",           // whole-tile repaint: no tile-boundary AA seams
+    "--disable-composited-antialiasing",
+  ],
+});
 console.log(`chromium: ${(await browser.version()) || "unknown"}${chromiumExecutable ? "" : " (playwright managed)"}`);
 
 const report = [];

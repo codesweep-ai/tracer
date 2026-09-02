@@ -51,6 +51,27 @@ export function traceFilename(traceId: string): string {
   return `${encodeURIComponent(base || "trajectory")}.html`;
 }
 
+/**
+ * Whether `traceId` names a trajectory this artifact actually contains.
+ *
+ * A parent's `childSessionId` is only a *claim*: the child may not have been
+ * exported (a single-trajectory export is a legitimate scope choice), or the
+ * reference may be broken upstream — the codex and opencode fixtures both had
+ * their thread-id references scrubbed to prose, so every child link resolved to
+ * nothing (`?trace=each%20reads%20when`). linkTo() will happily build a URL for
+ * an id that names nothing: in single mode that lands on "Trajectory … was not
+ * found", and in split mode it is a plain 404.
+ *
+ * With no `#index` block at all — the dev server, and tests — presence cannot
+ * be established, so this answers true rather than hiding links that are
+ * probably fine. Every exported artifact carries the block.
+ */
+export function hasTrace(traceId: string): boolean {
+  const entries = indexEntries();
+  if (!entries) return true;
+  return entries.some((entry) => entry.id === traceId);
+}
+
 /** Where a link to `traceId` (optionally deep-linked to `#ev-<n>`) points from the current page. */
 export function linkTo(traceId: string, eventIndex?: number): string {
   const hash = eventIndex == null ? "" : `#ev-${eventIndex}`;

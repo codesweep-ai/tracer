@@ -19,6 +19,14 @@ type TreeResult struct {
 }
 
 // NormalizeDirectory normalizes a set and writes the oracle-compatible tree.
+// malformedRef reports a cross-session reference that cannot be an identifier.
+// Whitespace is the discriminator: every CLI in scope emits ids as unbroken
+// tokens (uuid, ses_..., hex), so a space means the value was rewritten by
+// something that took it for prose.
+func malformedRef(ref string) bool {
+	return ref != "" && strings.ContainsAny(ref, " \t\n")
+}
+
 func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 	var result TreeResult
 	// Resolve the input to an absolute path before discovery, but report skips
@@ -93,9 +101,36 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 		}
 		return result, errors.New("no supported session files found")
 	}
+	// A reference that is absent from the corpus is NOT reported: exporting one
+	// trajectory without its children is a legitimate scope choice, and the
+	// viewer already declines to offer a link it cannot resolve. What is
+	// reported is a reference that cannot be a session id at all — no CLI emits
+	// one containing whitespace — because that means something upstream
+	// rewrote it. That is not hypothetical: the fixture scrubber exempts a
+	// session's own id from prose redaction but did not exempt the keys that
+	// REFERENCE it, so codex and opencode corpora shipped with every
+	// parent/child edge replaced by prose ("each reads when"), and nothing
+	// noticed for four runs — the reconciliation below only ever ran for
+	// claude-code, whose reference keys happened to be exempt.
 	for _, doc := range result.Documents {
 		meta := object(get(doc, "meta"))
-		if str(get(meta, "source")) != "claude-code" || !present(get(meta, "parentSessionId")) {
+		sid := str(get(meta, "sessionId"))
+		if pid := str(get(meta, "parentSessionId")); malformedRef(pid) {
+			result.Diagnostics = append(result.Diagnostics,
+				fmt.Sprintf("session %s: parentSessionId %q is not a session id", sid, pid))
+		}
+		for _, event := range get(doc, "events").([]*obj) {
+			if cid := str(get(event, "childSessionId")); malformedRef(cid) {
+				result.Diagnostics = append(result.Diagnostics,
+					fmt.Sprintf("session %s: childSessionId %q is not a session id", sid, cid))
+			}
+		}
+	}
+	for _, doc := range result.Documents {
+		meta := object(get(doc, "meta"))
+		// Was gated to claude-code, so codex and opencode never had their
+		// parent/child edges reconciled at all.
+		if !present(get(meta, "parentSessionId")) {
 			continue
 		}
 		sid := str(get(meta, "sessionId"))

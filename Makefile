@@ -34,7 +34,7 @@ VIEWER_MAIN := $(VIEWER_OUT)/single/index.html
 VIEWER_REST := $(VIEWER_OUT)/split/index.html \
                $(VIEWER_OUT)/split/assets/app.js $(VIEWER_OUT)/split/assets/app.css
 VIEWER_ARTIFACTS := $(VIEWER_MAIN) $(VIEWER_REST)
-VIEWER_SRC := $(shell find apps/viewer/src apps/viewer/public apps/viewer/scripts ui \
+VIEWER_SRC := $(shell find apps/viewer/src apps/viewer/public apps/viewer/scripts \
                     -name node_modules -prune -o -type f -print 2>/dev/null) \
               $(wildcard apps/viewer/index.html apps/viewer/*.json apps/viewer/*.ts apps/viewer/*.js) \
               package.json package-lock.json
@@ -79,7 +79,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help tidy-check embed-check build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity ledger lint deadcode actionlint install uninstall snapshot release release-check clean
+.PHONY: help tidy-check embed-check build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity fixtures ledger lint deadcode actionlint install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -105,8 +105,8 @@ help:
 #
 # The artifacts under internal/cli/viewer are COMMITTED, so a clone with no Node
 # toolchain still builds the binary. They are rebuilt from apps/viewer wherever
-# npm is available; the design system it imports is vendored under ui/, so
-# no second checkout is involved.
+# npm is available; the design system it imports is @codesweep-ai/ui from the
+# registry, pinned in package.json, so no second checkout is involved.
 viewer: $(VIEWER_ARTIFACTS)
 ifeq ($(and $(wildcard apps/viewer/package.json),$(shell command -v npm 2>/dev/null)),)
 	@echo "viewer: building from the committed artifacts under $(VIEWER_OUT)"
@@ -193,6 +193,7 @@ coverage-check: coverage
 ## tier CI never runs commits a promise nothing keeps.
 coverage-baseline:
 	@scripts/coverage.sh baseline $(BASELINE_TIERS)
+
 
 ## viewer-lint: eslint over the viewer sources, where a Node toolchain is here
 ##
@@ -362,6 +363,14 @@ oss:
 ## surface: check the docs against the binary, the code and the build
 surface: build
 	$(CS_LINT) surface
+
+## fixtures: the viewer's behavioural oracle (apps/viewer/fixtures/README.md).
+## Deliberately NOT part of check: it holds the viewer to recorded behaviour
+## across a component migration, and its browser needs are the parity gate's
+## (CS_TRACER_CHROMIUM, or TRACER_FIXTURES_BROWSER). `--strict` and other
+## flags pass through FIXTURES_ARGS.
+fixtures: build
+	npm run fixtures --workspace apps/viewer -- $(FIXTURES_ARGS)
 
 # The four targets above are one shared tool: github.com/codesweep-ai/lint,
 # pinned in go.mod and run with `go tool`, so the gates use the version this

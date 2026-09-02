@@ -1,9 +1,0 @@
-The files in this directory and in ../codesweep-eslint-plugin are a pinned copy
-of part of the @codesweep-ai/ui design system. They carry the same copyright and
-licence as this repository:
-
-    Copyright 2026 Codesweep
-    Licensed under the Apache License, Version 2.0 (see ../../LICENSE)
-
-VERSION beside this file records which upstream release they were taken from and
-which files the subset covers.

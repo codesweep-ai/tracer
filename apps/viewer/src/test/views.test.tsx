@@ -1,29 +1,31 @@
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IndexPage } from "../IndexPage";
 import { TrajectoryPage } from "../TrajectoryPage";
 import { EventCard } from "../EventCard";
-import type { LoadedTrace, TraceChunk, TraceEvent, TraceSummary } from "../types";
-import { traceSeriesColors } from "../traceColors";
-import type { ChartTheme } from "@codesweep-ai/ui";
+import type { EventKind, LoadedTrace, TraceChunk, TraceEvent, TraceSummary } from "../types";
+import { TRACE_PALETTE, traceColorKey } from "../palette";
+import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
-/** a guard so a future palette edit cannot silently re-crowd the kind colours.
- * OKLab distance x100, same space the palette validator uses. */
-function oklabDistance(a: string, b: string): number {
-  const lab = (hex: string) => {
-    const [r, g, bl] = [0, 2, 4].map((i) => { const v = parseInt(hex.slice(1 + i, 3 + i), 16) / 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
-    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * bl);
-    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * bl);
-    const s2 = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * bl);
-    return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s2, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s2, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s2];
-  };
-  const [l1, a1, b1] = lab(a); const [l2, a2, b2] = lab(b);
-  return Math.hypot(l1 - l2, a1 - a2, b1 - b2) * 100;
+/* The kind colours are ui's categorical TOKEN palette now (traceColors.ts is
+   gone): the values live in ui's tokens.css, so the guard resolves them from
+   the installed package and asserts the property the review actually requires
+   (TR-15/16): every kind fill clears 3:1 non-text contrast against the surfaces
+   the strip renders on, in both themes — and no two kinds collapse to one hue. */
+const tokensCss = readFileSync(path.join(path.dirname(createRequire(import.meta.url).resolve("@codesweep-ai/ui/package.json")), "dist/styles/tokens.css"), "utf8");
+function tokenValue(name: string, theme: "dark" | "light"): string {
+  const block = theme === "light" ? tokensCss.split(':root[data-theme="light"]')[1]! : tokensCss.split(':root[data-theme="light"]')[0]!;
+  const match = new RegExp(`${name}:\\s*(#[0-9a-fA-F]{6})`).exec(block);
+  if (!match) throw new Error(`token ${name} not found for theme ${theme}`);
+  return match[1]!;
 }
-
-/* eslint-disable @codesweep-ai/no-hardcoded-colors -- this guard exists to assert exact
-   colour VALUES; tokens would defeat the test. Values mirror the real theme tokens. */
-const themeFor = (bg: string, error: string, muted = "#6b7280"): ChartTheme => ({ bg, card: bg, border: "#888", gridLine: "#888", fg: "#000", muted, axisLabel: "#888", accent: "#000", accentSoft: "#000", success: "#0a0", warning: "#fa0", error, categorical: [], categoricalLight: [], categoricalMid: [], categoricalDark: [] } as unknown as ChartTheme);
+function contrastRatio(a: string, b: string): number {
+  const lum = (hex: string) => { const f = (v: number) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; const [r, g, bl] = [0, 2, 4].map((i) => f(parseInt(hex.slice(1 + i, 3 + i), 16) / 255)); return 0.2126 * r + 0.7152 * g + 0.0722 * bl; };
+  const [x, y] = [lum(a), lum(b)];
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
 
 const summary: TraceSummary = { schemaVersion: 2, meta: { source: "claude-code", sessionId: "demo", parentSessionId: null, title: "Demo", model: "test", durationMs: 1000 }, totals: { events: 2, toolCalls: 0, toolErrors: 0, input: 10, output: 5, cacheRead: 0, cacheWrite: 0 }, parse: { adapter: "demo", adapterVersion: "1", skippedByType: [], unrecognized: 0, warnings: [] }, links: [], chunkSize: 1000, chunkCount: 1, strip: [{ i: 0, kind: "user", error: false }, { i: 1, kind: "assistant", error: false }] };
 const trace: LoadedTrace = { id: "demo", path: "demo", summary };
@@ -31,27 +33,38 @@ const trace: LoadedTrace = { id: "demo", path: "demo", summary };
  * every "<" escaped as < so a "</script>" in trace text cannot terminate the
  * block. */
 function block(id: string, value: unknown) { const node = document.createElement("script"); node.type = "application/json"; node.id = id; node.textContent = JSON.stringify(value).replaceAll("<", "\\u003c"); document.body.append(node); }
+/** A Legend chip's clickable button, found by the documented label hook. */
+const chipButton = (name: string) => document.querySelector(`[data-legend-label="${name}"]`)?.closest("button");
 beforeEach(() => { location.hash = ""; history.replaceState(null, "", "/"); document.querySelectorAll('script[type="application/json"]').forEach((node) => node.remove()); block("c-demo-000", { chunk: 0, events: [{ i: 0, kind: "user", text: "hello" }, { i: 1, kind: "assistant", text: "world" }] } satisfies TraceChunk); });
 afterEach(cleanup);
-describe("kind colours", () => {
-  it("keeps every rendered kind colour perceptually apart, in both themes", () => {
-    // real app tokens per theme (light/dark surfaces and muted ink)
-      for (const [bg, error, muted] of [["#f3f4f6", "#dc2626", "#6b7280"], ["#0b0f14", "#f87171", "#9aa4af"]] as const) {
-      const colors = traceSeriesColors(themeFor(bg, error, muted));
-      const marks = { ...colors, error };
-      const entries = Object.entries(marks);
-      for (let i = 0; i < entries.length; i++) for (let j = i + 1; j < entries.length; j++) {
-        const [nameA, colorA] = entries[i]!; const [nameB, colorB] = entries[j]!;
-        expect(oklabDistance(colorA, colorB), `${nameA} vs ${nameB} on ${bg}`).toBeGreaterThanOrEqual(15);
+describe("kind colours (token palette)", () => {
+  it("keeps every kind fill at or above 3:1 against the strip's surfaces, in both themes (TR-15/16)", () => {
+    for (const theme of ["dark", "light"] as const) {
+      for (const surface of ["--bg", "--card"] as const) {
+        for (const [key, token] of Object.entries(TRACE_PALETTE)) {
+          expect(contrastRatio(tokenValue(token, theme), tokenValue(surface, theme)), `${key} (${token}) vs ${surface} ${theme}`).toBeGreaterThanOrEqual(3);
+        }
       }
     }
   });
-  it("assigns kinds explicitly rather than by palette order", () => {
-    const light = traceSeriesColors(themeFor("#f3f4f6", "#dc2626", "#6b7280"));
-    const dark = traceSeriesColors(themeFor("#0b0f14", "#f87171", "#9aa4af"));
-    expect(light.user).not.toEqual(light.assistant);
-    expect(light.user).not.toEqual(dark.user); // dark is selected, not an automatic flip
-    expect(light.system).toEqual("#6b7280"); expect(dark.system).toEqual("#9aa4af"); // plumbing recedes to muted ink, not a hue
+  it("assigns kinds explicitly and never collapses two kinds to one hue", () => {
+    expect(Object.keys(TRACE_PALETTE).sort()).toEqual(["assistant", "meta", "system", "thinking", "tool", "user"]);
+    for (const theme of ["dark", "light"] as const) {
+      const values = Object.values(TRACE_PALETTE).map((token) => tokenValue(token, theme));
+      expect(new Set(values).size).toBe(values.length);
+    }
+    expect(traceColorKey("tool_call")).toBe("tool"); expect(traceColorKey("tool_result")).toBe("tool");
+    // turn_end shares system's ink on purpose: it is identified by its trailing
+    // tick, so it does not need a hue. meta does not share it — it recurs at
+    // volume, and the legend lists and filters the two separately.
+    expect(traceColorKey("turn_end")).toBe("system");
+    expect(traceColorKey("meta")).toBe("meta");
+    expect(TRACE_PALETTE.system).toBe("--muted"); // plumbing recedes to neutral ink, not a hue
+    expect(TRACE_PALETTE.meta).toBe("--color-structural");
+    for (const theme of ["dark", "light"] as const) {
+      // the whole point of the second step: it must not read as --muted
+      expect(tokenValue("--color-structural", theme)).not.toBe(tokenValue("--muted", theme));
+    }
   });
 });
 
@@ -85,7 +98,7 @@ describe("P0 views", () => {
     expect(metaLine()).toContain("· ~$2.3456 est.");
     expect(metaLine()).not.toMatch(/·\s*·/);
   });
-  it("renders filters and reacts to an in-page hash jump", async () => { const scrollTo = vi.mocked(HTMLElement.prototype.scrollTo); render(<TrajectoryPage trace={trace} />); expect(screen.getByTestId("trajectory-page")).toBeInTheDocument(); expect(screen.getByLabelText("Trajectory filters")).toBeInTheDocument(); expect(screen.getByPlaceholderText("Filter event text or tool names")).toBeInTheDocument(); location.hash = "#ev-1"; window.dispatchEvent(new HashChangeEvent("hashchange")); await waitFor(() => expect(scrollTo).toHaveBeenCalledWith({ top: 224, behavior: "auto" })); await waitFor(() => expect(screen.getByText("world")).toBeInTheDocument()); });
+  it("renders filters and reacts to an in-page hash jump", async () => { const scrollTo = vi.mocked(HTMLElement.prototype.scrollTo); render(<TrajectoryPage trace={trace} />); expect(screen.getByTestId("trajectory-page")).toBeInTheDocument(); expect(screen.getByLabelText("Trajectory filters")).toBeInTheDocument(); expect(document.querySelector("[data-search-input]")).toBeInTheDocument(); location.hash = "#ev-1"; window.dispatchEvent(new HashChangeEvent("hashchange")); await waitFor(() => expect(scrollTo).toHaveBeenCalledWith({ top: 224, behavior: "auto" })); await waitFor(() => expect(screen.getByText("world")).toBeInTheDocument()); });
   it("does not let a settling scroll cancel a pending hash navigation", async () => {
     const longSummary: TraceSummary = { ...summary, totals: { ...summary.totals, events: 6 }, strip: Array.from({ length: 6 }, (_, i) => ({ i, kind: i % 2 ? "assistant" as const : "user" as const, error: false })) };
     render(<TrajectoryPage trace={{ ...trace, summary: longSummary }} />);
@@ -123,7 +136,7 @@ describe("kind filters", () => {
     await waitFor(() => expect(screen.queryByText("hello")).not.toBeInTheDocument());
     expect(screen.getByTestId("errors-only")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("errors only")).toBeInTheDocument();
-    act(() => { screen.getByTitle("Hide tool events").click(); });   // AND: no errored tools left
+    act(() => { chipButton("tool")?.click(); });   // AND: no errored tools left (Legend's documented label hook is the chip's handle)
     await waitFor(() => expect(screen.getByTestId("empty-filter")).toBeInTheDocument());
   });
 
@@ -132,5 +145,53 @@ describe("kind filters", () => {
     await waitFor(() => expect(screen.getByText("hello")).toBeInTheDocument());
     act(() => { screen.getByTestId("errors-only").click(); });
     await waitFor(() => expect(screen.getByTestId("empty-filter")).toHaveTextContent("No errored events"));
+  });
+});
+
+describe("kind filtering is independent of kind colour (T4-01 regression)", () => {
+  /* `system`, `meta` and `turn_end` deliberately share one colour token, and the
+     legend exposes them as three separate chips. EventLanes' `kind` is BOTH the
+     paint key and the filter key, so passing it the coarse colour key made any
+     partial selection among the three erase all three from the strip while the
+     details list stayed correct — silent data loss, with data-event-count="0"
+     and an "aria-disabled" listbox agreeing with it. One event per kind here, so
+     a correct build reports exactly 1. */
+  const stripKinds: EventKind[] = ["user", "tool_call", "thinking", "system", "meta", "turn_end"];
+  const filterTrace: LoadedTrace = { id: "demo", path: "demo", summary: {
+    ...summary,
+    totals: { ...summary.totals, events: stripKinds.length },
+    strip: stripKinds.map((kind, i) => ({ i, kind, error: false })),
+  } };
+  // These tests drive selection, and TrajectoryPage writes `#ev-N` into history
+  // on every selection change. Left behind, that hash perturbs any test that
+  // navigates by hash afterwards, so put the URL back.
+  afterEach(() => { history.replaceState(null, "", "/"); location.hash = ""; });
+  const eventCount = () => document.querySelector('[data-testid="strip"] [data-event-lanes-scroller]')?.getAttribute("data-event-count");
+  const selectOnly = (...chips: string[]) => {
+    fireEvent.click(screen.getByTestId("filter-none"));
+    for (const chip of chips) fireEvent.click(chipButton(chip)!);
+  };
+
+  it.each([["meta"], ["turn end"], ["system"], ["user"], ["tool"]])(
+    "selecting only %s keeps that kind visible in the strip", (chip) => {
+      render(<TrajectoryPage trace={filterTrace} />);
+      selectOnly(chip);
+      expect(eventCount()).toBe("1");
+    });
+
+  it("keeps colour-siblings independent when selected in combination", () => {
+    render(<TrajectoryPage trace={filterTrace} />);
+    selectOnly("meta", "turn end");
+    expect(eventCount()).toBe("2");
+    selectOnly("system", "meta", "turn end");
+    expect(eventCount()).toBe("3");
+    selectOnly("user", "meta");
+    expect(eventCount()).toBe("2");
+  });
+
+  it("still hides what was actually deselected", () => {
+    render(<TrajectoryPage trace={filterTrace} />);
+    selectOnly();
+    expect(eventCount()).toBe("0");
   });
 });

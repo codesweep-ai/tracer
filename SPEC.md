@@ -285,7 +285,7 @@ as a known.*
 from a `--links` file and is somebody's claim, and a connector comes from the session's own spawn
 event.*
 
-**R55.** Viewer styling **MUST** go through the vendored design system's tokens rather than literal
+**R55.** Viewer styling **MUST** go through the `@codesweep-ai/ui` design tokens rather than literal
 values. *An eslint rule fails the build on a token it does not recognise, which is what lets both
 themes work with no change to the app.*
 
@@ -339,12 +339,13 @@ run it.
 | docs against the binary | every documented command exists, the paths and spec sections the docs and the source cite resolve, and the manual the binary prints is the manual in the tree | never |
 
 **The viewer gates skip rather than fail without npm.** `apps/viewer` resolves
-`@codesweep-ai/ui` from `ui/`, so no second checkout is involved, but rebuilding it still needs
-a Node toolchain. The compiled viewer assets are committed, so every Go gate above runs in any
+`@codesweep-ai/ui` from the registry, pinned to one exact version, so no second checkout is
+involved, but rebuilding it still needs a Node toolchain. The compiled viewer assets are committed, so every Go gate above runs in any
 clone and the binary builds with Go alone.
 
-Rebuilding needs **Node 20 or newer**, and `make build` takes that path whenever `npm` is on your
-PATH and a source under `apps/viewer` or `ui/` is newer than the artifacts. It runs `npm ci` and
+Rebuilding needs **Node 22.13 or newer**, the floor `@codesweep-ai/ui` sets. `make build` takes
+that path whenever `npm` is on your PATH and a source under `apps/viewer` is newer than the
+artifacts. It runs `npm ci` and
 the Vite builds first, because `//go:embed` reads the artifacts at compile time; when nothing has
 moved it skips both and embeds what is committed. A full `make check` needs npm for the viewer
 gates, so install it before you push. `make build` after an edit is what keeps the committed

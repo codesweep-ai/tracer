@@ -1,0 +1,2466 @@
+[
+ {
+  "id": "TF-01",
+  "name": "index.lanes",
+  "status": "keep",
+  "note": "lane count, labels, nesting by parent session (index, both fixtures × themes)",
+  "value": {
+   "large-session/dark": {
+    "title": "Trajectory overview",
+    "count": 1,
+    "lanes": [
+     {
+      "id": "e44bcdfa-eaf1-cf69-51de-20d7e925af16",
+      "label": "files files expected",
+      "parent": null,
+      "depth": 0,
+      "spawnIndex": null
+     }
+    ]
+   },
+   "large-session/light": {
+    "title": "Trajectory overview",
+    "count": 1,
+    "lanes": [
+     {
+      "id": "e44bcdfa-eaf1-cf69-51de-20d7e925af16",
+      "label": "files files expected",
+      "parent": null,
+      "depth": 0,
+      "spawnIndex": null
+     }
+    ]
+   },
+   "codex-multi-agent-run/dark": {
+    "title": "Trajectory overview",
+    "count": 3,
+    "lanes": [
+     {
+      "id": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+      "label": "successfully the the for document when confirm then writes…",
+      "parent": null,
+      "depth": 0,
+      "spawnIndex": null
+     },
+     {
+      "id": "02ecf77d-bf39-c187-3db5-cb7715c123ec",
+      "label": "successfully the the for document when confirm then writes…",
+      "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+      "depth": 1,
+      "spawnIndex": 12
+     },
+     {
+      "id": "c8e73c0e-6c5e-f739-41f7-898c508d90be",
+      "label": "successfully the the for document when confirm then writes…",
+      "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+      "depth": 1,
+      "spawnIndex": 14
+     }
+    ]
+   },
+   "codex-multi-agent-run/light": {
+    "title": "Trajectory overview",
+    "count": 3,
+    "lanes": [
+     {
+      "id": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+      "label": "successfully the the for document when confirm then writes…",
+      "parent": null,
+      "depth": 0,
+      "spawnIndex": null
+     },
+     {
+      "id": "02ecf77d-bf39-c187-3db5-cb7715c123ec",
+      "label": "successfully the the for document when confirm then writes…",
+      "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+      "depth": 1,
+      "spawnIndex": 12
+     },
+     {
+      "id": "c8e73c0e-6c5e-f739-41f7-898c508d90be",
+      "label": "successfully the the for document when confirm then writes…",
+      "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+      "depth": 1,
+      "spawnIndex": 14
+     }
+    ]
+   },
+   "subagent-run/dark": {
+    "title": "Trajectory overview",
+    "count": 3,
+    "lanes": [
+     {
+      "id": "4f00d255-46e9-4373-7232-09f72fda039e",
+      "label": "when completes handles the output tests writes",
+      "parent": null,
+      "depth": 0,
+      "spawnIndex": null
+     },
+     {
+      "id": "0ab5e331349408f01",
+      "label": "and the handles records remain values expected input when…",
+      "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+      "depth": 1,
+      "spawnIndex": 17
+     },
+     {
+      "id": "25ae75425a8bc0e94",
+      "label": "normalized each module normalized module this normalized…",
+      "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+      "depth": 1,
+      "spawnIndex": 16
+     }
+    ]
+   },
+   "subagent-run/light": {
+    "title": "Trajectory overview",
+    "count": 3,
+    "lanes": [
+     {
+      "id": "4f00d255-46e9-4373-7232-09f72fda039e",
+      "label": "when completes handles the output tests writes",
+      "parent": null,
+      "depth": 0,
+      "spawnIndex": null
+     },
+     {
+      "id": "0ab5e331349408f01",
+      "label": "and the handles records remain values expected input when…",
+      "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+      "depth": 1,
+      "spawnIndex": 17
+     },
+     {
+      "id": "25ae75425a8bc0e94",
+      "label": "normalized each module normalized module this normalized…",
+      "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+      "depth": 1,
+      "spawnIndex": 16
+     }
+    ]
+   }
+  },
+  "approval": {
+   "id": "host",
+   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "previous": {
+    "large-session/dark": {
+     "title": "Trajectory overview",
+     "count": 1,
+     "lanes": [
+      {
+       "id": "e44bcdfa-eaf1-cf69-51de-20d7e925af16",
+       "label": "files files expected",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      }
+     ]
+    },
+    "large-session/light": {
+     "title": "Trajectory overview",
+     "count": 1,
+     "lanes": [
+      {
+       "id": "e44bcdfa-eaf1-cf69-51de-20d7e925af16",
+       "label": "files files expected",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      }
+     ]
+    },
+    "codex-multi-agent-run/dark": {
+     "title": "Trajectory overview",
+     "count": 3,
+     "lanes": [
+      {
+       "id": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "02ecf77d-bf39-c187-3db5-cb7715c123ec",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": "no successfully runs",
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "c8e73c0e-6c5e-f739-41f7-898c508d90be",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": "no successfully runs",
+       "depth": 0,
+       "spawnIndex": null
+      }
+     ]
+    },
+    "codex-multi-agent-run/light": {
+     "title": "Trajectory overview",
+     "count": 3,
+     "lanes": [
+      {
+       "id": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "02ecf77d-bf39-c187-3db5-cb7715c123ec",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": "no successfully runs",
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "c8e73c0e-6c5e-f739-41f7-898c508d90be",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": "no successfully runs",
+       "depth": 0,
+       "spawnIndex": null
+      }
+     ]
+    },
+    "subagent-run/dark": {
+     "title": "Trajectory overview",
+     "count": 3,
+     "lanes": [
+      {
+       "id": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "label": "when completes handles the output tests writes",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "0ab5e331349408f01",
+       "label": "and the handles records remain values expected input when…",
+       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "depth": 1,
+       "spawnIndex": 17
+      },
+      {
+       "id": "25ae75425a8bc0e94",
+       "label": "normalized each module normalized module this normalized…",
+       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "depth": 1,
+       "spawnIndex": 16
+      }
+     ]
+    },
+    "subagent-run/light": {
+     "title": "Trajectory overview",
+     "count": 3,
+     "lanes": [
+      {
+       "id": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "label": "when completes handles the output tests writes",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "0ab5e331349408f01",
+       "label": "and the handles records remain values expected input when…",
+       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "depth": 1,
+       "spawnIndex": 17
+      },
+      {
+       "id": "25ae75425a8bc0e94",
+       "label": "normalized each module normalized module this normalized…",
+       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "depth": 1,
+       "spawnIndex": 16
+      }
+     ]
+    }
+   },
+   "measured": {
+    "large-session/dark": {
+     "title": "Trajectory overview",
+     "count": 1,
+     "lanes": [
+      {
+       "id": "e44bcdfa-eaf1-cf69-51de-20d7e925af16",
+       "label": "files files expected",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      }
+     ]
+    },
+    "large-session/light": {
+     "title": "Trajectory overview",
+     "count": 1,
+     "lanes": [
+      {
+       "id": "e44bcdfa-eaf1-cf69-51de-20d7e925af16",
+       "label": "files files expected",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      }
+     ]
+    },
+    "codex-multi-agent-run/dark": {
+     "title": "Trajectory overview",
+     "count": 3,
+     "lanes": [
+      {
+       "id": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "02ecf77d-bf39-c187-3db5-cb7715c123ec",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "depth": 1,
+       "spawnIndex": 12
+      },
+      {
+       "id": "c8e73c0e-6c5e-f739-41f7-898c508d90be",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "depth": 1,
+       "spawnIndex": 14
+      }
+     ]
+    },
+    "codex-multi-agent-run/light": {
+     "title": "Trajectory overview",
+     "count": 3,
+     "lanes": [
+      {
+       "id": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "02ecf77d-bf39-c187-3db5-cb7715c123ec",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "depth": 1,
+       "spawnIndex": 12
+      },
+      {
+       "id": "c8e73c0e-6c5e-f739-41f7-898c508d90be",
+       "label": "successfully the the for document when confirm then writes…",
+       "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "depth": 1,
+       "spawnIndex": 14
+      }
+     ]
+    },
+    "subagent-run/dark": {
+     "title": "Trajectory overview",
+     "count": 3,
+     "lanes": [
+      {
+       "id": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "label": "when completes handles the output tests writes",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "0ab5e331349408f01",
+       "label": "and the handles records remain values expected input when…",
+       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "depth": 1,
+       "spawnIndex": 17
+      },
+      {
+       "id": "25ae75425a8bc0e94",
+       "label": "normalized each module normalized module this normalized…",
+       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "depth": 1,
+       "spawnIndex": 16
+      }
+     ]
+    },
+    "subagent-run/light": {
+     "title": "Trajectory overview",
+     "count": 3,
+     "lanes": [
+      {
+       "id": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "label": "when completes handles the output tests writes",
+       "parent": null,
+       "depth": 0,
+       "spawnIndex": null
+      },
+      {
+       "id": "0ab5e331349408f01",
+       "label": "and the handles records remain values expected input when…",
+       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "depth": 1,
+       "spawnIndex": 17
+      },
+      {
+       "id": "25ae75425a8bc0e94",
+       "label": "normalized each module normalized module this normalized…",
+       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
+       "depth": 1,
+       "spawnIndex": 16
+      }
+     ]
+    }
+   }
+  }
+ },
+ {
+  "id": "TF-02",
+  "name": "index.laneEvents",
+  "status": "keep",
+  "note": "per-lane event count from the strip's accessible label; spawn markers, connectors, badges per lane",
+  "value": {
+   "large-session/dark": {
+    "events": {
+     "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1366
+    },
+    "spawnMarkers": {
+     "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 2
+    },
+    "connectors": {
+     "e44bcdfa-eaf1-cf69-51de-20d7e925af16": false
+    },
+    "badges": {
+     "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1
+    }
+   },
+   "large-session/light": {
+    "events": {
+     "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1366
+    },
+    "spawnMarkers": {
+     "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 2
+    },
+    "connectors": {
+     "e44bcdfa-eaf1-cf69-51de-20d7e925af16": false
+    },
+    "badges": {
+     "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1
+    }
+   },
+   "codex-multi-agent-run/dark": {
+    "events": {
+     "77f0e564-f5d7-a937-aa50-ed64762175c7": 29,
+     "02ecf77d-bf39-c187-3db5-cb7715c123ec": 22,
+     "c8e73c0e-6c5e-f739-41f7-898c508d90be": 22
+    },
+    "spawnMarkers": {
+     "77f0e564-f5d7-a937-aa50-ed64762175c7": 2,
+     "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+     "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+    },
+    "connectors": {
+     "77f0e564-f5d7-a937-aa50-ed64762175c7": false,
+     "02ecf77d-bf39-c187-3db5-cb7715c123ec": true,
+     "c8e73c0e-6c5e-f739-41f7-898c508d90be": true
+    },
+    "badges": {
+     "77f0e564-f5d7-a937-aa50-ed64762175c7": 0,
+     "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+     "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+    }
+   },
+   "codex-multi-agent-run/light": {
+    "events": {
+     "77f0e564-f5d7-a937-aa50-ed64762175c7": 29,
+     "02ecf77d-bf39-c187-3db5-cb7715c123ec": 22,
+     "c8e73c0e-6c5e-f739-41f7-898c508d90be": 22
+    },
+    "spawnMarkers": {
+     "77f0e564-f5d7-a937-aa50-ed64762175c7": 2,
+     "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+     "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+    },
+    "connectors": {
+     "77f0e564-f5d7-a937-aa50-ed64762175c7": false,
+     "02ecf77d-bf39-c187-3db5-cb7715c123ec": true,
+     "c8e73c0e-6c5e-f739-41f7-898c508d90be": true
+    },
+    "badges": {
+     "77f0e564-f5d7-a937-aa50-ed64762175c7": 0,
+     "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+     "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+    }
+   },
+   "subagent-run/dark": {
+    "events": {
+     "4f00d255-46e9-4373-7232-09f72fda039e": 25,
+     "0ab5e331349408f01": 11,
+     "25ae75425a8bc0e94": 20
+    },
+    "spawnMarkers": {
+     "4f00d255-46e9-4373-7232-09f72fda039e": 2,
+     "0ab5e331349408f01": 0,
+     "25ae75425a8bc0e94": 0
+    },
+    "connectors": {
+     "4f00d255-46e9-4373-7232-09f72fda039e": false,
+     "0ab5e331349408f01": true,
+     "25ae75425a8bc0e94": true
+    },
+    "badges": {
+     "4f00d255-46e9-4373-7232-09f72fda039e": 0,
+     "0ab5e331349408f01": 0,
+     "25ae75425a8bc0e94": 1
+    }
+   },
+   "subagent-run/light": {
+    "events": {
+     "4f00d255-46e9-4373-7232-09f72fda039e": 25,
+     "0ab5e331349408f01": 11,
+     "25ae75425a8bc0e94": 20
+    },
+    "spawnMarkers": {
+     "4f00d255-46e9-4373-7232-09f72fda039e": 2,
+     "0ab5e331349408f01": 0,
+     "25ae75425a8bc0e94": 0
+    },
+    "connectors": {
+     "4f00d255-46e9-4373-7232-09f72fda039e": false,
+     "0ab5e331349408f01": true,
+     "25ae75425a8bc0e94": true
+    },
+    "badges": {
+     "4f00d255-46e9-4373-7232-09f72fda039e": 0,
+     "0ab5e331349408f01": 0,
+     "25ae75425a8bc0e94": 1
+    }
+   }
+  },
+  "approval": {
+   "id": "host",
+   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "previous": {
+    "large-session/dark": {
+     "events": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1366
+     },
+     "spawnMarkers": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 2
+     },
+     "connectors": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": false
+     },
+     "badges": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1
+     }
+    },
+    "large-session/light": {
+     "events": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1366
+     },
+     "spawnMarkers": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 2
+     },
+     "connectors": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": false
+     },
+     "badges": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1
+     }
+    },
+    "codex-multi-agent-run/dark": {
+     "events": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 29,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 22,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 22
+     },
+     "spawnMarkers": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 2,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+     },
+     "connectors": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": false,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": false,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": false
+     },
+     "badges": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 0,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+     }
+    },
+    "codex-multi-agent-run/light": {
+     "events": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 29,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 22,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 22
+     },
+     "spawnMarkers": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 2,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+     },
+     "connectors": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": false,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": false,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": false
+     },
+     "badges": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 0,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+     }
+    },
+    "subagent-run/dark": {
+     "events": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 25,
+      "0ab5e331349408f01": 11,
+      "25ae75425a8bc0e94": 20
+     },
+     "spawnMarkers": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 2,
+      "0ab5e331349408f01": 0,
+      "25ae75425a8bc0e94": 0
+     },
+     "connectors": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": false,
+      "0ab5e331349408f01": true,
+      "25ae75425a8bc0e94": true
+     },
+     "badges": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 0,
+      "0ab5e331349408f01": 0,
+      "25ae75425a8bc0e94": 1
+     }
+    },
+    "subagent-run/light": {
+     "events": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 25,
+      "0ab5e331349408f01": 11,
+      "25ae75425a8bc0e94": 20
+     },
+     "spawnMarkers": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 2,
+      "0ab5e331349408f01": 0,
+      "25ae75425a8bc0e94": 0
+     },
+     "connectors": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": false,
+      "0ab5e331349408f01": true,
+      "25ae75425a8bc0e94": true
+     },
+     "badges": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 0,
+      "0ab5e331349408f01": 0,
+      "25ae75425a8bc0e94": 1
+     }
+    }
+   },
+   "measured": {
+    "large-session/dark": {
+     "events": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1366
+     },
+     "spawnMarkers": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 2
+     },
+     "connectors": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": false
+     },
+     "badges": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1
+     }
+    },
+    "large-session/light": {
+     "events": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1366
+     },
+     "spawnMarkers": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 2
+     },
+     "connectors": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": false
+     },
+     "badges": {
+      "e44bcdfa-eaf1-cf69-51de-20d7e925af16": 1
+     }
+    },
+    "codex-multi-agent-run/dark": {
+     "events": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 29,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 22,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 22
+     },
+     "spawnMarkers": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 2,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+     },
+     "connectors": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": false,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": true,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": true
+     },
+     "badges": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 0,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+     }
+    },
+    "codex-multi-agent-run/light": {
+     "events": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 29,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 22,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 22
+     },
+     "spawnMarkers": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 2,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+     },
+     "connectors": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": false,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": true,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": true
+     },
+     "badges": {
+      "77f0e564-f5d7-a937-aa50-ed64762175c7": 0,
+      "02ecf77d-bf39-c187-3db5-cb7715c123ec": 0,
+      "c8e73c0e-6c5e-f739-41f7-898c508d90be": 0
+     }
+    },
+    "subagent-run/dark": {
+     "events": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 25,
+      "0ab5e331349408f01": 11,
+      "25ae75425a8bc0e94": 20
+     },
+     "spawnMarkers": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 2,
+      "0ab5e331349408f01": 0,
+      "25ae75425a8bc0e94": 0
+     },
+     "connectors": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": false,
+      "0ab5e331349408f01": true,
+      "25ae75425a8bc0e94": true
+     },
+     "badges": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 0,
+      "0ab5e331349408f01": 0,
+      "25ae75425a8bc0e94": 1
+     }
+    },
+    "subagent-run/light": {
+     "events": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 25,
+      "0ab5e331349408f01": 11,
+      "25ae75425a8bc0e94": 20
+     },
+     "spawnMarkers": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 2,
+      "0ab5e331349408f01": 0,
+      "25ae75425a8bc0e94": 0
+     },
+     "connectors": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": false,
+      "0ab5e331349408f01": true,
+      "25ae75425a8bc0e94": true
+     },
+     "badges": {
+      "4f00d255-46e9-4373-7232-09f72fda039e": 0,
+      "0ab5e331349408f01": 0,
+      "25ae75425a8bc0e94": 1
+     }
+    }
+   }
+  }
+ },
+ {
+  "id": "TF-03",
+  "name": "index.legend",
+  "status": "keep",
+  "note": "legend entries on the index, in order",
+  "value": {
+   "large-session/dark": [
+    "user",
+    "assistant",
+    "tool",
+    "thinking",
+    "system",
+    "meta",
+    "turn end",
+    "error",
+    "redacted at source",
+    "┄ link hint"
+   ],
+   "large-session/light": [
+    "user",
+    "assistant",
+    "tool",
+    "thinking",
+    "system",
+    "meta",
+    "turn end",
+    "error",
+    "redacted at source",
+    "┄ link hint"
+   ],
+   "codex-multi-agent-run/dark": [
+    "user",
+    "assistant",
+    "tool",
+    "thinking",
+    "system",
+    "meta",
+    "turn end",
+    "error",
+    "redacted at source",
+    "┄ link hint"
+   ],
+   "codex-multi-agent-run/light": [
+    "user",
+    "assistant",
+    "tool",
+    "thinking",
+    "system",
+    "meta",
+    "turn end",
+    "error",
+    "redacted at source",
+    "┄ link hint"
+   ],
+   "subagent-run/dark": [
+    "user",
+    "assistant",
+    "tool",
+    "thinking",
+    "system",
+    "meta",
+    "turn end",
+    "error",
+    "redacted at source",
+    "┄ link hint"
+   ],
+   "subagent-run/light": [
+    "user",
+    "assistant",
+    "tool",
+    "thinking",
+    "system",
+    "meta",
+    "turn end",
+    "error",
+    "redacted at source",
+    "┄ link hint"
+   ]
+  },
+  "approval": {
+   "id": "host",
+   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "previous": {
+    "large-session/dark": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "error",
+     "┄ link hint"
+    ],
+    "large-session/light": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "error",
+     "┄ link hint"
+    ],
+    "codex-multi-agent-run/dark": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "error",
+     "┄ link hint"
+    ],
+    "codex-multi-agent-run/light": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "error",
+     "┄ link hint"
+    ],
+    "subagent-run/dark": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "error",
+     "┄ link hint"
+    ],
+    "subagent-run/light": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "error",
+     "┄ link hint"
+    ]
+   },
+   "measured": {
+    "large-session/dark": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "meta",
+     "turn end",
+     "error",
+     "redacted at source",
+     "┄ link hint"
+    ],
+    "large-session/light": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "meta",
+     "turn end",
+     "error",
+     "redacted at source",
+     "┄ link hint"
+    ],
+    "codex-multi-agent-run/dark": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "meta",
+     "turn end",
+     "error",
+     "redacted at source",
+     "┄ link hint"
+    ],
+    "codex-multi-agent-run/light": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "meta",
+     "turn end",
+     "error",
+     "redacted at source",
+     "┄ link hint"
+    ],
+    "subagent-run/dark": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "meta",
+     "turn end",
+     "error",
+     "redacted at source",
+     "┄ link hint"
+    ],
+    "subagent-run/light": [
+     "user",
+     "assistant",
+     "tool",
+     "thinking",
+     "system",
+     "meta",
+     "turn end",
+     "error",
+     "redacted at source",
+     "┄ link hint"
+    ]
+   }
+  }
+ },
+ {
+  "id": "TF-04",
+  "name": "index.rollup",
+  "status": "keep",
+  "note": "the rollup line under the index title",
+  "value": {
+   "large-session/dark": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
+   "large-session/light": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
+   "codex-multi-agent-run/dark": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
+   "codex-multi-agent-run/light": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
+   "subagent-run/dark": "3 lanes · 56 events · 5.2K tokens · ~$1.6279 est.",
+   "subagent-run/light": "3 lanes · 56 events · 5.2K tokens · ~$1.6279 est."
+  }
+ },
+ {
+  "id": "TF-05",
+  "name": "theme.attr",
+  "status": "keep",
+  "note": "<html data-theme> under each seeded theme, index and trace page",
+  "value": {
+   "large-session/dark": {
+    "index": "dark",
+    "trace": "dark"
+   },
+   "large-session/light": {
+    "index": "light",
+    "trace": "light"
+   },
+   "codex-multi-agent-run/dark": {
+    "index": "dark",
+    "trace": "dark"
+   },
+   "codex-multi-agent-run/light": {
+    "index": "light",
+    "trace": "light"
+   },
+   "subagent-run/dark": {
+    "index": "dark",
+    "trace": "dark"
+   },
+   "subagent-run/light": {
+    "index": "light",
+    "trace": "light"
+   }
+  }
+ },
+ {
+  "id": "TF-06",
+  "name": "trace.stripEvents",
+  "status": "keep",
+  "note": "event count in the trace strip's accessible label",
+  "value": {
+   "large-session/dark": {
+    "events": 1366,
+    "focusable": true
+   },
+   "large-session/light": {
+    "events": 1366,
+    "focusable": true
+   },
+   "codex-multi-agent-run/dark": {
+    "events": 29,
+    "focusable": true
+   },
+   "codex-multi-agent-run/light": {
+    "events": 29,
+    "focusable": true
+   },
+   "subagent-run/dark": {
+    "events": 25,
+    "focusable": true
+   },
+   "subagent-run/light": {
+    "events": 25,
+    "focusable": true
+   }
+  }
+ },
+ {
+  "id": "TF-07",
+  "name": "trace.kindChips",
+  "status": "keep",
+  "note": "the 7 kind chips (label, pressed) with the event count each governs, errors-only / all / none state at load",
+  "value": {
+   "large-session/dark": {
+    "chips": [
+     {
+      "label": "user",
+      "on": true,
+      "count": 68
+     },
+     {
+      "label": "assistant",
+      "on": true,
+      "count": 354
+     },
+     {
+      "label": "tool",
+      "on": true,
+      "count": 449
+     },
+     {
+      "label": "thinking",
+      "on": true,
+      "count": 326
+     },
+     {
+      "label": "system",
+      "on": true,
+      "count": 8
+     },
+     {
+      "label": "meta",
+      "on": true,
+      "count": 101
+     },
+     {
+      "label": "turn end",
+      "on": true,
+      "count": 60
+     }
+    ],
+    "errorsOnly": {
+     "label": "error",
+     "on": false
+    },
+    "allDisabled": true,
+    "noneDisabled": false
+   },
+   "large-session/light": {
+    "chips": [
+     {
+      "label": "user",
+      "on": true,
+      "count": 68
+     },
+     {
+      "label": "assistant",
+      "on": true,
+      "count": 354
+     },
+     {
+      "label": "tool",
+      "on": true,
+      "count": 449
+     },
+     {
+      "label": "thinking",
+      "on": true,
+      "count": 326
+     },
+     {
+      "label": "system",
+      "on": true,
+      "count": 8
+     },
+     {
+      "label": "meta",
+      "on": true,
+      "count": 101
+     },
+     {
+      "label": "turn end",
+      "on": true,
+      "count": 60
+     }
+    ],
+    "errorsOnly": {
+     "label": "error",
+     "on": false
+    },
+    "allDisabled": true,
+    "noneDisabled": false
+   },
+   "codex-multi-agent-run/dark": {
+    "chips": [
+     {
+      "label": "user",
+      "on": true,
+      "count": 2
+     },
+     {
+      "label": "assistant",
+      "on": true,
+      "count": 5
+     },
+     {
+      "label": "tool",
+      "on": true,
+      "count": 5
+     },
+     {
+      "label": "thinking",
+      "on": true,
+      "count": 5
+     },
+     {
+      "label": "system",
+      "on": true,
+      "count": 7
+     },
+     {
+      "label": "meta",
+      "on": true,
+      "count": 4
+     },
+     {
+      "label": "turn end",
+      "on": true,
+      "count": 1
+     }
+    ],
+    "errorsOnly": {
+     "label": "error",
+     "on": false
+    },
+    "allDisabled": true,
+    "noneDisabled": false
+   },
+   "codex-multi-agent-run/light": {
+    "chips": [
+     {
+      "label": "user",
+      "on": true,
+      "count": 2
+     },
+     {
+      "label": "assistant",
+      "on": true,
+      "count": 5
+     },
+     {
+      "label": "tool",
+      "on": true,
+      "count": 5
+     },
+     {
+      "label": "thinking",
+      "on": true,
+      "count": 5
+     },
+     {
+      "label": "system",
+      "on": true,
+      "count": 7
+     },
+     {
+      "label": "meta",
+      "on": true,
+      "count": 4
+     },
+     {
+      "label": "turn end",
+      "on": true,
+      "count": 1
+     }
+    ],
+    "errorsOnly": {
+     "label": "error",
+     "on": false
+    },
+    "allDisabled": true,
+    "noneDisabled": false
+   },
+   "subagent-run/dark": {
+    "chips": [
+     {
+      "label": "user",
+      "on": true,
+      "count": 1
+     },
+     {
+      "label": "assistant",
+      "on": true,
+      "count": 3
+     },
+     {
+      "label": "tool",
+      "on": true,
+      "count": 9
+     },
+     {
+      "label": "thinking",
+      "on": true,
+      "count": 5
+     },
+     {
+      "label": "system",
+      "on": true,
+      "count": 0
+     },
+     {
+      "label": "meta",
+      "on": true,
+      "count": 6
+     },
+     {
+      "label": "turn end",
+      "on": true,
+      "count": 1
+     }
+    ],
+    "errorsOnly": {
+     "label": "error",
+     "on": false
+    },
+    "allDisabled": true,
+    "noneDisabled": false
+   },
+   "subagent-run/light": {
+    "chips": [
+     {
+      "label": "user",
+      "on": true,
+      "count": 1
+     },
+     {
+      "label": "assistant",
+      "on": true,
+      "count": 3
+     },
+     {
+      "label": "tool",
+      "on": true,
+      "count": 9
+     },
+     {
+      "label": "thinking",
+      "on": true,
+      "count": 5
+     },
+     {
+      "label": "system",
+      "on": true,
+      "count": 0
+     },
+     {
+      "label": "meta",
+      "on": true,
+      "count": 6
+     },
+     {
+      "label": "turn end",
+      "on": true,
+      "count": 1
+     }
+    ],
+    "errorsOnly": {
+     "label": "error",
+     "on": false
+    },
+    "allDisabled": true,
+    "noneDisabled": false
+   }
+  }
+ },
+ {
+  "id": "TF-08",
+  "name": "trace.firstLast",
+  "status": "keep",
+  "note": "first/last event ids in the strip data, the first card rendered at load, the hash at load",
+  "value": {
+   "large-session/dark": {
+    "first": 0,
+    "last": 1365,
+    "firstCardAtLoad": 0,
+    "hashAtLoad": "#ev-0"
+   },
+   "large-session/light": {
+    "first": 0,
+    "last": 1365,
+    "firstCardAtLoad": 0,
+    "hashAtLoad": "#ev-0"
+   },
+   "codex-multi-agent-run/dark": {
+    "first": 0,
+    "last": 28,
+    "firstCardAtLoad": 0,
+    "hashAtLoad": "#ev-0"
+   },
+   "codex-multi-agent-run/light": {
+    "first": 0,
+    "last": 28,
+    "firstCardAtLoad": 0,
+    "hashAtLoad": "#ev-0"
+   },
+   "subagent-run/dark": {
+    "first": 0,
+    "last": 24,
+    "firstCardAtLoad": 0,
+    "hashAtLoad": "#ev-0"
+   },
+   "subagent-run/light": {
+    "first": 0,
+    "last": 24,
+    "firstCardAtLoad": 0,
+    "hashAtLoad": "#ev-0"
+   }
+  }
+ },
+ {
+  "id": "TF-09",
+  "name": "trace.cardsAtLoad",
+  "status": "keep",
+  "note": "cards in the DOM at load, 1280×900 (virtualized: a handful, not the event count)",
+  "value": {
+   "large-session/dark": {
+    "cards": 8,
+    "loading": 0
+   },
+   "large-session/light": {
+    "cards": 8,
+    "loading": 0
+   },
+   "codex-multi-agent-run/dark": {
+    "cards": 6,
+    "loading": 0
+   },
+   "codex-multi-agent-run/light": {
+    "cards": 6,
+    "loading": 0
+   },
+   "subagent-run/dark": {
+    "cards": 9,
+    "loading": 0
+   },
+   "subagent-run/light": {
+    "cards": 9,
+    "loading": 0
+   }
+  }
+ },
+ {
+  "id": "TF-10",
+  "name": "trace.searchPresent",
+  "status": "keep",
+  "note": "search input + button present",
+  "value": {
+   "large-session/dark": {
+    "present": true,
+    "placeholder": "Filter event text or tool names",
+    "button": null
+   },
+   "large-session/light": {
+    "present": true,
+    "placeholder": "Filter event text or tool names",
+    "button": null
+   },
+   "codex-multi-agent-run/dark": {
+    "present": true,
+    "placeholder": "Filter event text or tool names",
+    "button": null
+   },
+   "codex-multi-agent-run/light": {
+    "present": true,
+    "placeholder": "Filter event text or tool names",
+    "button": null
+   },
+   "subagent-run/dark": {
+    "present": true,
+    "placeholder": "Filter event text or tool names",
+    "button": null
+   },
+   "subagent-run/light": {
+    "present": true,
+    "placeholder": "Filter event text or tool names",
+    "button": null
+   }
+  }
+ },
+ {
+  "id": "TF-11",
+  "name": "search.tool",
+  "status": "keep",
+  "note": "fill \"tool\", settle past the debounce, Enter → status text and the ids of the first 5 matches",
+  "value": {
+   "large-session": {
+    "status": "5 matches",
+    "first": [
+     4,
+     26,
+     73,
+     1104,
+     1360
+    ],
+    "empty": null
+   },
+   "codex-multi-agent-run": {
+    "status": "0 matches",
+    "first": [],
+    "empty": "No events match this filter."
+   },
+   "subagent-run": {
+    "status": "2 matches",
+    "first": [
+     1,
+     10
+    ],
+    "empty": null
+   }
+  }
+ },
+ {
+  "id": "TF-12",
+  "name": "filter.chipTool",
+  "status": "keep",
+  "note": "tool chip off → data count, first 5 displayed, last card after scrolling to the end; chip back on restores",
+  "value": {
+   "large-session": {
+    "off": {
+     "pressed": "false",
+     "dataCount": 917,
+     "first": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "lastAfterScrollToEnd": 1365,
+     "empty": null,
+     "allDisabled": false
+    },
+    "on": {
+     "pressed": "true",
+     "chipsOn": 7,
+     "allDisabled": true
+    }
+   },
+   "codex-multi-agent-run": {
+    "off": {
+     "pressed": "false",
+     "dataCount": 24,
+     "first": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "lastAfterScrollToEnd": 28,
+     "empty": null,
+     "allDisabled": false
+    },
+    "on": {
+     "pressed": "true",
+     "chipsOn": 7,
+     "allDisabled": true
+    }
+   },
+   "subagent-run": {
+    "off": {
+     "pressed": "false",
+     "dataCount": 16,
+     "first": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "lastAfterScrollToEnd": 24,
+     "empty": null,
+     "allDisabled": false
+    },
+    "on": {
+     "pressed": "true",
+     "chipsOn": 7,
+     "allDisabled": true
+    }
+   }
+  }
+ },
+ {
+  "id": "TF-13",
+  "name": "filter.noneAll",
+  "status": "keep",
+  "note": "none → empty-state text; all → first cards restored, chips all on",
+  "value": {
+   "large-session": {
+    "none": {
+     "empty": "No event kinds selected — pick one above, or choose all.",
+     "rendered": 0,
+     "chipsOn": 0,
+     "noneDisabled": true,
+     "allDisabled": false
+    },
+    "all": {
+     "first": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "restored": true,
+     "chipsOn": 7,
+     "allDisabled": true,
+     "empty": null
+    }
+   },
+   "codex-multi-agent-run": {
+    "none": {
+     "empty": "No event kinds selected — pick one above, or choose all.",
+     "rendered": 0,
+     "chipsOn": 0,
+     "noneDisabled": true,
+     "allDisabled": false
+    },
+    "all": {
+     "first": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "restored": true,
+     "chipsOn": 7,
+     "allDisabled": true,
+     "empty": null
+    }
+   },
+   "subagent-run": {
+    "none": {
+     "empty": "No event kinds selected — pick one above, or choose all.",
+     "rendered": 0,
+     "chipsOn": 0,
+     "noneDisabled": true,
+     "allDisabled": false
+    },
+    "all": {
+     "first": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "restored": true,
+     "chipsOn": 7,
+     "allDisabled": true,
+     "empty": null
+    }
+   }
+  }
+ },
+ {
+  "id": "TF-14",
+  "name": "filter.errorsOnly",
+  "status": "keep",
+  "note": "errors-only → data count, first 5 displayed, last after scrolling to the end, empty-state text when the trace has none",
+  "value": {
+   "large-session": {
+    "label": "errors only",
+    "on": true,
+    "dataCount": 7,
+    "first": [
+     506,
+     623,
+     661,
+     668,
+     963
+    ],
+    "lastAfterScrollToEnd": 1218,
+    "empty": null,
+    "allDisabled": false
+   },
+   "codex-multi-agent-run": {
+    "label": "errors only",
+    "on": true,
+    "dataCount": 0,
+    "first": [],
+    "lastAfterScrollToEnd": null,
+    "empty": "No errored events in this trajectory.",
+    "allDisabled": false
+   },
+   "subagent-run": {
+    "label": "errors only",
+    "on": true,
+    "dataCount": 0,
+    "first": [],
+    "lastAfterScrollToEnd": null,
+    "empty": "No errored events in this trajectory.",
+    "allDisabled": false
+   }
+  }
+ },
+ {
+  "id": "TF-15",
+  "name": "strip.click",
+  "status": "keep",
+  "note": "click cell 10 of the strip (x = 10.5 × data-cell-width): trace page hash; index lane → navigates to ?trace=…#ev-10",
+  "value": {
+   "large-session": {
+    "cellWidth": 10,
+    "trace": {
+     "selectedHash": "#ev-10",
+     "cardPresent": true
+    },
+    "index": {
+     "urlSuffix": "?trace=e44bcdfa-eaf1-cf69-51de-20d7e925af16#ev-10"
+    }
+   },
+   "codex-multi-agent-run": {
+    "cellWidth": 10,
+    "trace": {
+     "selectedHash": "#ev-10",
+     "cardPresent": true
+    },
+    "index": {
+     "urlSuffix": "?trace=77f0e564-f5d7-a937-aa50-ed64762175c7#ev-10"
+    }
+   },
+   "subagent-run": {
+    "cellWidth": 10,
+    "trace": {
+     "selectedHash": "#ev-10",
+     "cardPresent": true
+    },
+    "index": {
+     "urlSuffix": "?trace=4f00d255-46e9-4373-7232-09f72fda039e#ev-10"
+    }
+   }
+  }
+ },
+ {
+  "id": "TF-16",
+  "name": "nav.hash",
+  "status": "keep",
+  "note": "location.hash = #ev-N → card N rendered, no loading rows, hash kept",
+  "value": {
+   "large-session": {
+    "target": 1050,
+    "cardPresent": true,
+    "loading": 0
+   },
+   "codex-multi-agent-run": {
+    "target": 20,
+    "cardPresent": true,
+    "loading": 0
+   },
+   "subagent-run": {
+    "target": 20,
+    "cardPresent": true,
+    "loading": 0
+   }
+  }
+ },
+ {
+  "id": "TF-17",
+  "name": "modes.links",
+  "status": "keep",
+  "note": "single vs split transport: lane href, back link, nav link, trace page mounts in split",
+  "value": {
+   "large-session": {
+    "single": {
+     "laneHref": "?trace=e44bcdfa-eaf1-cf69-51de-20d7e925af16",
+     "navHrefOnIndex": "?",
+     "backHref": "?",
+     "navHrefOnTrace": "?",
+     "stripEvents": 1366,
+     "cards": 8
+    },
+    "split": {
+     "laneHref": "traces/e44bcdfa-eaf1-cf69-51de-20d7e925af16.html",
+     "navHrefOnIndex": "index.html",
+     "backHref": "../index.html",
+     "navHrefOnTrace": "../index.html",
+     "stripEvents": 1366,
+     "cards": 8
+    }
+   },
+   "codex-multi-agent-run": {
+    "single": {
+     "laneHref": "?trace=77f0e564-f5d7-a937-aa50-ed64762175c7",
+     "navHrefOnIndex": "?",
+     "backHref": "?",
+     "navHrefOnTrace": "?",
+     "stripEvents": 29,
+     "cards": 6
+    },
+    "split": {
+     "laneHref": "traces/77f0e564-f5d7-a937-aa50-ed64762175c7.html",
+     "navHrefOnIndex": "index.html",
+     "backHref": "../index.html",
+     "navHrefOnTrace": "../index.html",
+     "stripEvents": 29,
+     "cards": 6
+    }
+   },
+   "subagent-run": {
+    "single": {
+     "laneHref": "?trace=4f00d255-46e9-4373-7232-09f72fda039e",
+     "navHrefOnIndex": "?",
+     "backHref": "?",
+     "navHrefOnTrace": "?",
+     "stripEvents": 25,
+     "cards": 9
+    },
+    "split": {
+     "laneHref": "traces/4f00d255-46e9-4373-7232-09f72fda039e.html",
+     "navHrefOnIndex": "index.html",
+     "backHref": "../index.html",
+     "navHrefOnTrace": "../index.html",
+     "stripEvents": 25,
+     "cards": 9
+    }
+   }
+  }
+ },
+ {
+  "id": "TF-18",
+  "name": "theme.toggle",
+  "status": "keep",
+  "note": "ThemeToggle: system(dark) → light, persisted across reload, → dark",
+  "value": {
+   "large-session": {
+    "initial": "dark",
+    "afterToggle": "light",
+    "stored": "light",
+    "afterReload": "light",
+    "afterSecondToggle": "dark",
+    "storedAfterSecond": "dark"
+   },
+   "codex-multi-agent-run": {
+    "initial": "dark",
+    "afterToggle": "light",
+    "stored": "light",
+    "afterReload": "light",
+    "afterSecondToggle": "dark",
+    "storedAfterSecond": "dark"
+   },
+   "subagent-run": {
+    "initial": "dark",
+    "afterToggle": "light",
+    "stored": "light",
+    "afterReload": "light",
+    "afterSecondToggle": "dark",
+    "storedAfterSecond": "dark"
+   }
+  }
+ },
+ {
+  "id": "TF-19",
+  "name": "search.responsive",
+  "status": "must-change",
+  "target": {
+   "responsive": true
+  },
+  "note": "type \"to\" fast, Enter inside the debounce, large-session: the page must answer an evaluate within 2 s (today the renderer wedges)",
+  "value": {
+   "responsive": true,
+   "enterResolved": true,
+   "probesAnswered": [
+    true,
+    true,
+    true
+   ],
+   "status": "11 matches"
+  }
+ },
+ {
+  "id": "TF-20",
+  "name": "a11y.axe",
+  "status": "must-change",
+  "target": {
+   "*.seriousOrCritical": 0
+  },
+  "note": "axe-core violations by rule id per page × theme (nodes, impact); target: no serious/critical nodes on any page",
+  "value": {
+   "large-session/dark/index": {
+    "seriousOrCritical": 0
+   },
+   "large-session/dark/trace": {
+    "seriousOrCritical": 0
+   },
+   "large-session/light/index": {
+    "seriousOrCritical": 0
+   },
+   "large-session/light/trace": {
+    "seriousOrCritical": 0
+   },
+   "codex-multi-agent-run/dark/index": {
+    "seriousOrCritical": 0
+   },
+   "codex-multi-agent-run/dark/trace": {
+    "seriousOrCritical": 0
+   },
+   "codex-multi-agent-run/light/index": {
+    "seriousOrCritical": 0
+   },
+   "codex-multi-agent-run/light/trace": {
+    "seriousOrCritical": 0
+   },
+   "subagent-run/dark/index": {
+    "seriousOrCritical": 0
+   },
+   "subagent-run/dark/trace": {
+    "seriousOrCritical": 0
+   },
+   "subagent-run/light/index": {
+    "seriousOrCritical": 0
+   },
+   "subagent-run/light/trace": {
+    "seriousOrCritical": 0
+   }
+  }
+ },
+ {
+  "id": "TF-21",
+  "name": "keys.tabStops",
+  "status": "keep",
+  "note": "Tab stops on the trace page from the top of the document up to the strip (first 20 at most)",
+  "value": {
+   "large-session": [
+    "a:cs-tracer",
+    "a:Trajectories",
+    "button:Toggle theme. Current: dark",
+    "a:← All trajectories",
+    "input:Filter event text or tool names",
+    "button:Search",
+    "button:user",
+    "button:assistant",
+    "button:tool",
+    "button:thinking",
+    "button:system",
+    "button:meta",
+    "button:turn end",
+    "button:error",
+    "button:none",
+    "div[listbox]:e44bcdfa-eaf1-cf69-51de-20d7e925af16 event strip: 1366 events"
+   ],
+   "codex-multi-agent-run": [
+    "a:cs-tracer",
+    "a:Trajectories",
+    "button:Toggle theme. Current: dark",
+    "a:← All trajectories",
+    "input:Filter event text or tool names",
+    "button:Search",
+    "button:user",
+    "button:assistant",
+    "button:tool",
+    "button:thinking",
+    "button:system",
+    "button:meta",
+    "button:turn end",
+    "button:error",
+    "button:none",
+    "div[listbox]:77f0e564-f5d7-a937-aa50-ed64762175c7 event strip: 29 events"
+   ],
+   "subagent-run": [
+    "a:cs-tracer",
+    "a:Trajectories",
+    "button:Toggle theme. Current: dark",
+    "a:← All trajectories",
+    "input:Filter event text or tool names",
+    "button:Search",
+    "button:user",
+    "button:assistant",
+    "button:tool",
+    "button:thinking",
+    "button:system",
+    "button:meta",
+    "button:turn end",
+    "button:error",
+    "button:none",
+    "div[listbox]:4f00d255-46e9-4373-7232-09f72fda039e event strip: 25 events"
+   ]
+  },
+  "approval": {
+   "id": "host",
+   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "previous": {
+    "large-session": [
+     "a:Trajectories",
+     "button:Toggle theme. Current: dark",
+     "a:← All trajectories",
+     "input:Filter event text or tool names",
+     "button:Search",
+     "button:user",
+     "button:assistant",
+     "button:tool",
+     "button:thinking",
+     "button:system",
+     "button:meta",
+     "button:turn end",
+     "button:error",
+     "button:none",
+     "div[listbox]:e44bcdfa-eaf1-cf69-51de-20d7e925af16 event strip: 1366 events"
+    ],
+    "codex-multi-agent-run": [
+     "a:Trajectories",
+     "button:Toggle theme. Current: dark",
+     "a:← All trajectories",
+     "input:Filter event text or tool names",
+     "button:Search",
+     "button:user",
+     "button:assistant",
+     "button:tool",
+     "button:thinking",
+     "button:system",
+     "button:meta",
+     "button:turn end",
+     "button:error",
+     "button:none",
+     "div[listbox]:77f0e564-f5d7-a937-aa50-ed64762175c7 event strip: 29 events"
+    ],
+    "subagent-run": [
+     "a:Trajectories",
+     "button:Toggle theme. Current: dark",
+     "a:← All trajectories",
+     "input:Filter event text or tool names",
+     "button:Search",
+     "button:user",
+     "button:assistant",
+     "button:tool",
+     "button:thinking",
+     "button:system",
+     "button:meta",
+     "button:turn end",
+     "button:error",
+     "button:none",
+     "div[listbox]:4f00d255-46e9-4373-7232-09f72fda039e event strip: 25 events"
+    ]
+   },
+   "measured": {
+    "large-session": [
+     "a:cs-tracer",
+     "a:Trajectories",
+     "button:Toggle theme. Current: dark",
+     "a:← All trajectories",
+     "input:Filter event text or tool names",
+     "button:Search",
+     "button:user",
+     "button:assistant",
+     "button:tool",
+     "button:thinking",
+     "button:system",
+     "button:meta",
+     "button:turn end",
+     "button:error",
+     "button:none",
+     "div[listbox]:e44bcdfa-eaf1-cf69-51de-20d7e925af16 event strip: 1366 events"
+    ],
+    "codex-multi-agent-run": [
+     "a:cs-tracer",
+     "a:Trajectories",
+     "button:Toggle theme. Current: dark",
+     "a:← All trajectories",
+     "input:Filter event text or tool names",
+     "button:Search",
+     "button:user",
+     "button:assistant",
+     "button:tool",
+     "button:thinking",
+     "button:system",
+     "button:meta",
+     "button:turn end",
+     "button:error",
+     "button:none",
+     "div[listbox]:77f0e564-f5d7-a937-aa50-ed64762175c7 event strip: 29 events"
+    ],
+    "subagent-run": [
+     "a:cs-tracer",
+     "a:Trajectories",
+     "button:Toggle theme. Current: dark",
+     "a:← All trajectories",
+     "input:Filter event text or tool names",
+     "button:Search",
+     "button:user",
+     "button:assistant",
+     "button:tool",
+     "button:thinking",
+     "button:system",
+     "button:meta",
+     "button:turn end",
+     "button:error",
+     "button:none",
+     "div[listbox]:4f00d255-46e9-4373-7232-09f72fda039e event strip: 25 events"
+    ]
+   }
+  }
+ },
+ {
+  "id": "TF-22",
+  "name": "keys.stripReachable",
+  "status": "keep",
+  "note": "the strip is in the Tab order",
+  "value": {
+   "large-session": {
+    "reachable": true,
+    "stop": 16
+   },
+   "codex-multi-agent-run": {
+    "reachable": true,
+    "stop": 16
+   },
+   "subagent-run": {
+    "reachable": true,
+    "stop": 16
+   }
+  },
+  "approval": {
+   "id": "host",
+   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "previous": {
+    "large-session": {
+     "reachable": true,
+     "stop": 15
+    },
+    "codex-multi-agent-run": {
+     "reachable": true,
+     "stop": 15
+    },
+    "subagent-run": {
+     "reachable": true,
+     "stop": 15
+    }
+   },
+   "measured": {
+    "large-session": {
+     "reachable": true,
+     "stop": 16
+    },
+    "codex-multi-agent-run": {
+     "reachable": true,
+     "stop": 16
+    },
+    "subagent-run": {
+     "reachable": true,
+     "stop": 16
+    }
+   }
+  }
+ },
+ {
+  "id": "TF-23",
+  "name": "keys.stripArrows",
+  "status": "must-change",
+  "target": {
+   "*.selectionChanges": true
+  },
+  "note": "focus the strip, ArrowRight then Enter: the selection (location.hash) must move (today it does not)",
+  "value": {
+   "large-session": {
+    "before": "#ev-0",
+    "afterArrowRight": "#ev-1",
+    "afterEnter": "#ev-1",
+    "selectionChanges": true
+   },
+   "codex-multi-agent-run": {
+    "before": "#ev-0",
+    "afterArrowRight": "#ev-1",
+    "afterEnter": "#ev-1",
+    "selectionChanges": true
+   },
+   "subagent-run": {
+    "before": "#ev-0",
+    "afterArrowRight": "#ev-1",
+    "afterEnter": "#ev-1",
+    "selectionChanges": true
+   }
+  }
+ },
+ {
+  "id": "TF-24",
+  "name": "keys.listFocusable",
+  "status": "must-change",
+  "target": {
+   "*.focusable": true
+  },
+  "note": "the virtual event list carries an explicit tabindex ≥ 0 (today none; Chromium reaches it only as a keyboard-scrollable region)",
+  "value": {
+   "large-session": {
+    "tabindex": "0",
+    "role": "region",
+    "ariaLabel": "Events",
+    "focusable": true,
+    "reachedByTab": true
+   },
+   "codex-multi-agent-run": {
+    "tabindex": "0",
+    "role": "region",
+    "ariaLabel": "Events",
+    "focusable": true,
+    "reachedByTab": true
+   },
+   "subagent-run": {
+    "tabindex": "0",
+    "role": "region",
+    "ariaLabel": "Events",
+    "focusable": true,
+    "reachedByTab": true
+   }
+  }
+ },
+ {
+  "id": "TF-25",
+  "name": "keys.selectWithoutMouse",
+  "status": "must-change",
+  "target": {
+   "*.selectable": true
+  },
+  "note": "Tab to the strip, ArrowRight ×3, Enter — or Tab to the list, ArrowDown, Enter — must select an event other than #0",
+  "value": {
+   "large-session": {
+    "start": "#ev-0",
+    "reachedStrip": true,
+    "afterStripKeys": "#ev-3",
+    "reachedList": true,
+    "afterListKeys": "#ev-3",
+    "cardFocused": false,
+    "hashNamesFocusedCard": false,
+    "selectable": true
+   },
+   "codex-multi-agent-run": {
+    "start": "#ev-0",
+    "reachedStrip": true,
+    "afterStripKeys": "#ev-3",
+    "reachedList": true,
+    "afterListKeys": "#ev-3",
+    "cardFocused": false,
+    "hashNamesFocusedCard": false,
+    "selectable": true
+   },
+   "subagent-run": {
+    "start": "#ev-0",
+    "reachedStrip": true,
+    "afterStripKeys": "#ev-3",
+    "reachedList": true,
+    "afterListKeys": "#ev-3",
+    "cardFocused": false,
+    "hashNamesFocusedCard": false,
+    "selectable": true
+   }
+  }
+ },
+ {
+  "id": "TF-26",
+  "name": "size.page",
+  "status": "must-change",
+  "target": {
+   "large-session.bytes": "<=1130000",
+   "codex-multi-agent-run.bytes": "<=380000",
+   "subagent-run.bytes": "<=375000"
+  },
+  "note": "single-file page bytes with the CSS / JS split; budget per page, at (just above) today's size — the CSS is expected to shrink when Tailwind goes",
+  "value": {
+   "large-session": {
+    "bytes": 1052004,
+    "css": 36608,
+    "js": 224529
+   },
+   "codex-multi-agent-run": {
+    "bytes": 301163,
+    "css": 36608,
+    "js": 224529
+   },
+   "subagent-run": {
+    "bytes": 297046,
+    "css": 36608,
+    "js": 224529
+   }
+  }
+ },
+ {
+  "id": "TF-27",
+  "name": "size.data",
+  "status": "keep",
+  "note": "embedded data bytes and block count — the transport payload must not change",
+  "value": {
+   "large-session": {
+    "data": 789978,
+    "blocks": 5
+   },
+   "codex-multi-agent-run": {
+    "data": 38875,
+    "blocks": 8
+   },
+   "subagent-run": {
+    "data": 34834,
+    "blocks": 8
+   }
+  },
+  "approval": {
+   "id": "host",
+   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "previous": {
+    "large-session": {
+     "data": 789978,
+     "blocks": 5
+    },
+    "codex-multi-agent-run": {
+     "data": 38670,
+     "blocks": 8
+    },
+    "subagent-run": {
+     "data": 34834,
+     "blocks": 8
+    }
+   },
+   "measured": {
+    "large-session": {
+     "data": 789978,
+     "blocks": 5
+    },
+    "codex-multi-agent-run": {
+     "data": 38875,
+     "blocks": 8
+    },
+    "subagent-run": {
+     "data": 34834,
+     "blocks": 8
+    }
+   }
+  }
+ },
+ {
+  "id": "TF-28",
+  "name": "size.tailwind",
+  "status": "must-change",
+  "target": {
+   "*.total": 0
+  },
+  "note": "Tailwind bytes in the page CSS: the preflight segment plus tracer's utility rules (non-`.cs-` class rules with --tw- vars, escaped selectors, or sitting after the preflight); ui's own --tw- vars are not counted",
+  "value": {
+   "large-session": {
+    "preflight": 0,
+    "utilities": 0,
+    "total": 0,
+    "twVarRefs": 0
+   },
+   "codex-multi-agent-run": {
+    "preflight": 0,
+    "utilities": 0,
+    "total": 0,
+    "twVarRefs": 0
+   },
+   "subagent-run": {
+    "preflight": 0,
+    "utilities": 0,
+    "total": 0,
+    "twVarRefs": 0
+   }
+  }
+ },
+ {
+  "id": "TF-29",
+  "name": "net.external",
+  "status": "keep",
+  "note": "requests to anything but file:/data:/blob: over every page the suite opened",
+  "value": {
+   "external": 0,
+   "sample": []
+  }
+ },
+ {
+  "id": "TF-30",
+  "name": "errors.page",
+  "status": "keep",
+  "note": "pageerror + console.error over every page the suite opened",
+  "value": {
+   "errors": 0,
+   "sample": []
+  }
+ },
+ {
+  "id": "TF-31",
+  "name": "search.highlight",
+  "status": "must-change",
+  "target": {
+   "large-session.marks": ">=1",
+   "subagent-run.marks": ">=1"
+  },
+  "note": "after search \"tool\", rendered cards wrap hits in <mark> (HighlightText); today none",
+  "value": {
+   "large-session": {
+    "marks": 5,
+    "renderedCards": 5
+   },
+   "codex-multi-agent-run": {
+    "marks": 0,
+    "renderedCards": 0
+   },
+   "subagent-run": {
+    "marks": 2,
+    "renderedCards": 2
+   }
+  },
+  "approval": {
+   "id": "tracer-03",
+   "reason": "TF-11 freezes zero matches as the codex-multi-agent-run fixture's correct behaviour on this query, and zero matches render zero cards with nothing to wrap in <mark>; the highlight assertion holds only on the fixtures where a match exists",
+   "previous": {
+    "*.marks": ">=1"
+   },
+   "measured": {
+    "large-session.marks": ">=1",
+    "subagent-run.marks": ">=1"
+   }
+  }
+ },
+ {
+  "id": "TF-32",
+  "name": "nav.targetInView",
+  "status": "must-change",
+  "target": {
+   "*.hashNav.inView": true,
+   "*.hashNav.hashKept": true,
+   "*.stripClick.inView": true,
+   "*.stripClick.hashKept": true
+  },
+  "note": "after a deep link (#ev-N) or a strip click the selected card intersects the list viewport and the hash still names it; today the scroll lands near the card, row measurement shifts the offsets, and the scrollspy re-selects whatever is on top",
+  "value": {
+   "large-session": {
+    "hashNav": {
+     "inView": true,
+     "hashKept": true
+    },
+    "stripClick": {
+     "inView": true,
+     "hashKept": true
+    }
+   },
+   "codex-multi-agent-run": {
+    "hashNav": {
+     "inView": true,
+     "hashKept": true
+    },
+    "stripClick": {
+     "inView": true,
+     "hashKept": true
+    }
+   },
+   "subagent-run": {
+    "hashNav": {
+     "inView": true,
+     "hashKept": true
+    },
+    "stripClick": {
+     "inView": true,
+     "hashKept": true
+    }
+   }
+  }
+ },
+ {
+  "id": "TF-33",
+  "name": "invariant.stripMatchesData",
+  "status": "keep",
+  "note": "for each kind chip selected alone: the strip's rendered data-event-count must equal the count of that kind in the source strip data. Catches a strip that filters on anything other than the event's own kind",
+  "value": {
+   "large-session": [],
+   "codex-multi-agent-run": [],
+   "subagent-run": []
+  }
+ },
+ {
+  "id": "TF-34",
+  "name": "invariant.canvasPinned",
+  "status": "keep",
+  "note": "the strip canvas must stay pinned to its scrollport at 0%, 50% and 100% horizontal scroll. The paint already subtracts scrollLeft, so a canvas that scrolls away offsets everything twice and the drawn region collapses",
+  "value": {
+   "large-session": [],
+   "codex-multi-agent-run": [],
+   "subagent-run": []
+  }
+ }
+]

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { currentTraceId, inTracePage, indexLink, linkTo, mode, traceFilename } from "../routes";
+import { currentTraceId, hasTrace, inTracePage, indexLink, linkTo, mode, traceFilename } from "../routes";
 import type { LoadedTrace } from "../types";
 
 function block(id: string, value: unknown) {
@@ -55,6 +55,26 @@ describe("linkTo", () => {
     document.getElementById("index")!.remove();
     expect(traceFilename("a/b")).toBe("a-b.html");
     expect(traceFilename("")).toBe("trajectory.html");
+  });
+});
+
+describe("hasTrace", () => {
+  // A parent's childSessionId is a claim about another trajectory. EventCard
+  // used to link to it unconditionally, so a child that was never exported —
+  // or a reference broken upstream, which is what the codex and opencode
+  // fixtures shipped — produced a live-looking "Open child trajectory →"
+  // pointing at ?trace=each%20reads%20when.
+  it("distinguishes a trajectory this artifact contains from one it only names", () => {
+    block("index", { trajectories: [{ id: "root", path: "root" }, { id: "kid", path: "kid" }] });
+    expect(hasTrace("root")).toBe(true);
+    expect(hasTrace("kid")).toBe(true);
+    expect(hasTrace("each reads when")).toBe(false);
+    expect(hasTrace("a-real-looking-id-that-was-not-exported")).toBe(false);
+  });
+
+  it("answers true with no index block at all, rather than hiding links it cannot check", () => {
+    // The dev server and the tests have no #index; every exported artifact does.
+    expect(hasTrace("anything")).toBe(true);
   });
 });
 

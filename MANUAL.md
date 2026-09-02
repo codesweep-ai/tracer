@@ -164,6 +164,29 @@ estimate. Beside each one sits an activity strip, and clicking a cell jumps to t
 - **Filter.** The search box matches event text and tool names, scanning across chunk boundaries.
 - **Sub-agents.** Each appears as its own trajectory, linked from the parent event that spawned it.
 
+### What a mark on the strip means
+
+Colour is the event **kind**, and the legend below the strip names each one; clicking a kind filters
+it out. Four kinds carry the conversation and get distinct hues: user, assistant, tool and thinking.
+The structural kinds deliberately do not. They recede to neutral ink so the conversation carries the
+signal. **system** and **meta** take two different neutral steps, because meta recurs at volume and
+the legend filters the two apart. **turn end** shares system's ink on purpose: it is identified by
+its tick, and a mark named by shape does not need a colour of its own.
+
+Everything else a mark can carry is an **overlay**. An overlay is a property of one event rather than
+a kind of its own, so it is not in the kind list:
+
+| Mark | Meaning |
+|---|---|
+| Filled square | An ordinary event of that kind. |
+| **Hollow square** | **Redacted at source.** The event exists and is counted, but its content was withheld before `cs-tracer` ever saw it: a thinking block that arrived empty. There is nothing to show, and a hollow mark says so rather than implying the event is missing. It is keyed beside the legend. |
+| Cross | The event errored. The **errors** toggle beside the legend narrows to these; it composes with the kind filters and the search box. |
+| Tick | A turn boundary, the last event of a turn. Drawn at the trailing edge of the mark, and every turn-end event has one. |
+| Marker | The event spawned a sub-agent. Its card links to that trajectory when the export contains it, and says so when it does not. |
+
+Hovering any mark names the event and repeats these in words, so the strip is readable without
+memorising the vocabulary.
+
 Above **25 MiB** the tool prints the size and continues. That is a warning rather than a refusal. If
 one file is impractical at that size, `--split` puts each trajectory on its own page, so opening one
 loads that page rather than the whole export.

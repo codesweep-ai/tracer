@@ -1,0 +1,30 @@
+{
+ "selectors": [
+  { "file": "apps/viewer/src/styles.css", "line": 116, "selector": ".event-strip [data-component=\"EventLanes\"]", "component": "EventLanes" },
+  { "file": "apps/viewer/src/styles.css", "line": 119, "selector": ".event-strip [data-event-lanes-labels]", "component": "EventLanes" },
+  { "file": "apps/viewer/src/styles.css", "line": 123, "selector": ".event-strip [data-event-lanes-overview-label]", "component": "EventLanes" },
+  { "file": "apps/viewer/src/IndexPage.tsx", "line": 27, "selector": "[data-event-lanes-scroller]", "component": "EventLanes" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 26, "selector": "[data-component=\"StatusBadge\"]", "component": "StatusBadge" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 29, "selector": "[data-testid=\"index-page\"] [data-component=\"Legend\"]", "component": "Legend" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 30, "selector": "[data-legend-label]", "component": "Legend" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 38, "selector": "[data-event-lanes-scroller]", "component": "EventLanes" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 39, "selector": "[data-event-lanes-canvas]", "component": "EventLanes" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 40, "selector": "[data-component=\"ChartTooltip\"]", "component": "ChartTooltip" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 43, "selector": "[data-search-input]", "component": "SearchInput" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 44, "selector": "[data-search-submit]", "component": "SearchInput" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 45, "selector": "[data-search-status]", "component": "SearchInput" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 46, "selector": "button:has([data-legend-label])", "component": "Legend" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 51, "selector": "[data-header-nav-link]", "component": "AppShell" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 62, "selector": "[data-highlight-match]", "component": "HighlightText" },
+  { "file": "apps/viewer/fixtures/selectors.mjs", "line": 65, "selector": "[data-component=\"ThemeToggle\"]", "component": "ThemeToggle" },
+  { "file": "apps/viewer/fixtures/checks.mjs", "line": 247, "selector": "[data-card-index] [data-highlight-match]", "component": "HighlightText" },
+  { "file": "apps/viewer/fixtures/checks.mjs", "line": 313, "selector": "[data-event-index=\"${i}\"]", "component": "EventLanes" },
+  { "file": "apps/viewer/fixtures/checks.mjs", "line": 339, "selector": "[data-event-index=\"${i}\"]", "component": "EventLanes" },
+  { "file": "apps/viewer/fixtures/checks.mjs", "line": 385, "selector": "[data-event-lanes-canvas]", "component": "EventLanes" },
+  { "file": "apps/viewer/scripts/parity.mjs", "line": 210, "selector": "[data-search-input]", "component": "SearchInput" },
+  { "file": "apps/viewer/scripts/parity.mjs", "line": 216, "selector": "[data-search-input]", "component": "SearchInput" },
+  { "file": "apps/viewer/src/test/views.test.tsx", "line": 37, "selector": "[data-legend-label=\"${name}\"]", "component": "Legend" },
+  { "file": "apps/viewer/src/test/views.test.tsx", "line": 92, "selector": "[data-search-input]", "component": "SearchInput" },
+  { "file": "apps/viewer/src/test/views.test.tsx", "line": 160, "selector": "[data-testid=\"strip\"] [data-event-lanes-scroller]", "component": "EventLanes" }
+ ]
+}

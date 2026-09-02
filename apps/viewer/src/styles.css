@@ -1,17 +1,222 @@
-@import "@codesweep-ai/ui/styles/tokens.css";
-@import "@codesweep-ai/ui/styles/base.css";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "@codesweep-ai/ui/styles/core.css";
+@import "@codesweep-ai/ui/styles/components/app-shell.css";
+@import "@codesweep-ai/ui/styles/components/theme-toggle.css";
+@import "@codesweep-ai/ui/styles/components/card.css";
+@import "@codesweep-ai/ui/styles/syntax.css";
+@import "@codesweep-ai/ui/styles/components/status-badge.css";
+@import "@codesweep-ai/ui/styles/components/search-input.css";
+@import "@codesweep-ai/ui/styles/components/skeleton.css";
+@import "@codesweep-ai/ui/styles/components/highlight-text.css";
+@import "@codesweep-ai/ui/styles/components/code-block.css";
+@import "@codesweep-ai/ui/styles/components/chart-tooltip.css";
+@import "@codesweep-ai/ui/styles/components/legend.css";
+@import "@codesweep-ai/ui/styles/components/event-lanes.css";
 
 :root {
-  /* Viewer layout tokens: canvas height, virtual row height, and agent-tree indentation. */
-  --strip-height: 18px;
+  /* Viewer layout tokens: virtual row height and agent-tree indentation. */
   --event-row-height: 224px;
   --trajectory-depth-indent: 32px;
-  --trace-user: var(--color-link);
-  --trace-assistant: var(--color-warning);
-  --trace-tool: var(--color-brand);
-  --trace-recessive: var(--muted);
 }
 canvas { image-rendering: pixelated; }
+
+/* ---- shared bits ---------------------------------------------------------- */
+.muted { color: var(--muted); }
+.caption { font-size: var(--font-size-caption); }
+.auto-title { font-style: italic; }
+.alert-error { color: var(--color-error); }
+
+/* ---- app shell contents ---------------------------------------------------- */
+.app-main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+/* ---- index page ------------------------------------------------------------- */
+.index-page { display: flex; flex-direction: column; gap: var(--space-4); }
+.page-title { font-size: var(--font-size-page-title); font-weight: var(--font-weight-bold); }
+.rollup { color: var(--muted); }
+.index-legend { font-size: var(--font-size-caption); }
+.legend-extra { display: inline-flex; align-items: center; gap: var(--space-1); }
+
+.lane-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.lane { position: relative; }
+.lane-grid {
+  display: grid;
+  grid-template-columns: minmax(12rem, 20rem) 1fr;
+  gap: var(--space-4);
+  align-items: center;
+}
+@media (max-width: 48rem) {
+  .lane-grid { grid-template-columns: 1fr; }
+}
+.lane-meta { min-width: 0; }
+.lane-title {
+  color: var(--fg);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lane-title:hover { color: var(--color-link); }
+.lane-meta-line {
+  font-size: var(--font-size-caption);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lane-id { font-family: var(--font-family-mono); }
+.lane-badges { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+
+/* The nesting/fork connectors and link hints stay tracer's (review §2.3). The
+   border-solid / border-dashed class names are asserted by views.test.tsx. */
+.border-solid { border-style: solid; }
+.border-dashed { border-style: dashed; }
+.fork-connector-depth,
+.fork-connector-offscreen {
+  position: absolute;
+  right: 100%;
+  top: var(--space-5);
+  width: var(--trajectory-depth-indent);
+  height: var(--space-5);
+  border-left: 1px solid var(--color-link);
+  border-bottom: 1px solid var(--color-link);
+  border-bottom-left-radius: var(--radius-sm);
+  pointer-events: none;
+}
+.fork-connector-vertical {
+  position: absolute;
+  z-index: var(--z-sticky);
+  border-left: 2px solid var(--color-link);
+  pointer-events: none;
+}
+.fork-connector-horizontal {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  border-bottom: 2px solid var(--color-link);
+}
+.link-hint {
+  position: absolute;
+  left: calc(-1 * var(--space-4));
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--muted);
+}
+
+/* ---- the strip (EventLanes wrapper) ---------------------------------------- */
+.event-strip { position: relative; width: 100%; min-width: 0; }
+/* tracer's strips are single-lane and every page already names the trace, so the
+   lane label carries no information here. Collapse the sticky gutter using
+   EventLanes' own theming variable (the package's override surface) plus the
+   per-lane className the contract provides. */
+.event-strip [data-component="EventLanes"] { --event-lanes-gutter: 0px; }
+.event-strip-lane-label { padding: 0; }
+/* At zero width the labels cell's frame is all that is left — drop it. */
+.event-strip [data-event-lanes-labels] { border: 0; }
+/* Base had no "Overview" caption; with the gutter collapsed its cell is 0 wide
+   and the word prints across the band's left edge. The band is self-evident
+   and the listbox carries the accessible name, so the label goes. */
+.event-strip [data-event-lanes-overview-label] { visibility: hidden; }
+/* The strip's spawn-marker census spans are tracer's machine-readable contract
+   (the fixture suite counts them; fork connectors anchor on the lane's strip).
+   EventLanes paints and announces the visible markers itself. */
+.spawn-marker-census {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  pointer-events: none;
+}
+
+/* ---- trace page -------------------------------------------------------------- */
+.trace-page { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.trace-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.back-link { color: var(--color-link); }
+.trace-title { font-size: var(--font-size-page-title); font-weight: var(--font-weight-bold); }
+.trace-meta { color: var(--muted); font-size: var(--font-size-caption); }
+.trace-id { font-family: var(--font-family-mono); }
+.filters-row { display: flex; align-items: flex-start; gap: var(--space-3); flex-wrap: wrap; }
+.trace-search { min-width: var(--input-min-width); }
+.kind-legend { font-size: var(--font-size-caption); padding: var(--space-2) 0; }
+.legend-sep { color: var(--border); }
+/* The strip's hollow mark, at legend scale: a token-coloured outline around the
+   page background, matching EventLanes' `shape="hollow"` geometry. */
+.redacted-key { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--muted); }
+.redacted-key-swatch {
+  width: var(--space-3); height: var(--space-3); flex: none;
+  background: var(--bg); border: 1px solid var(--muted); border-radius: var(--radius-xs);
+}
+
+.errors-only {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+  border: 0;
+  font-size: var(--font-size-caption);
+  border-radius: var(--radius-sm);
+  padding: var(--space-0-5) var(--space-1);
+  background: transparent;
+  color: var(--fg);
+}
+.errors-only:hover { text-decoration: underline; }
+.errors-only-on { background: var(--color-error-bg); color: var(--color-error); }
+
+.filter-reset { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--muted); }
+.filter-reset-button {
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: var(--font-size-caption);
+}
+.filter-reset-button:hover { text-decoration: underline; }
+.filter-reset-button:not(:disabled) { color: var(--color-link); }
+.filter-reset-button:disabled { opacity: 0.4; cursor: default; }
+
+/* overflow-anchor: none — Chromium's scroll anchoring adjusts scrollTop when
+   content above the viewport changes height, which fires a scroll event the
+   scrollspy cannot tell from a user scroll. This list manages its scroll
+   position explicitly (nav intents); anchoring adjustments made the post-jump
+   settle nondeterministic (the parity interaction flake). */
+.virtual-list { flex: 1; min-height: 0; overflow-y: auto; overflow-anchor: none; }
+.empty-filter { color: var(--muted); padding: var(--space-4) 0; }
+.virtual-list-inner { position: relative; }
+.virtual-list-window { position: absolute; left: 0; right: 0; }
+
+/* ---- event cards -------------------------------------------------------------- */
+.event-card { padding-bottom: var(--space-3); scroll-margin-top: var(--space-4); }
+.event-card-compact { padding-bottom: var(--space-1); scroll-margin-top: var(--space-4); }
+.event-card-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: var(--space-3);
+  row-gap: var(--space-1);
+  font-size: var(--font-size-caption);
+}
+.event-card-title { display: flex; align-items: center; gap: var(--space-2); }
+.event-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--font-size-body);
+  min-width: 0;
+}
+.event-text { white-space: pre-wrap; overflow-wrap: break-word; }
+.tool-summary { cursor: pointer; font-weight: var(--font-weight-semibold); }
+.tool-output {
+  margin-top: var(--space-2);
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-code);
+}
+.child-link { color: var(--color-link); text-decoration: underline; }

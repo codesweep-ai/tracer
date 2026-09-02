@@ -1,8 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { uiVersion } from "./scripts/uiVersion.mjs";
 
 // build:split — the --split export shell (SPEC.md §5): a shared
 // assets/app.js + assets/app.css referenced RELATIVELY, written once per output
@@ -10,12 +10,12 @@ import { createRequire } from "node:module";
 // must be CLASSIC, not type="module": a fetched module script is CORS-restricted
 // and blocked under file://, while a relative classic <script src> loads fine.
 // The bundle is therefore built as an IIFE with no import/export/import.meta.
-const root = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const reactDir = path.dirname(require.resolve("react/package.json"));
 const reactDomDir = path.dirname(require.resolve("react-dom/package.json"));
 
 export default defineConfig({
+  define: { __UI_VERSION__: JSON.stringify(uiVersion()) },
   base: "./", // index.html references ./assets/app.js; the exporter rewrites to ../assets/ for traces/*.html
   publicDir: false,
   plugins: [
@@ -33,7 +33,7 @@ export default defineConfig({
       },
     },
   ],
-  resolve: { alias: { "@codesweep-ai/ui": path.resolve(root, "../../ui/codesweep-ui/src"), react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
+  resolve: { alias: { react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
   build: {
     outDir: "../../internal/cli/viewer/split",
     emptyOutDir: true,

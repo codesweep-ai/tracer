@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { block, injectBlocks } from "./scripts/assemble.mjs";
+import { uiVersion } from "./scripts/uiVersion.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -28,7 +29,10 @@ function demoDataBlocks(): Plugin {
   return { name: "demo-data-blocks", apply: "serve", transformIndexHtml: (html) => injectBlocks(html, blocks) };
 }
 
+
+
 export default defineConfig({
+  define: { __UI_VERSION__: JSON.stringify(uiVersion()) },
   plugins: [react(), demoDataBlocks()],
-  resolve: { alias: { "@codesweep-ai/ui": path.resolve(root, "../../ui/codesweep-ui/src"), react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
+  resolve: { alias: { react: reactDir, "react-dom": reactDomDir }, dedupe: ["react", "react-dom"] },
 });

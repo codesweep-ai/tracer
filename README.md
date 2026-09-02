@@ -41,7 +41,7 @@ make install                    # -> ~/.local/bin/cs-tracer
 ```
 
 That build needs **Go 1.26 or newer**. It also rebuilds the viewer whenever `npm` is on your PATH,
-which needs **Node 20 or newer**. [INSTALL.md](INSTALL.md#or-build-from-source) shows how to build
+which needs **Node 22.13 or newer**. [INSTALL.md](INSTALL.md#or-build-from-source) shows how to build
 from the committed viewer assets instead.
 
 Then point it at a session directory and open the result:

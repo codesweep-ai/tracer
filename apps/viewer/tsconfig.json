@@ -9,9 +9,7 @@
     "declarationMap": false,
     "noEmit": true,
     "noUncheckedIndexedAccess": false,
-    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
-    "baseUrl": ".",
-    "paths": { "@codesweep-ai/ui": ["../../ui/codesweep-ui/src/index.ts"], "@codesweep-ai/ui/*": ["../../ui/codesweep-ui/src/*"] }
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src", "vite.config.ts", "vite.single.config.ts", "vite.split.config.ts", "vitest.config.ts"]
 }

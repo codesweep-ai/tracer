@@ -209,6 +209,23 @@ const STRUCTURAL_KEYS = new Set([
   "type", "role", "kind", "uuid", "id", "sessionId", "session_id", "parentUuid",
   "messageId", "promptId", "leafUuid", "snapshotMessageId", "toolUseID", "tool_use_id",
   "agentId", "bridgeSessionId", "childSessionId", "model", "version", "cliVersion",
+  // Cross-session references. These were NOT exempt, and the omission severed
+  // every parent/child edge in the codex and opencode corpora: the session's
+  // own id is exempt and goes through mapId(), while the *reference to it* fell
+  // through to redactProse(). Both are deterministic, so each was internally
+  // consistent — and they disagreed with each other, which is why
+  // `agent_thread_id` ended up as "each reads when" pointing at a session now
+  // called 02ecf77d-…. A reference and its target must take the same path.
+  // claude-code was untouched only because `agentId`/`parentUuid` happen to be
+  // on this list; the snake_case and camelCase spellings other CLIs use were not.
+  // `tool` is opencode's tool-NAME key (claude's is `name`, which is exempt).
+  // Redacting it turned every tool name into prose, so `p.tool == "task"` never
+  // matched and the adapter produced no subtask events at all: the corpus could
+  // not exercise the sub-agent spawning its own README says it exercises.
+  // Behaviour depends on this value, which is the test for belonging here.
+  "tool", "subagent_type",
+  "agent_thread_id", "parent_thread_id", "parentID", "thread_id", "event_id",
+  "call_id", "callId", "conversationId", "conversation_id", "turnId", "turn_id",
   "mode", "permissionMode", "operation", "name", "timestamp", "ts", "cwd",
   "stop_reason", "stopReason", "status", "source", "adapter", "subtype", "level",
   // Pricing inputs. `speed` and `inferenceGeo` select the rate and the geo
