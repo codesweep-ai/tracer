@@ -334,6 +334,7 @@ run it.
 | eslint | the viewer sources and its build scripts are clean | npm is not installed |
 | viewer tests + schema conformance | the React app behaves, and output validates against the schema, both the committed goldens **and** output produced fresh by the current binary | as above |
 | visual parity | `--single` and `--split` render identically: DOM digest, full-page pixels, interaction end-state across a chunk boundary | as above, or no browser |
+| conventions | the ui pin agrees across every specifier, every lockfile entry (which must carry an `integrity`) and the install, and it is one exact version rather than a range; and a target that re-records committed files is named `record-*` | only the installed-copy rule skips, when nothing is installed |
 | prose | the writing rules below, and that no sentence asserts a count the repo counts itself | never |
 | open-source readiness | the licence, the document set, that no tracked file carries a home path, a mail address or a user name, and what a stranger's clone can do | never |
 | docs against the binary | every documented command exists, the paths and spec sections the docs and the source cite resolve, and the manual the binary prints is the manual in the tree | never |

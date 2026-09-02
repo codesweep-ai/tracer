@@ -79,7 +79,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help tidy-check embed-check build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity fixtures ledger lint deadcode actionlint install uninstall snapshot release release-check clean
+.PHONY: help tidy-check embed-check build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity fixtures conventions ledger lint deadcode actionlint install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -195,6 +195,16 @@ coverage-baseline:
 	@scripts/coverage.sh baseline $(BASELINE_TIERS)
 
 
+## conventions: the house rules a @codesweep-ai/ui consumer must keep — the pin
+## agrees across tarball, specifiers, lockfiles and the install, and a target
+## that re-records committed files is named record-*. The script is vendored
+## byte-identical into ledger, tracer and campaign; keep the copies identical.
+##
+## Go only, so the committed-file rules run even on a clone with no Node; only
+## the installed-marker rule needs npm ci and it skips by itself.
+conventions:
+	@go run scripts/consumer-conventions.go
+
 ## viewer-lint: eslint over the viewer sources, where a Node toolchain is here
 ##
 ## The artifacts under internal/cli/viewer are committed, so a clone with no
@@ -246,7 +256,7 @@ ledger:
 ## confusing. Four of these skip on a machine that lacks what they need, and
 ## each says so where it runs. A skipped gate is not a passed one.
 check: fmt-check tidy-check embed-check vet lint deadcode build check-version test coverage-check \
-       viewer-lint viewer-test parity prose refs oss surface ledger
+       conventions viewer-lint viewer-test parity prose refs oss surface ledger
 
 # say prints a heading above each gate, so a long run reads as a list rather
 # than as a wall. Bold where a terminal is reading it and plain where a pipe
