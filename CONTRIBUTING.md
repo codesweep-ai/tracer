@@ -127,7 +127,7 @@ Fix the asset path a split trace page points at
 ```
 
 ```
-Compare the pixels the parity gate says it compares
+Make the parity gate compare images, not file bytes
 
 Buffer.compare over a PNG reports on the compressor, and the
 first page in a fresh browser rasterises differently.
