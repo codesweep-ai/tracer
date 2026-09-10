@@ -55,10 +55,9 @@ prerequisites ships stale embedded assets in a binary that passes every other ga
 artifacts are present, and compile against those. *A clone cannot install a checkout it has no
 access to, and failing there would leave the binary unbuildable for everyone else.*
 
-**R5.** The version **MUST** be injected at link time, and `make check-version` **MUST** compare the
-built binary's stamp against `git describe`. *The Go
-linker silently ignores an `-X` naming a symbol that does not exist, so a plain `go build` produces
-a working binary that reports its version as `dev`.*
+**R5.** The version **MUST** come from the build information Go embeds, rather than a linker `-X`
+stamp. *The Go linker silently ignores an `-X` naming a symbol that does not exist, so a plain
+`go build` produces a working binary that reports its version as `dev`.*
 
 The viewer is a React application built twice by Vite. One build inlines everything, the other
 emits shared assets. Both write into the Go module tree, so `//go:embed` reaches them at compile

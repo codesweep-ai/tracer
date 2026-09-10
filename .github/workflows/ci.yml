@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # make check-version compares the stamp to git describe
+          fetch-depth: 0 # make check runs the oss gate, which reads the history
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod

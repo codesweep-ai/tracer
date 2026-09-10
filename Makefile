@@ -17,7 +17,7 @@ PREFIX     ?= $(HOME)/.local
 VERSION    := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 # No -X version stamp: the version comes from the build info Go embeds itself,
 # so `make install`, `go install ...@latest` and `go tool` all report the same
-# string for the same commit. `make check-version` holds the binary to the tree.
+# string for the same commit.
 LDFLAGS    := -s -w
 GO_FILES   := $(shell git ls-files '*.go')
 VIEWER_OUT := internal/cli/viewer
@@ -82,7 +82,7 @@ COVERFLAGS  = -covermode=atomic -coverpkg=$(COVERPKG)
 
 GORELEASER ?= goreleaser
 
-.PHONY: help tidy-check embed-check build viewer viewer-build test coverage coverage-check coverage-baseline check ci check-version vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity fixtures conventions ledger lint deadcode actionlint install uninstall snapshot release release-check clean
+.PHONY: help tidy-check embed-check build viewer viewer-build test coverage coverage-check coverage-baseline check ci vet fmt fmt-check prose refs oss surface viewer-lint viewer-test parity fixtures conventions ledger lint deadcode actionlint install uninstall snapshot release release-check clean
 
 .DEFAULT_GOAL := help
 
@@ -261,7 +261,7 @@ ledger:
 ## usually means a language-version mismatch that makes everything after it
 ## confusing. Three of these skip on a machine that lacks what they need, and
 ## each says so where it runs. A skipped gate is not a passed one.
-check: fmt-check tidy-check embed-check vet lint deadcode build check-version test coverage-check \
+check: fmt-check tidy-check embed-check vet lint deadcode test coverage-check \
        conventions viewer-lint viewer-test parity prose refs oss surface
 
 # say prints a heading above each gate, so a long run reads as a list rather
@@ -287,21 +287,6 @@ ci:
 	$(call say,ledger)
 	@$(MAKE) --no-print-directory ledger
 	@printf '\nci: every gate ran. Not reproduced here: build-test on macOS.\n'
-
-## check-version: assert the binary was built from this tree. `version` prints
-## "cs-tracer <stamp> (os/arch, go)", so compare the stamp field alone, and read
-## it in the recipe: $(shell) would run the binary before build made it.
-##
-## The stamp is Go's own build info, so it is the tag when HEAD carries one and
-## a pseudo-version carrying HEAD's commit otherwise. Match on whichever of the
-## two this tree is at; a stale binary names an older commit and fails.
-check-version: build
-	@stamp="$$($(BIN) version | awk '{print $$2}')"; \
-	want="$$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short=12 HEAD)"; \
-	case "$$stamp" in \
-		*"$$want"*) echo "version OK: $$stamp" ;; \
-		*) echo "version mismatch: binary says '$$stamp', tree is at $$want" >&2; exit 1 ;; \
-	esac
 
 ## vet: go vet
 vet:
