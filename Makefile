@@ -261,7 +261,7 @@ ledger:
 ## usually means a language-version mismatch that makes everything after it
 ## confusing. Three of these skip on a machine that lacks what they need, and
 ## each says so where it runs. A skipped gate is not a passed one.
-check: fmt-check tidy-check embed-check vet lint deadcode test coverage-check \
+check: fmt-check tidy-check embed-check vet lint deadcode build test coverage-check \
        conventions viewer-lint viewer-test parity prose refs oss surface
 
 # say prints a heading above each gate, so a long run reads as a list rather
