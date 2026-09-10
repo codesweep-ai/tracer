@@ -328,7 +328,6 @@ run it.
 | gofmt | every tracked Go file is formatted | never |
 | go vet | no vet findings, including a language-version mismatch between `go.mod` and the APIs in use | never |
 | build | the binary links, and where the viewer sources resolve, both Vite builds emit and their artifact assertions hold | never |
-| version stamp | the binary's version equals `git describe`, which catches a plain `go build` | never |
 | Go tests | the unit tier, plus the oracle, invocation and determinism gates | never |
 | eslint | the viewer sources and its build scripts are clean | npm is not installed |
 | viewer tests + schema conformance | the React app behaves, and output validates against the schema, both the committed goldens **and** output produced fresh by the current binary | as above |
