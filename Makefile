@@ -259,10 +259,10 @@ ledger:
 ##
 ## Formatting and vet come first: they are the cheapest, and a vet failure
 ## usually means a language-version mismatch that makes everything after it
-## confusing. Four of these skip on a machine that lacks what they need, and
+## confusing. Three of these skip on a machine that lacks what they need, and
 ## each says so where it runs. A skipped gate is not a passed one.
 check: fmt-check tidy-check embed-check vet lint deadcode build check-version test coverage-check \
-       conventions viewer-lint viewer-test parity prose refs oss surface ledger
+       conventions viewer-lint viewer-test parity prose refs oss surface
 
 # say prints a heading above each gate, so a long run reads as a list rather
 # than as a wall. Bold where a terminal is reading it and plain where a pipe
@@ -284,6 +284,8 @@ ci:
 	@$(MAKE) --no-print-directory actionlint
 	$(call say,release manifest)
 	@$(MAKE) --no-print-directory release-check
+	$(call say,ledger)
+	@$(MAKE) --no-print-directory ledger
 	@printf '\nci: every gate ran. Not reproduced here: build-test on macOS.\n'
 
 ## check-version: assert the binary was built from this tree. `version` prints
