@@ -1,0 +1,20 @@
+{
+  "id": "TRC-005",
+  "title": "A site built over several directories cannot say which directory a session came from",
+  "type": "improvement",
+  "severity": "med",
+  "status": "open",
+  "foundBy": "session agent working in the simple-tools-demo repository, which runs a three member campaign at the pinned build of 2026-09-17, while reading the trajectories of three campaign members",
+  "opened": "2026-09-19",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "`cs-tracer <path> --split` builds one index over every session under `<path>`. Each row is titled by what the agent CLI called the session. Nothing in a row says where under `<path>` the session was read from.\n\nA campaign archive holds one directory per member. The members' sessions are titled by their dispatch, for example `Campaign dispatch d002 execution`, and every member reports the same working directory. One site over the archive therefore shows several rows with near identical titles, and no way to tell the orchestrator's session from a member's.\n\n`--links` does not help, because it joins related sessions and does not label them.\n\nThe demo works around this in its Makefile. It runs `cs-tracer` once per member and writes a small index page of its own that names the members. That loses the one page where every session sits side by side with its tokens and cost, which is the view a fleet wants.\n\nThe relative directory a session was read from is already known when the index is built. Showing it as a column, or grouping rows by it, would be enough.\n\nTo reproduce, unpack two members' `transcript/cli-evidence.tgz` from a campaign archive into `src/a` and `src/b`, then run `cs-tracer src --split -o site`.",
+  "notes": [],
+  "links": []
+}
