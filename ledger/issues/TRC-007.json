@@ -3,11 +3,11 @@
   "title": "Claude Sonnet 5 sessions from September 2026 are priced at an increase the provider cancelled",
   "type": "defect",
   "severity": "med",
-  "status": "open",
+  "status": "in-progress",
   "foundBy": "session agent, while auditing the cost estimates in a rendered trace against the provider's published price list on 2026-09-19, at the host's request",
   "opened": "2026-09-19",
   "resolved": null,
-  "stint": null,
+  "stint": "pricing-audit",
   "evidence": {
     "commits": [],
     "integrated": [],

@@ -3,11 +3,11 @@
   "title": "A subagent session's output tokens are counted from a partial usage record",
   "type": "defect",
   "severity": "high",
-  "status": "open",
+  "status": "in-progress",
   "foundBy": "session agent, while auditing the cost estimates in a rendered trace against the provider's published price list on 2026-09-19, at the host's request",
   "opened": "2026-09-19",
   "resolved": null,
-  "stint": null,
+  "stint": "pricing-audit",
   "evidence": {
     "commits": [],
     "integrated": [],

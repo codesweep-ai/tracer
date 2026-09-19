@@ -3,11 +3,11 @@
   "title": "Claude Fable 5.1 and Claude Mythos 5.1 sessions are billed four times the real cache-read rate",
   "type": "defect",
   "severity": "high",
-  "status": "open",
+  "status": "in-progress",
   "foundBy": "session agent, while auditing the cost estimates in a rendered trace against the provider's published price list on 2026-09-19, at the host's request",
   "opened": "2026-09-19",
   "resolved": null,
-  "stint": null,
+  "stint": "pricing-audit",
   "evidence": {
     "commits": [],
     "integrated": [],
