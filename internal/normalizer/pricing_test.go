@@ -229,3 +229,21 @@ func mustDecode(t *testing.T, s string) *obj {
 	}
 	return o
 }
+
+func TestEmbeddedTableCacheReadRates(t *testing.T) {
+	// "claude-fable-5" is a substring of "claude-fable-5-1", so a missing 5.1
+	// key silently bills the 5 rate, four times the real one.
+	for model, want := range map[string]float64{
+		"claude-fable-5-1":  0.25,
+		"claude-mythos-5-1": 0.25,
+		"claude-fable-5":    1,
+		"claude-mythos-5":   1,
+	} {
+		doc := pricingDoc(t, model, map[string]any{"cacheRead": 1000000}, nil)
+		estimateDefault(doc)
+		cost, ok := costOf(t, doc)
+		if !ok || num(cost) != want {
+			t.Errorf("%s: cost of 1M cache reads = %#v (ok=%v), want %v", model, cost, ok, want)
+		}
+	}
+}
