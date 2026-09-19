@@ -1,20 +1,27 @@
 {
   "id": "TRC-007",
-  "title": "Claude Sonnet 5 sessions from September 2026 are priced at an increase the provider cancelled",
+  "title": "Sessions on Claude Sonnet 5 from September 2026 are priced at an increase the provider cancelled",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, while auditing the cost estimates in a rendered trace against the provider's published price list on 2026-09-19, at the host's request",
   "opened": "2026-09-19",
-  "resolved": null,
+  "resolved": "2026-09-19",
   "stint": "pricing-audit",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "c27c6f6"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`go test ./internal/normalizer/ -run TestEmbeddedTableSonnet5HasNoSeptemberReprice -count=1`: PASS. A million input and a million output tokens cost $12 for a session started in August 2026 and for one started in September 2026. A real Sonnet 5 subagent session from September, normalized with the rebuilt binary, estimated $0.49, which matches a hand sum at the published rates."
   },
-  "resolution": null,
-  "details": "The `claude-sonnet-5` entry in `pricing.json` carries two dated rate periods. The first runs through 2026-08-31 at $2 input and $10 output per million tokens. The second starts 2026-09-01 at $3 and $15, with the cache rates scaled to match.\n\nThe table was audited on 2026-08-03, when the provider had announced that increase. The provider's price list now says the introductory price is the standard price, and that the increase will not happen.\n\nEvery Sonnet 5 session started on or after 2026-09-01 is therefore estimated at 1.5 times its real cost.\n\nTo reproduce, render a Sonnet 5 session started in September 2026 and recompute its cost from its token totals at $2, $10, $0.20, $2.50 and $4.\n\nThe fix is one undated rate set at the introductory numbers. The `_doc` line that describes the reprice needs to say what happened instead.",
-  "notes": [],
+  "resolution": "The `claude-sonnet-5` entry is one undated rate set at $2 input and $10 output. The dated-rates mechanism stays, and its own test still covers it with a synthetic table.",
+  "details": "The `claude-sonnet-5` entry in `pricing.json` carries two dated rate periods. The first runs through 2026-08-31 at $2 input and $10 output per million tokens. The second starts 2026-09-01 at $3 and $15, with the cache rates scaled to match.\n\nThe table was audited on 2026-08-03, when the provider had announced that increase. The provider now says the introductory rate is the standard one, and that the increase will not happen.\n\nEvery Sonnet 5 session started on or after 2026-09-01 is therefore estimated at 1.5 times its real cost.\n\nTo reproduce, render a Sonnet 5 session started in September 2026 and recompute its cost from its token totals at $2, $10, $0.20, $2.50 and $4.\n\nThe fix is one undated rate set at the introductory numbers. The `_doc` line that describes the reprice needs to say what happened instead.",
+  "notes": [
+    {
+      "date": "2026-09-19",
+      "text": "An announced reprice is a claim about the future. The `_doc` line on dated rates now says to recheck one after its date has passed."
+    }
+  ],
   "links": []
 }

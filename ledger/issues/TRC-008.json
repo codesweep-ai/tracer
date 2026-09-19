@@ -3,18 +3,26 @@
   "title": "A subagent session's output tokens are counted from a partial usage record",
   "type": "defect",
   "severity": "high",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, while auditing the cost estimates in a rendered trace against the provider's published price list on 2026-09-19, at the host's request",
   "opened": "2026-09-19",
-  "resolved": null,
+  "resolved": "2026-09-19",
   "stint": "pricing-audit",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "6fbc45c",
+      "a94c025"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`go test ./internal/normalizer/ -run TestClaudeLastUsageRecordForAMessageWins -count=1`: PASS, and it fails against the old adapter with `output = 2, want the final record's 900`. The three subagent goldens moved to 647, 1047 and 3627 output tokens, each equal to an independent sum of the last usage record per message id in its fixture. The golden diff changed only `output`, `cost` and the byte size of the affected events. A real subagent session that had reported 141 output tokens reports 9,356."
   },
-  "resolution": null,
+  "resolution": "The claude adapter overwrites a message's token counts in place each time a later record with the same message id arrives, so the last record wins. The tokens stay on the message's first event and are counted once. The first commit cited is the fix, and the second regenerates the goldens it moved.",
   "details": "Claude Code writes one transcript line per content block, so one API message spans several lines that share a message id. Each line carries a `usage` object. The claude adapter keeps the first `usage` it sees for an id and ignores the rest, so that a message is not counted once per block.\n\nIn a subagent transcript the first line's `usage` is a snapshot taken while the message was still streaming. Its `output_tokens` is a handful. The last line for the same id carries the final count. The input and cache counts are the same on every line.\n\nThe adapter therefore reports a small fraction of a subagent's real output. One audited subagent showed 141 output tokens across 27 tool calls, where the final records sum to 9,356. Every subagent in the audited trace was affected, by factors between 3 and 300. The main session transcripts were not affected, because their lines agree with each other.\n\nOutput is the most expensive token, so the cost estimate is understated too, by 15 to 25 percent on the audited cache-heavy subagents.\n\nTo reproduce, take a subagent transcript and sum `output_tokens` over the last line of each message id. Compare that with the `output` total the tool reports.\n\nThe fix is to count the last `usage` record for each message id rather than the first, while still attaching the tokens to the message's first event.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-19",
+      "text": "The subagent fixtures already held this defect, so the old goldens had recorded the partial counts as expected output. The oracle diff catches change and cannot catch a wrong value that never changed."
+    }
+  ],
   "links": []
 }

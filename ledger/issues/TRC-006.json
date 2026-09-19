@@ -3,18 +3,25 @@
   "title": "Claude Fable 5.1 and Claude Mythos 5.1 sessions are billed four times the real cache-read rate",
   "type": "defect",
   "severity": "high",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, while auditing the cost estimates in a rendered trace against the provider's published price list on 2026-09-19, at the host's request",
   "opened": "2026-09-19",
-  "resolved": null,
+  "resolved": "2026-09-19",
   "stint": "pricing-audit",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "c8c10ef"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`go test ./internal/normalizer/ -run TestEmbeddedTableCacheReadRates -count=1`: PASS. One million cache reads cost $0.25 on both 5.1 models and $1 on both 5 models. The test fails without the new entries. A real Fable 5.1 session of about 120 million cache-read tokens, normalized with the rebuilt binary, estimated $63.22 where the old table gave more than twice that."
   },
-  "resolution": null,
+  "resolution": "`pricing.json` carries `claude-fable-5-1` and `claude-mythos-5-1` entries with `cacheRead` at 0.25. A `_doc` line says why the two need their own keys.",
   "details": "`pricing.json` has no entry for `claude-fable-5-1` or `claude-mythos-5-1`. A model name is matched by the longest table key it contains, so both fall to the `claude-fable-5` and `claude-mythos-5` entries.\n\nThose entries charge $1 per million cache-read tokens, which is right for the 5 models. The provider's price list charges $0.25 for the 5.1 models, which is 0.025 times base input where every other model pays 0.1 times. Input, output and both cache-write rates are the same across 5 and 5.1.\n\nCache reads are most of the tokens in a long agentic session, so the error is most of the estimate. One audited session of about 100 million cache-read tokens showed an estimate more than twice the correct figure.\n\nTo reproduce, render any Claude Code session whose model is `claude-fable-5-1`. Then multiply its `cacheRead` total by both rates and compare each with the cost shown.\n\nThe fix is an entry for each 5.1 model with `cacheRead` at 0.25. The longest-match rule then picks it over the shorter key.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-19",
+      "text": "The provider's price list was read again on 2026-09-19. Every other Anthropic rate in the table matched it, apart from the Sonnet 5 rates that TRC-007 records."
+    }
+  ],
   "links": []
 }
