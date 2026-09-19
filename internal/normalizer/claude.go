@@ -18,7 +18,10 @@ func NormalizeClaude(records []*obj) *obj {
 	meta := trajectory.NewObject("source", "claude-code")
 	var events []*obj
 	calls := map[string]*obj{}
-	seen := map[string]bool{}
+	// One API message spans several records that share a message id. Its tokens
+	// ride on the message's first event, and are counted once.
+	counted := map[string]*obj{}
+	placed := map[string]bool{}
 	warnings := map[string]int{}
 	var warningOrder []string
 	skipped := skipTally{}
@@ -146,21 +149,29 @@ func NormalizeClaude(records []*obj) *obj {
 			var token *obj
 			usage := object(get(m, "usage"))
 			id := str(get(m, "id"))
-			if usage != nil && id != "" && !seen[id] {
-				seen[id] = true
+			if usage != nil && id != "" {
+				// A record written while the message was still streaming carries a
+				// partial output_tokens, and only the last record for the id has the
+				// final count. So a later record overwrites the counts in place.
+				counts := counted[id]
+				if counts == nil {
+					counts = trajectory.NewObject()
+					counted[id] = counts
+				}
+				if !placed[id] {
+					token = counts
+				}
 				// Claude input_tokens excludes cache tokens; preserve each
 				// bucket independently.
-				token = trajectory.NewObject(
-					"input", nullishOr(get(usage, "input_tokens"), 0),
-					"output", nullishOr(get(usage, "output_tokens"), 0),
-					"cacheRead", nullishOr(get(usage, "cache_read_input_tokens"), 0),
-					"cacheWrite", nullishOr(get(usage, "cache_creation_input_tokens"), 0),
-				)
+				counts.Set("input", nullishOr(get(usage, "input_tokens"), 0))
+				counts.Set("output", nullishOr(get(usage, "output_tokens"), 0))
+				counts.Set("cacheRead", nullishOr(get(usage, "cache_read_input_tokens"), 0))
+				counts.Set("cacheWrite", nullishOr(get(usage, "cache_creation_input_tokens"), 0))
 				// TTL split, only when the record actually carries
 				// cache_creation.
 				if c := object(get(usage, "cache_creation")); c != nil {
-					token.Set("cacheWrite5m", nullishOr(get(c, "ephemeral_5m_input_tokens"), 0))
-					token.Set("cacheWrite1h", nullishOr(get(c, "ephemeral_1h_input_tokens"), 0))
+					counts.Set("cacheWrite5m", nullishOr(get(c, "ephemeral_5m_input_tokens"), 0))
+					counts.Set("cacheWrite1h", nullishOr(get(c, "ephemeral_1h_input_tokens"), 0))
 				}
 				// serving mode lives inside usage; 'not_available' is
 				// the source saying it does not know — captured as absence.
@@ -181,6 +192,7 @@ func NormalizeClaude(records []*obj) *obj {
 				base := trajectory.NewObject("ts", ts, "lane", lane)
 				if token != nil {
 					base.Set("tokens", token)
+					placed[id] = true
 					token = nil
 				}
 				bt := str(get(b, "type"))

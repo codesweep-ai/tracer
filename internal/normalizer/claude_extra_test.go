@@ -142,3 +142,31 @@ func keysOf(o *obj) []string {
 	}
 	return keys
 }
+
+// One message spans several records sharing a message id. A record written
+// while the message was streaming carries a partial output_tokens, so the last
+// record supplies the counts, and they are still counted once, on the
+// message's first event.
+func TestClaudeLastUsageRecordForAMessageWins(t *testing.T) {
+	streaming := trajectory.NewObject("input_tokens", 3, "output_tokens", 2, "cache_read_input_tokens", 100)
+	final := trajectory.NewObject("input_tokens", 3, "output_tokens", 900, "cache_read_input_tokens", 100)
+
+	doc := NormalizeClaude([]*obj{claudeAssistant("a", "m1", streaming), claudeAssistant("b", "m1", final)})
+	totals := object(get(doc, "totals"))
+	if got := num(get(totals, "output")); got != 900 {
+		t.Fatalf("output = %v, want the final record's 900", got)
+	}
+	if got := num(get(totals, "input")); got != 3 {
+		t.Fatalf("input = %v, want 3 counted once", got)
+	}
+	if got := num(get(totals, "cacheRead")); got != 100 {
+		t.Fatalf("cacheRead = %v, want 100 counted once", got)
+	}
+	events := get(doc, "events").([]*obj)
+	if _, ok := events[0].Get("tokens"); !ok {
+		t.Fatal("the message's first event carries no tokens")
+	}
+	if _, ok := events[1].Get("tokens"); ok {
+		t.Fatal("the message's second event repeats the tokens")
+	}
+}
