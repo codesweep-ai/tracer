@@ -247,3 +247,16 @@ func TestEmbeddedTableCacheReadRates(t *testing.T) {
 		}
 	}
 }
+
+func TestEmbeddedTableSonnet5HasNoSeptemberReprice(t *testing.T) {
+	// The provider announced $3/$15 from 2026-09-01 and then cancelled it, so
+	// a session on either side of that date prices at $2/$10.
+	for _, startedAt := range []string{"2026-08-13T12:00:00.000Z", "2026-09-13T12:00:00.000Z"} {
+		doc := pricingDoc(t, "claude-sonnet-5", map[string]any{"input": 1000000, "output": 1000000}, map[string]any{"startedAt": startedAt})
+		estimateDefault(doc)
+		cost, ok := costOf(t, doc)
+		if !ok || num(cost) != 12 {
+			t.Errorf("%s: cost = %#v (ok=%v), want 12", startedAt, cost, ok)
+		}
+	}
+}

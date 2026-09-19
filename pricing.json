@@ -4,7 +4,7 @@
     "Null or missing prices produce no estimate.",
     "ENTRY SHAPE: a model value is either one entry object or an ARRAY of them. An entry may carry an optional \"provider\" (absent = matches any document, including one whose provider is unknown; a provider-scoped entry is preferred over a provider-less one at the same key), optional dated \"rates\", optional \"modes\", and optional \"geoMultipliers\". A bare rate object at the entry level remains valid shorthand for \"always\".",
     "Keys are resolved LONGEST-MATCH-FIRST: 'gpt-5.4' is a substring of 'gpt-5.4-mini'/'-nano'/'-pro'/'-cyber'; 'gpt-5.5' of 'gpt-5.5-pro'. ONLY the longest matching key is considered — there is NO fall-through to shorter keys. If the longest key has no entry matching the document's provider, the result is NO estimate, never the price of a shorter key.",
-    "DATED RATES: a model value may carry rates: [{from?, through?, ...}] instead of a bare rate object; from/through are INCLUSIVE ISO dates matched against the UTC date of meta.startedAt. claude-sonnet-5's 2026-09-01 reprice ($2/$10 intro -> $3/$15) is represented this way and needs no calendar reminder — no calendar reminder is needed. A session whose date no period covers produces NO estimate; a session with NO date prices only if the entry has exactly one period.",
+    "DATED RATES: a model value may carry rates: [{from?, through?, ...}] instead of a bare rate object; from/through are INCLUSIVE ISO dates matched against the UTC date of meta.startedAt. No entry is dated today: claude-sonnet-5 carried a 2026-09-01 reprice ($2/$10 intro -> $3/$15) until the provider cancelled the increase and made the introductory price standard, so it is a bare rate object again. An announced reprice is a claim about the future, so recheck it once its date has passed. A session whose date no period covers produces NO estimate; a session with NO date prices only if the entry has exactly one period.",
     "CACHE READS: cacheRead is 0.1x base input on every Anthropic model except claude-fable-5-1 and claude-mythos-5-1, which the provider prices at 0.025x ($0.25). Those two carry their own keys because 'claude-fable-5' is a substring of 'claude-fable-5-1': without them the longest match is the 5 entry, and a 5.1 session is billed four times the real cache-read rate.",
     "CACHE WRITES: cacheWrite is the Anthropic 5-minute-TTL rate; cacheWrite1h is the 1-hour rate, = 2x that period's base input. Both are represented and both are billed: the claude adapter reports totals.cacheWrite5m/cacheWrite1h and the estimator charges each bucket at its own rate. A document with 1h writes whose resolved rates carry no numeric cacheWrite1h produces NO estimate — it never falls back to the 5m rate. Only the claude adapter emits a TTL split, so non-Anthropic entries carry no cacheWrite1h key.",
     "MODES AND GEO: modes.fast (Opus 5 / Opus 4.8, the quoted $10 in / $50 out tier) and geoMultipliers are represented and are applied ONLY when the transcript records meta.speed / meta.inferenceGeo. A mode rate set REPLACES the period's rates wholesale rather than scaling them. A recorded speed or geo naming no key produces NO estimate; inference_geo 'not_available' is captured as absence, so it neither selects nor suppresses.",
@@ -38,7 +38,7 @@
       "https://developers.openai.com/api/docs/guides/prompt-caching",
       "https://developers.openai.com/codex/models"
     ],
-    "ruleDerived": "cacheWrite1h is quoted from the provider pages for fable-5-1/mythos-5-1/fable-5/mythos-5 (20), opus-5/4-8/4-7/4-6/4-5 (10), sonnet-5 (4 intro, 6 from 2026-09-01), sonnet-4-6/4-5/4 (6) and haiku-4-5 (2). Values DERIVED from the documented rules rather than separately quoted: claude-opus-4-1-20250805 cacheWrite1h 30 and claude-opus-4-20250514 cacheWrite1h 30 and claude-3-5-haiku-20241022 cacheWrite1h 1.6 (2x base input); and, within the two modes.fast rate sets, cacheRead 1 (0.1x), cacheWrite 12.5 (1.25x) and cacheWrite1h 20 (2x) off the quoted $10 fast input. All three fast cache rates come from the same documented ratios — deriving some but not others would make an Opus-5 fast session with 1h writes unpriceable through an authoring omission rather than through missing information."
+    "ruleDerived": "cacheWrite1h is quoted from the provider pages for fable-5-1/mythos-5-1/fable-5/mythos-5 (20), opus-5/4-8/4-7/4-6/4-5 (10), sonnet-5 (4), sonnet-4-6/4-5/4 (6) and haiku-4-5 (2). Values DERIVED from the documented rules rather than separately quoted: claude-opus-4-1-20250805 cacheWrite1h 30 and claude-opus-4-20250514 cacheWrite1h 30 and claude-3-5-haiku-20241022 cacheWrite1h 1.6 (2x base input); and, within the two modes.fast rate sets, cacheRead 1 (0.1x), cacheWrite 12.5 (1.25x) and cacheWrite1h 20 (2x) off the quoted $10 fast input. All three fast cache rates come from the same documented ratios — deriving some but not others would make an Opus-5 fast session with 1h writes unpriceable through an authoring omission rather than through missing information."
   },
   "models": {
     "claude-fable-5-1": {
@@ -181,24 +181,11 @@
       }
     },
     "claude-sonnet-5": {
-      "rates": [
-        {
-          "through": "2026-08-31",
-          "input": 2,
-          "output": 10,
-          "cacheRead": 0.2,
-          "cacheWrite": 2.5,
-          "cacheWrite1h": 4
-        },
-        {
-          "from": "2026-09-01",
-          "input": 3,
-          "output": 15,
-          "cacheRead": 0.3,
-          "cacheWrite": 3.75,
-          "cacheWrite1h": 6
-        }
-      ],
+      "input": 2,
+      "output": 10,
+      "cacheRead": 0.2,
+      "cacheWrite": 2.5,
+      "cacheWrite1h": 4,
       "cachedIncludedInInput": false,
       "geoMultipliers": {
         "us": 1.1
