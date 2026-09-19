@@ -1,0 +1,20 @@
+{
+  "id": "TRC-006",
+  "title": "Claude Fable 5.1 and Claude Mythos 5.1 sessions are billed four times the real cache-read rate",
+  "type": "defect",
+  "severity": "high",
+  "status": "open",
+  "foundBy": "session agent, while auditing the cost estimates in a rendered trace against the provider's published price list on 2026-09-19, at the host's request",
+  "opened": "2026-09-19",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "`pricing.json` has no entry for `claude-fable-5-1` or `claude-mythos-5-1`. A model name is matched by the longest table key it contains, so both fall to the `claude-fable-5` and `claude-mythos-5` entries.\n\nThose entries charge $1 per million cache-read tokens, which is right for the 5 models. The provider's price list charges $0.25 for the 5.1 models, which is 0.025 times base input where every other model pays 0.1 times. Input, output and both cache-write rates are the same across 5 and 5.1.\n\nCache reads are most of the tokens in a long agentic session, so the error is most of the estimate. One audited session of about 100 million cache-read tokens showed an estimate more than twice the correct figure.\n\nTo reproduce, render any Claude Code session whose model is `claude-fable-5-1`. Then multiply its `cacheRead` total by both rates and compare each with the cost shown.\n\nThe fix is an entry for each 5.1 model with `cacheRead` at 0.25. The longest-match rule then picks it over the shorter key.",
+  "notes": [],
+  "links": []
+}

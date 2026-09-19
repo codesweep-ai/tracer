@@ -1,5 +1,18 @@
 {
-  "recommendedBy": "the repository owner, at publication",
-  "updated": "2026-08-16",
-  "items": []
+  "recommendedBy": "session agent",
+  "updated": "2026-09-19",
+  "items": [
+    {
+      "id": "TRC-006",
+      "why": "Doubles the headline cost of any Fable 5.1 session, and the fix is two table entries."
+    },
+    {
+      "id": "TRC-008",
+      "why": "Every subagent lane under-reports its output tokens, which a reader compares across lanes."
+    },
+    {
+      "id": "TRC-007",
+      "why": "Overprices every current Sonnet 5 session by half."
+    }
+  ]
 }
