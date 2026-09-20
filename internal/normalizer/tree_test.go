@@ -110,3 +110,70 @@ func TestNormalizeDirectoryNamesDamagedInput(t *testing.T) {
 		t.Fatalf("no damage diagnostic in %q", result.Diagnostics)
 	}
 }
+
+// R59: the child carries the index of the event that spawned it. The index page
+// could already derive this by scanning the parent's strip, because it holds
+// every summary; a split-mode trace page holds only its own, so without the
+// stamp a child had no way back to its fork point.
+//
+// Counts are pinned per fixture so a join that quietly stops resolving is a
+// failure rather than a smaller number. claude/v2.1/subagent-depth2 stamps one
+// of its two children: the other is the depth-2 agent whose `toolUseId` and
+// `parentAgentId` the fixture scrubber rewrote to prose, which is the corpus
+// hazard NormalizeDirectory's own comment records. A child with no discoverable
+// spawn is not an error — the viewer falls back to the depth connector — so the
+// contract is that a stamp, where present, is correct.
+func TestNormalizeDirectoryStampsParentEventIndex(t *testing.T) {
+	for _, tc := range []struct {
+		fixture           string
+		children, stamped int
+	}{
+		{"claude/v2.1/subagent-run", 2, 2},
+		{"claude/v2.1/subagent-depth2", 2, 1},
+		{"codex/v0.146/multi-agent-run", 2, 2},
+		{"codex/v0.146/subagent-depth2", 2, 2},
+		{"opencode/v1.18/multi-agent-run", 2, 2},
+	} {
+		t.Run(tc.fixture, func(t *testing.T) {
+			result, err := NormalizeDirectory(filepath.Join("..", "..", "fixtures", tc.fixture), t.TempDir(), "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			byID := map[string]*obj{}
+			for _, doc := range result.Documents {
+				byID[str(get(object(get(doc, "meta")), "sessionId"))] = doc
+			}
+			var children, stamped int
+			for _, doc := range result.Documents {
+				meta := object(get(doc, "meta"))
+				parent, ok := byID[str(get(meta, "parentSessionId"))]
+				if !ok {
+					continue // a root, or a child exported without its parent
+				}
+				children++
+				idx, present := meta.Get("parentEventIndex")
+				if !present {
+					continue
+				}
+				stamped++
+				events := get(parent, "events").([]*obj)
+				at := int(num(idx))
+				if at < 0 || at >= len(events) {
+					t.Fatalf("parentEventIndex %d out of range for a parent of %d events", at, len(events))
+				}
+				// It must name the event that spawned THIS child, not merely a
+				// valid position in the parent.
+				spawnEvent := events[at]
+				if !truthy(get(spawnEvent, "subtask")) {
+					t.Fatalf("parent event %d is not a spawn", at)
+				}
+				if cid := str(get(spawnEvent, "childSessionId")); cid != "" && cid != str(get(meta, "sessionId")) {
+					t.Fatalf("parent event %d spawns %q, not this child %q", at, cid, str(get(meta, "sessionId")))
+				}
+			}
+			if children != tc.children || stamped != tc.stamped {
+				t.Fatalf("children=%d stamped=%d, want %d and %d", children, stamped, tc.children, tc.stamped)
+			}
+		})
+	}
+}

@@ -304,6 +304,16 @@ as a known.*
 from a `--links` file and is somebody's claim, and a connector comes from the session's own spawn
 event.*
 
+**R59.** A child whose spawning event is present **MUST** carry that event's index as
+`meta.parentEventIndex`. *The index page can derive it by scanning the parent's strip, because it
+holds every summary. A split-mode trace page holds only its own, so without the stamp a child has no
+route back to its fork point on a cold load.*
+
+**R60.** A proven connector **MUST** name the event it points at, and **MUST** navigate there.
+*Ten pixels per event makes a long parent a scroller thousands of pixels wide, so the spawn cell is
+usually off screen and the connector degrades to a stub. A stub that cannot point can still say
+where.*
+
 **R55.** Viewer styling **MUST** go through the `@codesweep-ai/ui` design tokens rather than literal
 values. *An eslint rule fails the build on a token it does not recognise, which is what lets both
 themes work with no change to the app.*

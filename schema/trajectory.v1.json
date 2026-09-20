@@ -79,6 +79,11 @@
             "null"
           ]
         },
+        "parentEventIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index of the event in the PARENT that spawned this trajectory. Present only when both documents were normalized together, since that is the only point at which the position is knowable. Absent for a root, for a child exported without its parent, and in documents written before R59."
+        },
         "agentId": {
           "type": [
             "string",
