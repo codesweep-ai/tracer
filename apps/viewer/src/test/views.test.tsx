@@ -351,3 +351,42 @@ describe("fork connector semantics", () => {
     expect(origin.getAttribute("href")).toBe("?trace=parent#ev-1");
   });
 });
+
+/* R63's page-level half: one control, defaulting to formatted, applying to
+   every card. It is a VIEW preference and not a filter — it changes how an
+   event reads, never which events are shown. */
+describe("tool input view toggle", () => {
+  // Its own path: loadChunk caches per path for the life of the module, so
+  // reusing "demo" would serve the block an earlier test already cached.
+  const withTool: LoadedTrace = {
+    id: "demo", path: "tooldemo",
+    summary: { ...summary, strip: [{ i: 0, kind: "tool_call", error: false, label: "Bash" }] },
+  };
+  beforeEach(() => {
+    block("c-tooldemo-000", { chunk: 0, events: [{ i: 0, kind: "tool_call", tool: { name: "Bash", input: { command: "ls -la", description: "list" } } }] } satisfies TraceChunk);
+  });
+
+  it("formats by default and hands over the raw record on request", async () => {
+    render(<TrajectoryPage trace={withTool} />);
+    const toggle = await screen.findByTestId("input-view");
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    await waitFor(() => expect(screen.getByTestId("virtual-event-list").textContent).toContain("ls -la"));
+    // formatted: the command stands alone, with no JSON punctuation around it
+    expect(screen.getByTestId("virtual-event-list").textContent).not.toContain('"command"');
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+    await waitFor(() => expect(screen.getByTestId("virtual-event-list").textContent).toContain('"command"'));
+    // the command itself is still there, now inside the record
+    expect(screen.getByTestId("virtual-event-list").textContent).toContain("ls -la");
+  });
+
+  it("shows the same events either way", async () => {
+    render(<TrajectoryPage trace={withTool} />);
+    const toggle = await screen.findByTestId("input-view");
+    const before = document.querySelectorAll("[data-card-index]").length;
+    fireEvent.click(toggle);
+    expect(document.querySelectorAll("[data-card-index]").length).toBe(before);
+    expect(screen.queryByTestId("empty-filter")).toBeNull();
+  });
+});

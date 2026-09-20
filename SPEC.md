@@ -323,6 +323,19 @@ learn where a fork happened throws that away.*
 view minimally, parking it against the viewport edge with nothing after it visible, which is the
 least useful place to arrive.*
 
+**R63.** A tool input **MUST** render for reading by default, and the verbatim record **MUST** stay
+one control away. *Almost every tool's payload is a multi-line string, and JSON escaping is what
+turns one into a single line of `\n` and `\"`. In one captured corpus 3,159 of 3,432 calls were
+shell commands, so the commonest case was the worst served.*
+
+**R64.** The formatted view **MUST** render every key of the input. *It is a rendering, not a
+summary. Switching to the record must reveal nothing that was withheld, because that is what lets
+the formatted view be the default.*
+
+**R65.** Input shape, never tool name, **MUST** select the rendering. *Names differ per CLI, and the
+fixture scrubber rewrites them to prose, so a table keyed by name could not be exercised by the
+corpus at all.*
+
 **R55.** Viewer styling **MUST** go through the `@codesweep-ai/ui` design tokens rather than literal
 values. *An eslint rule fails the build on a token it does not recognise, which is what lets both
 themes work with no change to the app.*

@@ -7,6 +7,7 @@ import { EventCard } from "./EventCard";
 import { EventStrip, LEGEND_CHIPS, RedactedKey } from "./EventStrip";
 import type { StripFocus } from "./EventStrip";
 import { ErrorSwatch } from "./ErrorSwatch";
+import type { ToolInputView } from "./ToolInput";
 import { TRACE_PALETTE, traceColorKey } from "./palette";
 import type { EventKind, LoadedTrace, TraceChunk } from "./types";
 
@@ -29,7 +30,7 @@ function cardInView(list: HTMLElement, i: number): boolean {
   const cardRect = card.getBoundingClientRect(); const listRect = list.getBoundingClientRect();
   return cardRect.bottom > listRect.top && cardRect.top < listRect.bottom;
 }
-function MeasuredEventCard({ event, query, onHeight }: { event: Parameters<typeof EventCard>[0]["event"]; query?: string; onHeight: (eventIndex: number, height: number) => void }) {
+function MeasuredEventCard({ event, query, inputView, onHeight }: { event: Parameters<typeof EventCard>[0]["event"]; query?: string; inputView: ToolInputView; onHeight: (eventIndex: number, height: number) => void }) {
   const row = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const element = row.current; if (!element) return;
@@ -38,7 +39,7 @@ function MeasuredEventCard({ event, query, onHeight }: { event: Parameters<typeo
     const observer = new ResizeObserver(measure); observer.observe(element);
     return () => observer.disconnect();
   }, [event.i, onHeight]);
-  return <div ref={row}><EventCard event={event} query={query} /></div>;
+  return <div ref={row}><EventCard event={event} query={query} inputView={inputView} /></div>;
 }
 
 export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
@@ -73,6 +74,12 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
   const [scrollTop, setScrollTop] = useState(selected * rowHeight); const [loadedChunks, setLoadedChunks] = useState(new Map<number, TraceChunk>());
   const [viewportHeight, setViewportHeight] = useState(0); const [measuredHeights, setMeasuredHeights] = useState(new Map<number, number>());
   const [kinds, setKinds] = useState<Set<string>>(() => new Set(EVENT_KINDS)); const [query, setQuery] = useState(""); const [activeQuery, setActiveQuery] = useState("");
+  // A VIEW preference rather than a filter: it changes how an event reads, not
+  // which events are shown, so it does not compose into `displayed` (R49).
+  // Session-only, never persisted: localStorage under file:// is an opaque
+  // origin that can throw or come back empty, and the page has to behave the
+  // same way when it is opened from disk years later.
+  const [inputView, setInputView] = useState<ToolInputView>("formatted");
   const [errorsOnly, setErrorsOnly] = useState(false); // a second filter dimension, ANDed with kinds + text const [query, setQuery] = useState(""); const [activeQuery, setActiveQuery] = useState("");
   const [matches, setMatches] = useState<Set<number>>(new Set()); const [scanned, setScanned] = useState(0); const [searching, setSearching] = useState(false);
   const hiddenKinds = useMemo(() => new Set(EVENT_KINDS.filter((kind) => !kinds.has(kind))), [kinds]);
@@ -172,6 +179,10 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
           {/* errors are an overlay flag, not a kind — this restricts rather than hides,
               so it gets its own affordance and composes (AND) with the chips and text search. */}
           <button type="button" data-testid="errors-only" aria-pressed={errorsOnly} title={errorsOnly ? "Show all events again" : "Show only events that errored"} onClick={() => setErrorsOnly(!errorsOnly)} className={errorsOnly ? "errors-only errors-only-on" : "errors-only"}><ErrorSwatch />{errorsOnly ? "errors only" : "error"}</button>
+          <span aria-hidden="true" className="legend-sep">|</span>
+          {/* Formatted is the default because it hides nothing: the formatted
+              view renders every key, so this reveals no data it withheld. */}
+          <button type="button" data-testid="input-view" aria-pressed={inputView === "json"} title={inputView === "json" ? "Show tool inputs formatted for reading" : "Show tool inputs as the raw JSON record"} onClick={() => setInputView(inputView === "json" ? "formatted" : "json")} className={inputView === "json" ? "input-view input-view-on" : "input-view"}>raw JSON</button>
           <span className="filter-reset">
             <button type="button" data-testid="filter-all" onClick={() => { setKinds(new Set(EVENT_KINDS)); setErrorsOnly(false); }} disabled={!filtering} className="filter-reset-button">all</button>
             ·
@@ -184,7 +195,7 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
     <div ref={viewport} data-testid="virtual-event-list" tabIndex={0} role="region" aria-label="Events" className="virtual-list" onScroll={(event) => { const top = event.currentTarget.scrollTop; setScrollTop(top); const index = displayed[positionAtOffset(offsets, top)]; const pending = pendingNavTarget.current; if (pending != null) { if (index === pending && cardInView(event.currentTarget, pending)) pendingNavTarget.current = null; return; } if (programmaticTops.current.some((requested) => Math.abs(requested - top) < 1)) return; if (correctOnLand.current) return; if (index != null && index !== selected) setSelected(index); }}>
       {!displayed.length && <p role="status" data-testid="empty-filter" className="empty-filter">{kinds.size === 0 ? "No event kinds selected — pick one above, or choose all." : errorsOnly ? "No errored events in this trajectory." : "No events match this filter."}</p>}
       <div className="virtual-list-inner" style={{ height: offsets[offsets.length - 1] ?? 0 }}>
-        <div className="virtual-list-window" style={{ top: offsets[visible.start] ?? 0 }}>{displayed.slice(visible.start, visible.end).map((i) => { const event = loadedChunks.get(Math.floor(i / trace.summary.chunkSize))?.events[i % trace.summary.chunkSize]; return event ? <MeasuredEventCard key={i} event={event} query={activeQuery} onHeight={recordHeight} /> : /* App-local layout token defined in styles.css. */ <div key={i} aria-label={`Loading event ${i}`}><Skeleton variant="rect" height="var(--event-row-height)" /></div>; })}</div>
+        <div className="virtual-list-window" style={{ top: offsets[visible.start] ?? 0 }}>{displayed.slice(visible.start, visible.end).map((i) => { const event = loadedChunks.get(Math.floor(i / trace.summary.chunkSize))?.events[i % trace.summary.chunkSize]; return event ? <MeasuredEventCard key={i} event={event} query={activeQuery} inputView={inputView} onHeight={recordHeight} /> : /* App-local layout token defined in styles.css. */ <div key={i} aria-label={`Loading event ${i}`}><Skeleton variant="rect" height="var(--event-row-height)" /></div>; })}</div>
       </div>
     </div>
   </section>;

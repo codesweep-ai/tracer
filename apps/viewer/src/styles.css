@@ -188,6 +188,34 @@ button.fork-connector-vertical::after {
 .errors-only:hover { text-decoration: underline; }
 .errors-only-on { background: var(--color-error-bg); color: var(--color-error); }
 
+/* The input-view control sits with the filters because that is where a reader
+   looks for view controls, but it restricts nothing — same chrome as
+   errors-only, no error colouring, since nothing here is wrong. */
+.input-view {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--font-size-caption);
+  border-radius: var(--radius-sm);
+  padding: var(--space-0-5) var(--space-1);
+}
+.input-view:hover { text-decoration: underline; }
+.input-view-on { background: var(--color-surface-raised); color: var(--fg); }
+
+/* A tool input's fields: name in the gutter, value beside it, and a value too
+   long or too tall for one line drops to its own block below. */
+.tool-fields { display: grid; gap: var(--space-1); margin: var(--space-1) 0 0; }
+.tool-field { display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr); gap: var(--space-2); align-items: baseline; }
+.tool-field-name { color: var(--muted); }
+.tool-field-value { margin: 0; min-width: 0; }
+.tool-field-inline { overflow-wrap: anywhere; }
+@media (max-width: 40rem) {
+  .tool-field { grid-template-columns: minmax(0, 1fr); gap: var(--space-0-5); }
+}
+
 .filter-reset { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--muted); }
 .filter-reset-button {
   cursor: pointer;
