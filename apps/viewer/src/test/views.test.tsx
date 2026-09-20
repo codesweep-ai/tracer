@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IndexPage } from "../IndexPage";
 import { TrajectoryPage } from "../TrajectoryPage";
 import { EventCard } from "../EventCard";
+import { centerCell } from "../EventStrip";
 import type { EventKind, LoadedTrace, TraceChunk, TraceEvent, TraceSummary } from "../types";
 import { TRACE_PALETTE, traceColorKey } from "../palette";
 import { createRequire } from "node:module";
@@ -271,5 +272,82 @@ describe("fork navigation", () => {
   it("offers no parent link on a root", () => {
     render(<TrajectoryPage trace={trace} />);
     expect(screen.queryByTestId("parent-link")).toBeNull();
+  });
+});
+
+/* R62. EventLanes scrolls a selection into view minimally, so a cell to the
+   right lands flush against the viewport's right edge with nothing after it
+   visible — the least useful place to arrive at a fork point. centerCell is
+   what puts it in the middle instead, and the clamps are what "where there is
+   room" means: near either end it stops at the end rather than centring into
+   blank space. */
+describe("centring a strip cell", () => {
+  const strip = (cellWidth = 10, cellOffset = 3) => {
+    const element = document.createElement("div");
+    element.dataset.cellWidth = String(cellWidth);
+    element.dataset.cellOffset = String(cellOffset);
+    return element;
+  };
+  const scroller = (clientWidth: number, scrollWidth: number) => {
+    const element = document.createElement("div");
+    Object.defineProperty(element, "clientWidth", { value: clientWidth });
+    Object.defineProperty(element, "scrollWidth", { value: scrollWidth });
+    Object.defineProperty(element, "scrollLeft", { value: 0, writable: true });
+    return element;
+  };
+
+  it("puts a cell with room on both sides in the middle", () => {
+    const view = scroller(200, 2000);
+    centerCell(strip(), view, 100);
+    // 3 offset + 100*10 + half a cell = 1008, less half the viewport.
+    expect(view.scrollLeft).toBe(908);
+  });
+
+  it("stops at the start rather than scrolling past it", () => {
+    const view = scroller(200, 2000);
+    centerCell(strip(), view, 2);
+    expect(view.scrollLeft).toBe(0);
+  });
+
+  it("stops at the end when too few events follow the cell", () => {
+    const view = scroller(200, 2000);
+    centerCell(strip(), view, 195);
+    expect(view.scrollLeft).toBe(1800); // scrollWidth - clientWidth
+  });
+
+  it("reads the geometry off the strip rather than assuming the default pitch", () => {
+    const view = scroller(100, 4000);
+    centerCell(strip(20, 6), view, 50);
+    expect(view.scrollLeft).toBe(6 + 50 * 20 + 10 - 50);
+  });
+});
+
+/* The connector reveals the fork point in place. Sending the reader to the
+   parent's own page would throw away the index, which is the view they are on
+   to compare lanes. */
+describe("fork connector semantics", () => {
+  const parent: LoadedTrace = {
+    id: "parent", path: "demo",
+    summary: { ...summary, meta: { ...summary.meta, sessionId: "parent", title: "Parent" }, strip: [{ i: 0, kind: "user", error: false }, { i: 1, kind: "tool_call", error: false, subtask: true, childSessionId: "child" }] },
+  };
+  const child: LoadedTrace = {
+    id: "child", path: "demo",
+    summary: { ...summary, meta: { ...summary.meta, sessionId: "child", parentSessionId: "parent", parentEventIndex: 1, title: "Child" } },
+  };
+
+  it("acts in place instead of navigating away", () => {
+    render(<IndexPage traces={[parent, child]} links={[]} />);
+    const connector = screen.queryByTestId("fork-connector") ?? screen.queryByTestId("offscreen-fork-connector");
+    expect(connector).not.toBeNull();
+    expect(connector?.tagName).toBe("BUTTON");
+    expect(connector?.getAttribute("href")).toBeNull();
+    expect(connector?.getAttribute("aria-label")).toMatch(/#1/);
+  });
+
+  it("still offers the parent's page as a separate, explicit link", () => {
+    render(<IndexPage traces={[parent, child]} links={[]} />);
+    const origin = screen.getByTestId("fork-origin");
+    expect(origin.tagName).toBe("A");
+    expect(origin.getAttribute("href")).toBe("?trace=parent#ev-1");
   });
 });

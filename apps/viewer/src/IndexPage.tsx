@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card, Legend, StatusBadge } from "@codesweep-ai/ui";
 import { compact, duration, money } from "./format";
 import { hasTrace, linkTo } from "./routes";
-import { EventStrip, LEGEND_CHIPS, RedactedKey, STRIP_CELL_WIDTH, stripAxisPadding } from "./EventStrip";
+import { centerCell, EventStrip, LEGEND_CHIPS, RedactedKey, STRIP_CELL_WIDTH, stripAxisPadding } from "./EventStrip";
 import type { LinkHint, LoadedTrace } from "./types";
 import { ErrorSwatch } from "./ErrorSwatch";
 import { TRACE_PALETTE, traceColorKey } from "./palette";
@@ -28,16 +28,27 @@ function ForkConnector({ parentId, spawnIndex, childLane }: { parentId: string; 
     // parent's settle and lands on either of two heights (the parity coin flip).
     const observer = new ResizeObserver(update); observer.observe(scroller); observer.observe(child); observer.observe(parent); return () => { observer.disconnect(); scroller.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
   }, [childLane, parentId, spawnIndex]);
-  // R60: the connector names the event it points at and navigates there. It is
-  // a link in BOTH states, and the off-screen one is where that matters most —
-  // at ten pixels an event a long parent scrolls for thousands of pixels, so the
+  // R60/R61: the connector NAMES the event it points at, and acting on it
+  // reveals that cell in the parent's strip WITHOUT leaving the page. It is not
+  // a link: the reader is looking at the index precisely to compare lanes, and
+  // sending them to the parent's own page to see where a fork happened throws
+  // that away. The lane's "forked from #n" link is there for readers who do
+  // want the parent's page.
+  //
+  // Revealing matters most in the off-screen state, which is the common one: at
+  // ten pixels an event a long parent scrolls for thousands of pixels, so the
   // spawn cell is usually out of view and the drawn L has nothing to point at.
-  // The label carries the index either way, so a connector that cannot point
-  // can still say where.
-  const label = `Forked from event #${spawnIndex} of the parent trajectory`;
+  // One click scrolls the cell to the middle and the L reappears aimed at it.
+  const label = `Show event #${spawnIndex}, where the parent forked this trajectory`;
+  const reveal = () => {
+    const parent = [...document.querySelectorAll<HTMLElement>("[data-trace-id]")].find((element) => element.dataset.traceId === parentId);
+    const strip = parent?.querySelector<HTMLElement>('[data-testid="strip"]');
+    const scroller = parent?.querySelector<HTMLElement>("[data-event-lanes-scroller]");
+    if (strip && scroller) centerCell(strip, scroller, spawnIndex);
+  };
   if (!anchor) return null;
-  if (!anchor.visible) return <a data-testid="offscreen-fork-connector" data-spawn-index={spawnIndex} data-spawn-visible="false" href={linkTo(parentId, spawnIndex)} aria-label={`${label} (outside the visible strip)`} title={`${label} (outside the visible strip)`} className="fork-connector fork-connector-offscreen border-solid" />;
-  return <a data-testid="fork-connector" data-spawn-index={spawnIndex} data-spawn-x={anchor.x} data-spawn-visible={anchor.visible} href={linkTo(parentId, spawnIndex)} aria-label={label} title={label} className="fork-connector fork-connector-vertical border-solid" style={{ left: anchor.left, top: anchor.top, height: anchor.height }}><span aria-hidden="true" className="fork-connector-horizontal border-solid" style={{ width: Math.max(0, anchor.left) }} /></a>;
+  if (!anchor.visible) return <button type="button" data-testid="offscreen-fork-connector" data-spawn-index={spawnIndex} data-spawn-visible="false" onClick={reveal} aria-label={`${label} (currently outside the visible strip)`} title={`${label} (currently outside the visible strip)`} className="fork-connector fork-connector-offscreen border-solid" />;
+  return <button type="button" data-testid="fork-connector" data-spawn-index={spawnIndex} data-spawn-x={anchor.x} data-spawn-visible={anchor.visible} onClick={reveal} aria-label={label} title={label} className="fork-connector fork-connector-vertical border-solid" style={{ left: anchor.left, top: anchor.top, height: anchor.height }}><span aria-hidden="true" className="fork-connector-horizontal border-solid" style={{ width: Math.max(0, anchor.left) }} /></button>;
 }
 
 function Lane({ trace, depth, hinted, parentId, spawnIndex }: { trace: LoadedTrace; depth: number; hinted: boolean; parentId?: string; spawnIndex?: number }) {

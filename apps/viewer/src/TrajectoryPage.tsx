@@ -5,6 +5,7 @@ import { hasTrace, indexLink, linkTo } from "./routes";
 import { compact, duration, money } from "./format";
 import { EventCard } from "./EventCard";
 import { EventStrip, LEGEND_CHIPS, RedactedKey } from "./EventStrip";
+import type { StripFocus } from "./EventStrip";
 import { ErrorSwatch } from "./ErrorSwatch";
 import { TRACE_PALETTE, traceColorKey } from "./palette";
 import type { EventKind, LoadedTrace, TraceChunk } from "./types";
@@ -60,6 +61,15 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
   // life of the page: a user scroll landing on one to the pixel loses a single
   // spy update and the next event in the stream corrects it.
   const programmaticTops = useRef<number[]>([]);
+  // Centring is a NAVIGATION concern, so it is tracked apart from navRequest,
+  // which a strip click and a filter correction also raise. Yanking the strip
+  // under a reader who just clicked a cell, or who is scrolling the list, is
+  // exactly what R62 must not do.
+  const centerSequence = useRef(0);
+  const [centerRequest, setCenterRequest] = useState<StripFocus | undefined>(() => {
+    const index = hashEventIndex(trace.summary.strip.length);
+    return index == null ? undefined : { index, sequence: 0 };
+  });
   const [scrollTop, setScrollTop] = useState(selected * rowHeight); const [loadedChunks, setLoadedChunks] = useState(new Map<number, TraceChunk>());
   const [viewportHeight, setViewportHeight] = useState(0); const [measuredHeights, setMeasuredHeights] = useState(new Map<number, number>());
   const [kinds, setKinds] = useState<Set<string>>(() => new Set(EVENT_KINDS)); const [query, setQuery] = useState(""); const [activeQuery, setActiveQuery] = useState("");
@@ -87,7 +97,7 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
     setNavRequest({ index, sequence: ++navSequence.current });
   }, []);
 
-  useEffect(() => { const onHashChange = () => { const index = hashEventIndex(trace.summary.strip.length); if (index == null) return; pendingNavTarget.current = index; setNavRequest({ index, sequence: ++navSequence.current }); const chunk = Math.floor(index / trace.summary.chunkSize); void loadChunk(trace.path, chunk).then((data) => setLoadedChunks((current) => current.get(chunk) === data ? current : new Map(current).set(chunk, data))); }; window.addEventListener("hashchange", onHashChange); return () => window.removeEventListener("hashchange", onHashChange); }, [trace.path, trace.summary.chunkSize, trace.summary.strip.length]);
+  useEffect(() => { const onHashChange = () => { const index = hashEventIndex(trace.summary.strip.length); if (index == null) return; pendingNavTarget.current = index; setNavRequest({ index, sequence: ++navSequence.current }); setCenterRequest({ index, sequence: ++centerSequence.current }); const chunk = Math.floor(index / trace.summary.chunkSize); void loadChunk(trace.path, chunk).then((data) => setLoadedChunks((current) => current.get(chunk) === data ? current : new Map(current).set(chunk, data))); }; window.addEventListener("hashchange", onHashChange); return () => window.removeEventListener("hashchange", onHashChange); }, [trace.path, trace.summary.chunkSize, trace.summary.strip.length]);
   // Never dispatch for a chunk already loaded: the cached loadChunk promise
   // resolves on a microtask, and an unconditional setLoadedChunks per effect
   // run is a self-sustaining render loop when the search commit lands inside
@@ -170,7 +180,7 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
         </>}
       />
     </div>
-    <EventStrip events={trace.summary.strip} selected={selected} onSelect={selectEvent} label={`${trace.id} event strip`} laneLabel="" hiddenKinds={hiddenKinds} matches={stripMatches} textFiltering={Boolean(activeQuery) || errorsOnly} />
+    <EventStrip events={trace.summary.strip} selected={selected} onSelect={selectEvent} label={`${trace.id} event strip`} laneLabel="" hiddenKinds={hiddenKinds} matches={stripMatches} textFiltering={Boolean(activeQuery) || errorsOnly} focus={centerRequest} />
     <div ref={viewport} data-testid="virtual-event-list" tabIndex={0} role="region" aria-label="Events" className="virtual-list" onScroll={(event) => { const top = event.currentTarget.scrollTop; setScrollTop(top); const index = displayed[positionAtOffset(offsets, top)]; const pending = pendingNavTarget.current; if (pending != null) { if (index === pending && cardInView(event.currentTarget, pending)) pendingNavTarget.current = null; return; } if (programmaticTops.current.some((requested) => Math.abs(requested - top) < 1)) return; if (correctOnLand.current) return; if (index != null && index !== selected) setSelected(index); }}>
       {!displayed.length && <p role="status" data-testid="empty-filter" className="empty-filter">{kinds.size === 0 ? "No event kinds selected — pick one above, or choose all." : errorsOnly ? "No errored events in this trajectory." : "No events match this filter."}</p>}
       <div className="virtual-list-inner" style={{ height: offsets[offsets.length - 1] ?? 0 }}>

@@ -309,10 +309,19 @@ event.*
 holds every summary. A split-mode trace page holds only its own, so without the stamp a child has no
 route back to its fork point on a cold load.*
 
-**R60.** A proven connector **MUST** name the event it points at, and **MUST** navigate there.
-*Ten pixels per event makes a long parent a scroller thousands of pixels wide, so the spawn cell is
-usually off screen and the connector degrades to a stub. A stub that cannot point can still say
-where.*
+**R60.** A proven connector **MUST** name the event it points at, and the lane **MUST** offer a
+route to it. *Ten pixels per event makes a long parent a scroller thousands of pixels wide, so the
+spawn cell is usually off screen and the connector degrades to a stub. A stub that cannot point can
+still say where.*
+
+**R61.** Acting on a connector **MUST** reveal the spawn cell in the parent's strip without leaving
+the index. *A reader is on the index to compare lanes, and sending them to the parent's own page to
+learn where a fork happened throws that away.*
+
+**R62.** A cell reached by navigation **MUST** be centred in the strip where there is room, and
+**MUST** stop at an end rather than centre into blank space. *EventLanes scrolls a selection into
+view minimally, parking it against the viewport edge with nothing after it visible, which is the
+least useful place to arrive.*
 
 **R55.** Viewer styling **MUST** go through the `@codesweep-ai/ui` design tokens rather than literal
 values. *An eslint rule fails the build on a token it does not recognise, which is what lets both

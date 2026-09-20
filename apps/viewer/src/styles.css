@@ -89,10 +89,14 @@ canvas { image-rendering: pixelated; }
   pointer-events: none;
 }
 /* The depth connector stays inert: it is drawn when no spawn index is known,
-   so it has nowhere to navigate. The two that DO know become links (R60). */
-.fork-connector-offscreen[href],
-.fork-connector-vertical[href] {
+   so it has nothing to reveal. The two that DO know are buttons (R60/R61),
+   and a button needs its own reset — these are drawn entirely from borders. */
+button.fork-connector-offscreen,
+button.fork-connector-vertical {
   pointer-events: auto;
+  padding: 0;
+  background: none;
+  cursor: pointer;
 }
 .fork-connector-vertical {
   position: absolute;
@@ -103,7 +107,7 @@ canvas { image-rendering: pixelated; }
 /* A 2px rule is not a click target. This widens the hit area on both sides
    without moving the rule: the pseudo-element is absolutely positioned, so it
    adds nothing to the element's own box and the strip's pixels are unchanged. */
-.fork-connector-vertical[href]::after {
+button.fork-connector-vertical::after {
   content: "";
   position: absolute;
   inset: 0 calc(-1 * var(--space-2)) 0 calc(-1 * var(--space-2));
