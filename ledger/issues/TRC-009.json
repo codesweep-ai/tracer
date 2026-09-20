@@ -12,7 +12,7 @@
     "commits": [
       "d838e5a",
       "a30f024",
-      "89a94e2"
+      "539a01f"
     ],
     "integrated": [],
     "verified": "`make check` passes with parity enabled. `go test ./internal/normalizer/ -run TestNormalizeDirectoryStampsParentEventIndex`: PASS across five fixtures spanning all three CLIs, with per-fixture counts pinned so a join that stops resolving fails rather than reporting a smaller number. Ten oracle summaries gained `parentEventIndex` and nothing else, verified by removing the key and comparing byte for byte.\n\nA captured export of thirty trajectories was rendered headless and checked. A child spawned by a parent of 1,803 events reports `forked from parent · #742` and links to that parent at `#ev-742`, which is the index measured independently from the parent's own strip. Three sub-agents dispatched in one batch report 740, 741 and 742 separately. Every connector in that export takes the off-screen branch, and each now carries `Forked from event #<n> of the parent trajectory (outside the visible strip)` instead of pointing at nothing."
