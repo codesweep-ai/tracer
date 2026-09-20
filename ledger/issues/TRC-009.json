@@ -1,0 +1,20 @@
+{
+  "id": "TRC-009",
+  "title": "A sub-agent lane cannot say where in its parent it was forked from",
+  "type": "improvement",
+  "severity": "med",
+  "status": "in-progress",
+  "opened": "2026-09-20",
+  "foundBy": "user report (host), reading a captured export of thirty trajectories: \"when we have a sub-session ... it isn't obvious where in the strip it was forked from. maybe clicking on the blue L should navigate to its fork point?\"",
+  "resolved": null,
+  "stint": "fork-navigation",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The index page draws an L-shaped connector from a parent's spawn cell down to the child's lane. It carries no text and it is not clickable. When the spawn cell is scrolled out of the parent strip, it degrades to a stub with no position information at all.\n\nThat last case is the common one, not the edge case. The strip is ten pixels per event, so a parent of 1,800 events is an 18,000 pixel scroller. A spawn at event 740 sits about 7,400 pixels along it. Unless the strip happens to be scrolled there, `ForkConnector` takes its `!anchor.visible` branch and draws `fork-connector-offscreen`, which points at nothing. A reader is told a fork happened and cannot learn where.\n\nAdjacent spawns make it worse. Three sub-agents dispatched in one batch fork at three consecutive events, twenty pixels apart, so even scrolled into view their connectors overlap.\n\nThe reverse direction is missing outright. A child's own trace page offers only the breadcrumb to the index. It never names its parent, and there is no route back to the event that spawned it. In `--split` mode it could not build one: a trace page carries its own summary and a reduced index of `{id, safeId, title}`, so the spawn position is not knowable there. The index page derives it client side by scanning the parent's strip, which only works because that page has every summary loaded.\n\nThree changes, smallest first. Name the index in the connector, so it informs even when it cannot point. Make the connector a link to the parent at that event. Record the spawn position on the child at normalize time, so the child's page can offer the way back in both export modes and on a cold load.",
+  "notes": [],
+  "links": []
+}
