@@ -1,0 +1,24 @@
+{
+  "id": "TRC-011",
+  "title": "Tool inputs rendered as JSON, which destroys the multi-line strings they are made of",
+  "type": "improvement",
+  "severity": "med",
+  "status": "closed",
+  "opened": "2026-09-20",
+  "foundBy": "session agent, while reading a captured export of thirty trajectories; raised again by the user, who asked for a formatted default with the record still reachable",
+  "resolved": "2026-09-20",
+  "stint": "fork-navigation",
+  "evidence": {
+    "commits": [
+      "0795e1d"
+    ],
+    "integrated": [],
+    "verified": "`make check` passes with parity enabled. 75 viewer tests, thirteen of them on the renderer, including one that asserts every key of every shape reaches the page.\n\nThe three shapes were checked in a real browser against a captured corpus. A 515-line heredoc renders as shell in a card 513 px tall, with no JSON escapes left except the ones the script itself contains. A 66-line edit renders as a diff with its changed lines marked. A 357-line file write renders as its path and its body."
+  },
+  "resolution": "A shape registry in the viewer (R63). A `command` renders as shell and an old and new pair as a unified diff. A path with content renders as a file body, a bare string as text, and anything unrecognised as labelled fields.\n\nSelection is by input shape, never by tool name (R65). Names differ per CLI, and the fixture scrubber rewrites them to prose, so a table keyed by name could not be exercised by the corpus.\n\nThe formatted view renders every key (R64). Nothing is summarised away, so the toggle beside the kind chips reveals nothing that was withheld, which is what lets formatted be the default. The toggle is session state and is never persisted, because storage under a file URL is an opaque origin.\n\nCode blocks keep their bounded default height. Unbounded blocks would have traded an unreadable card for a card taller than the list holding it.",
+  "details": "Every tool call's input reached the page through one `CodeBlock` with `language=\"json\"`. The normalized record carries `tool.input` verbatim, so the viewer had the real data. Every input was drawn the same way regardless of what it held.\n\nThat choice destroys the field worth reading. Almost every tool's payload is a multi-line string, and JSON escaping is exactly what collapses a multi-line string into one line of backslash-n and backslash-quote. In one captured corpus of 3,432 tool calls, 3,159 were shell commands, so the commonest case was the worst served. One of them carried a 515-line heredoc, which arrived as a single unreadable line.\n\nThe same applies to the other shapes. An edit is a diff, and it arrived as two escaped blobs. A file write arrived as one escaped blob. A sub-agent dispatch arrived with its prompt escaped.\n\nTool output has the identical problem and is usually longer. It is deliberately left alone here, because bounding and truncating output is its own question.\n\nTo reproduce, export a session containing a shell command with a heredoc and read the tool call's input.",
+  "notes": [],
+  "links": [
+    "TRC-009"
+  ]
+}
