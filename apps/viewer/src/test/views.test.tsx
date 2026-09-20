@@ -390,3 +390,34 @@ describe("tool input view toggle", () => {
     expect(screen.queryByTestId("empty-filter")).toBeNull();
   });
 });
+
+/* A layout contract, asserted against the stylesheet because jsdom does not lay
+   out. ui's Legend container is a plain flex row that does not wrap, so at a
+   narrow width its extras were squeezed until their LABELS broke: "redacted at
+   source" went from one line to three, leaving its swatch beside a fragment. A
+   key is one thing, so each extra stays atomic and the row wraps between them. */
+describe("legend extras stay atomic when narrow", () => {
+  // Comments stripped first: a comment sitting directly above a rule would
+  // otherwise be read as part of its first selector.
+  const css = readFileSync(path.join(import.meta.dirname, "..", "styles.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  /** Every declaration that applies to `selector`. A selector appears in more
+   *  than one rule here — its own, and the grouped rule carrying this contract —
+   *  so all of them are gathered rather than the first. */
+  const ruleFor = (selector: string) =>
+    css.split("}")
+      .filter((block) => block.split("{")[0]?.split(",").some((s) => s.trim() === selector))
+      .map((block) => block.split("{")[1] ?? "")
+      .join(";");
+
+  it("never lets an extra's label break across lines", () => {
+    for (const selector of [".legend-extra", ".redacted-key", ".errors-only", ".input-view", ".filter-reset"]) {
+      expect(ruleFor(selector), selector).toContain("white-space: nowrap");
+    }
+  });
+
+  it("lets the legend row wrap instead, on both pages", () => {
+    for (const selector of [".kind-legend", ".index-legend"]) {
+      expect(ruleFor(selector), selector).toContain("flex-wrap: wrap");
+    }
+  });
+});

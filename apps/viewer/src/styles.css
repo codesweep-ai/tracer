@@ -164,6 +164,19 @@ button.fork-connector-vertical::after {
 .filters-row { display: flex; align-items: flex-start; gap: var(--space-3); flex-wrap: wrap; }
 .trace-search { min-width: var(--input-min-width); }
 .kind-legend { font-size: var(--font-size-caption); padding: var(--space-2) 0; }
+/* Legend's own container does not wrap (ui's .cs-component-legend-1 is a plain
+   flex row), so at a narrow width its extras were squeezed until their LABELS
+   broke across lines: "redacted at source" went from one line to three, and the
+   swatch was left stranded beside a fragment. A key is one thing — its mark and
+   the words naming it — so each extra is atomic and the ROW wraps between them.
+   Both legends, because both carry extras. */
+.kind-legend,
+.index-legend { flex-wrap: wrap; }
+.legend-extra,
+.redacted-key,
+.errors-only,
+.input-view,
+.filter-reset { white-space: nowrap; }
 .legend-sep { color: var(--border); }
 /* The strip's hollow mark, at legend scale: a token-coloured outline around the
    page background, matching EventLanes' `shape="hollow"` geometry. */
