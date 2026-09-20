@@ -3,17 +3,21 @@
   "title": "A sub-agent lane cannot say where in its parent it was forked from",
   "type": "improvement",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "opened": "2026-09-20",
   "foundBy": "user report (host), reading a captured export of thirty trajectories: \"when we have a sub-session ... it isn't obvious where in the strip it was forked from. maybe clicking on the blue L should navigate to its fork point?\"",
-  "resolved": null,
+  "resolved": "2026-09-20",
   "stint": "fork-navigation",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "d838e5a",
+      "a30f024",
+      "89a94e2"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled. `go test ./internal/normalizer/ -run TestNormalizeDirectoryStampsParentEventIndex`: PASS across five fixtures spanning all three CLIs, with per-fixture counts pinned so a join that stops resolving fails rather than reporting a smaller number. Ten oracle summaries gained `parentEventIndex` and nothing else, verified by removing the key and comparing byte for byte.\n\nA captured export of thirty trajectories was rendered headless and checked. A child spawned by a parent of 1,803 events reports `forked from parent · #742` and links to that parent at `#ev-742`, which is the index measured independently from the parent's own strip. Three sub-agents dispatched in one batch report 740, 741 and 742 separately. Every connector in that export takes the off-screen branch, and each now carries `Forked from event #<n> of the parent trajectory (outside the visible strip)` instead of pointing at nothing."
   },
-  "resolution": null,
+  "resolution": "Three changes. `NormalizeDirectory` stamps `meta.parentEventIndex` on a child when it finds the spawning event, which is the only point where both documents are in hand (R59). The connector becomes a link to the parent at that event, in both its drawn and its off-screen state (R60). Each names the index in its label, so the state that cannot point still says where. The lane repeats the index as text, which needs no geometry and so survives sibling spawns twenty pixels apart. A child's trace page gains the way back, working on a cold load in both export modes because the index is stamped rather than derived.\n\nAbsent stays legal. A child exported without its parent, or one whose spawn cannot be joined, keeps the inert depth connector. The index page prefers the stamp and falls back to the scan it always did, so an export made before this still nests and links correctly.\n\nThe parent is named \"parent\" rather than by its title. Only the reduced index carries a title, so rendering one read differently in the two transports and the parity gate failed on it. The tooltip carries the id.",
   "details": "The index page draws an L-shaped connector from a parent's spawn cell down to the child's lane. It carries no text and it is not clickable. When the spawn cell is scrolled out of the parent strip, it degrades to a stub with no position information at all.\n\nThat last case is the common one, not the edge case. The strip is ten pixels per event, so a parent of 1,800 events is an 18,000 pixel scroller. A spawn at event 740 sits about 7,400 pixels along it. Unless the strip happens to be scrolled there, `ForkConnector` takes its `!anchor.visible` branch and draws `fork-connector-offscreen`, which points at nothing. A reader is told a fork happened and cannot learn where.\n\nAdjacent spawns make it worse. Three sub-agents dispatched in one batch fork at three consecutive events, twenty pixels apart, so even scrolled into view their connectors overlap.\n\nThe reverse direction is missing outright. A child's own trace page offers only the breadcrumb to the index. It never names its parent, and there is no route back to the event that spawned it. In `--split` mode it could not build one: a trace page carries its own summary and a reduced index of `{id, safeId, title}`, so the spawn position is not knowable there. The index page derives it client side by scanning the parent's strip, which only works because that page has every summary loaded.\n\nThree changes, smallest first. Name the index in the connector, so it informs even when it cannot point. Make the connector a link to the parent at that event. Record the spawn position on the child at normalize time, so the child's page can offer the way back in both export modes and on a cold load.",
   "notes": [],
   "links": []
