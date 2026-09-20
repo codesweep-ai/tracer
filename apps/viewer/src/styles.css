@@ -88,12 +88,28 @@ canvas { image-rendering: pixelated; }
   border-bottom-left-radius: var(--radius-sm);
   pointer-events: none;
 }
+/* The depth connector stays inert: it is drawn when no spawn index is known,
+   so it has nowhere to navigate. The two that DO know become links (R60). */
+.fork-connector-offscreen[href],
+.fork-connector-vertical[href] {
+  pointer-events: auto;
+}
 .fork-connector-vertical {
   position: absolute;
   z-index: var(--z-sticky);
   border-left: 2px solid var(--color-link);
   pointer-events: none;
 }
+/* A 2px rule is not a click target. This widens the hit area on both sides
+   without moving the rule: the pseudo-element is absolutely positioned, so it
+   adds nothing to the element's own box and the strip's pixels are unchanged. */
+.fork-connector-vertical[href]::after {
+  content: "";
+  position: absolute;
+  inset: 0 calc(-1 * var(--space-2)) 0 calc(-1 * var(--space-2));
+}
+.fork-origin { color: var(--color-link); font-size: var(--font-size-caption); }
+.trace-breadcrumbs { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .fork-connector-horizontal {
   position: absolute;
   right: 0;

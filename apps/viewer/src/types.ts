@@ -1,6 +1,9 @@
 export type EventKind = "user" | "assistant" | "thinking" | "tool_call" | "tool_result" | "system" | "meta" | "turn_end";
 export interface TokenUsage { input?: number; output?: number; cacheRead?: number; cacheWrite?: number; reasoning?: number }
-export interface TraceMeta { source: string; sessionId: string; parentSessionId: string | null; agentId?: string | null; label?: string; title?: string; autoTitle?: string; model?: string | null; cliVersion?: string | null; cwd?: string; startedAt?: string; endedAt?: string; durationMs?: number | null; cost?: number | null }
+/** `parentEventIndex` is the index, IN THE PARENT, of the event that spawned this
+ * trajectory (R59). Absent for a root, for a child exported without its parent,
+ * and for a child whose spawn could not be joined. */
+export interface TraceMeta { source: string; sessionId: string; parentSessionId: string | null; parentEventIndex?: number | null; agentId?: string | null; label?: string; title?: string; autoTitle?: string; model?: string | null; cliVersion?: string | null; cwd?: string; startedAt?: string; endedAt?: string; durationMs?: number | null; cost?: number | null }
 export interface TraceTotals { events: number; toolCalls: number; toolErrors: number; input: number; output: number; cacheRead: number; cacheWrite: number; reasoning?: number; cost?: number | null; costEstimated?: boolean }
 export interface StripEvent { i: number; kind: EventKind; error: boolean; ts?: string; label?: string; size?: number; turnEnd?: boolean; subtask?: boolean; childSessionId?: string; redacted?: boolean }
 export interface LinkHint { fromSessionId: string; toSessionId: string; kind: string; label?: string; evidence?: string }

@@ -227,3 +227,49 @@ describe("damaged input badges", () => {
     expect(screen.queryByText(/unreadable/)).toBeNull();
   });
 });
+
+/* R59/R60. The connector used to be inert and, whenever the parent's spawn cell
+   was scrolled out of view, positionless — the common case, since the strip is
+   ten pixels an event. Every route to a fork point is asserted here: the lane's
+   text link, and the child page's way back, which is the one that could not
+   exist before the index was stamped at normalize time. */
+describe("fork navigation", () => {
+  const parent: LoadedTrace = {
+    id: "parent", path: "demo",
+    summary: { ...summary, meta: { ...summary.meta, sessionId: "parent", title: "Parent" }, strip: [{ i: 0, kind: "user", error: false }, { i: 1, kind: "tool_call", error: false, subtask: true, childSessionId: "child" }] },
+  };
+  const child = (meta: Partial<TraceSummary["meta"]>): LoadedTrace => ({
+    id: "child", path: "demo",
+    summary: { ...summary, meta: { ...summary.meta, sessionId: "child", parentSessionId: "parent", title: "Child", ...meta } },
+  });
+
+  it("names the fork point on the lane and links to the parent at that event", () => {
+    render(<IndexPage traces={[parent, child({ parentEventIndex: 1 })]} links={[]} />);
+    const origin = screen.getByTestId("fork-origin");
+    expect(origin).toHaveTextContent("forked from #1");
+    expect(origin.getAttribute("href")).toBe("?trace=parent#ev-1");
+  });
+
+  it("falls back to scanning the parent's strip when an export predates the stamp", () => {
+    // The index page holds every summary, so it can still find the spawn.
+    render(<IndexPage traces={[parent, child({})]} links={[]} />);
+    expect(screen.getByTestId("fork-origin").getAttribute("href")).toBe("?trace=parent#ev-1");
+  });
+
+  it("gives a child page the route back, at the spawning event", () => {
+    render(<TrajectoryPage trace={child({ parentEventIndex: 1 })} />);
+    const back = screen.getByTestId("parent-link");
+    expect(back.getAttribute("href")).toBe("?trace=parent#ev-1");
+    expect(back).toHaveTextContent("#1");
+  });
+
+  it("still reaches the parent when no spawn index was recorded", () => {
+    render(<TrajectoryPage trace={child({})} />);
+    expect(screen.getByTestId("parent-link").getAttribute("href")).toBe("?trace=parent");
+  });
+
+  it("offers no parent link on a root", () => {
+    render(<TrajectoryPage trace={trace} />);
+    expect(screen.queryByTestId("parent-link")).toBeNull();
+  });
+});

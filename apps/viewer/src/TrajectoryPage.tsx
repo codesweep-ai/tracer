@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Legend, SearchInput, Skeleton, StatusBadge } from "@codesweep-ai/ui";
 import { loadChunk, scanChunkText } from "./data";
-import { indexLink } from "./routes";
+import { hasTrace, indexLink, linkTo } from "./routes";
 import { compact, duration, money } from "./format";
 import { EventCard } from "./EventCard";
 import { EventStrip, LEGEND_CHIPS, RedactedKey } from "./EventStrip";
@@ -126,11 +126,26 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
     return () => { cancelled = true; };
   }, [activeQuery, trace.path, trace.summary.chunkCount, trace.summary.strip]);
 
+  // The way back. A child knew its parent but never named it, and offered no
+  // route to the event that spawned it — in split mode it could not build one,
+  // because a trace page carries its own summary and a reduced index, not the
+  // parent's strip. meta.parentEventIndex (R59) is what makes this work on a
+  // cold load in both modes. The deep link is offered only when the index is
+  // stamped; without it the link still reaches the parent, just not the event.
+  const parentId = trace.summary.meta.parentSessionId;
+  const spawnIndex = trace.summary.meta.parentEventIndex;
+  const parentLink = parentId && hasTrace(parentId)
+    // Named "parent" rather than by title: the title is carried by the reduced
+    // index only, so rendering it would read differently in the two transports
+    // and fail parity. The id rides on the tooltip, where it costs no layout.
+    ? <a data-testid="parent-link" href={linkTo(parentId, spawnIndex ?? undefined)} title={parentId} className="back-link parent-link">↖ forked from parent{spawnIndex != null && <> · #{spawnIndex}</>}</a>
+    : null;
+
   // money() is empty for an unpriced lane; its separator must go with it.
   const costLabel = money(trace.summary.totals.cost, trace.summary.totals.costEstimated);
   const filtering = kinds.size < EVENT_KINDS.length || errorsOnly;
   return <section data-testid="trajectory-page" className="trace-page">
-    <div className="trace-header"><div><a href={indexLink()} className="back-link">← All trajectories</a><h1 className="trace-title">{trace.summary.meta.title ?? (trace.summary.meta.autoTitle ? <span className="auto-title" title="Derived from the session's first user message">{trace.summary.meta.autoTitle}</span> : trace.id)}</h1><p className="trace-meta">{trace.summary.meta.model ?? "Unknown model"} · {compact(trace.summary.totals.input + trace.summary.totals.output)} tokens · {duration(trace.summary.meta.durationMs)}{costLabel && <> · {costLabel}</>}{(trace.summary.meta.title ?? trace.summary.meta.autoTitle) && <> · <span className="trace-id">{trace.id}</span></>}</p></div>{(trace.summary.parse.unreadable ?? 0) > 0 && <StatusBadge label={`${trace.summary.parse.unreadable} unreadable`} status="error" />}{trace.summary.parse.unrecognized > 0 && <StatusBadge label={`${trace.summary.parse.unrecognized} unrecognized`} status="warning" />}</div>
+    <div className="trace-header"><div><span className="trace-breadcrumbs"><a href={indexLink()} className="back-link">← All trajectories</a>{parentLink}</span><h1 className="trace-title">{trace.summary.meta.title ?? (trace.summary.meta.autoTitle ? <span className="auto-title" title="Derived from the session's first user message">{trace.summary.meta.autoTitle}</span> : trace.id)}</h1><p className="trace-meta">{trace.summary.meta.model ?? "Unknown model"} · {compact(trace.summary.totals.input + trace.summary.totals.output)} tokens · {duration(trace.summary.meta.durationMs)}{costLabel && <> · {costLabel}</>}{(trace.summary.meta.title ?? trace.summary.meta.autoTitle) && <> · <span className="trace-id">{trace.id}</span></>}</p></div>{(trace.summary.parse.unreadable ?? 0) > 0 && <StatusBadge label={`${trace.summary.parse.unreadable} unreadable`} status="error" />}{trace.summary.parse.unrecognized > 0 && <StatusBadge label={`${trace.summary.parse.unrecognized} unrecognized`} status="warning" />}</div>
     <div aria-label="Trajectory filters" className="filters-row">
       <SearchInput value={query} onChange={setQuery} onSearch={onSearch} minChars={1} placeholder="Filter event text or tool names" noResults={Boolean(activeQuery) && !searching && matches.size === 0} status={activeQuery ? `${matches.size} matches${searching ? ` · scanning ${scanned}/${trace.summary.chunkCount}` : ""}` : undefined} className="trace-search" />
       <Legend

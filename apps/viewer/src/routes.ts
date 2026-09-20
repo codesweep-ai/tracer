@@ -9,6 +9,10 @@ import type { LoadedTrace } from "./types";
 
 export type ViewerMode = "single" | "split";
 
+// NOTE: `title` is carried by the REDUCED index only (split-mode trace pages).
+// The full index block is index.json verbatim, which has no title. Anything
+// rendered from it would therefore differ between the two transports, which the
+// parity gate fails — so routing reads only the fields both blocks carry.
 type RouteIndexEntry = { id?: string; path?: string; safeId?: string };
 
 /** The injected `#mode` data block, defaulting to "single" when absent (dev server, tests). */
