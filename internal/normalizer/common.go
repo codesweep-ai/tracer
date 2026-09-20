@@ -240,8 +240,57 @@ func (t skipTally) list() []any {
 	return out
 }
 
-// warningReport builds the parse report shared by every adapter.
-func warningReport(adapter, version, cli string, skipped skipTally, counts map[string]int, order []string) *obj {
+// damageRun collapses a run of consecutive unreadable lines into ONE event.
+//
+// A line that is not JSON is a DAMAGED FILE; a record whose `type` nothing
+// knows is an ADAPTER BEHIND ITS CLI (SPEC.md §7). Both used to arrive as
+// unknown("parse-error"), which made them one indistinguishable grey cell —
+// yet they need opposite reactions from a reader: restore the file, versus
+// teach the adapter. R56 separates them.
+//
+// Collapsing the run is what makes the report legible. A captured session held
+// 2,771 consecutive unreadable lines (its first 721 KB overwritten with binary);
+// drawn one cell each, they are wallpaper a reader scrolls past rather than the
+// loud report §7 asks for. One event naming the range is louder (R57).
+//
+// `lines` counts the OPEN run; `total` counts every unreadable line in the
+// document and survives flush, because it is what parse.unreadable reports.
+type damageRun struct {
+	first, last, lines, total int
+}
+
+// add extends the open run with a 1-based source line number.
+func (d *damageRun) add(line int) {
+	if d.lines == 0 {
+		d.first = line
+	}
+	d.last = line
+	d.lines++
+	d.total++
+}
+
+// flush closes an open run, appending its single collapsed event. Callers must
+// call it wherever a readable record interrupts a run AND once after the record
+// loop, so the last run is not dropped.
+func (d *damageRun) flush(events []*obj) []*obj {
+	if d.lines == 0 {
+		return events
+	}
+	where := fmt.Sprintf("line %d", d.first)
+	noun := "line"
+	if d.last != d.first {
+		where = fmt.Sprintf("lines %d-%d", d.first, d.last)
+		noun = "lines"
+	}
+	text := fmt.Sprintf("%d unreadable %s (%s): not JSON — the file may be damaged", d.lines, noun, where)
+	d.first, d.last, d.lines = 0, 0, 0
+	return append(events, trajectory.NewObject("kind", "meta", "ts", trajectory.Undefined, "rawType", "unreadable", "text", text))
+}
+
+// warningReport builds the parse report shared by every adapter. `unreadable`
+// is the document's damageRun total; adapters whose format has no per-line
+// records (opencode reads one whole document) pass 0.
+func warningReport(adapter, version, cli string, skipped skipTally, counts map[string]int, order []string, unreadable int) *obj {
 	warnings := []any{}
 	total := 0
 	for _, k := range order {
@@ -249,7 +298,16 @@ func warningReport(adapter, version, cli string, skipped skipTally, counts map[s
 		total += n
 		warnings = append(warnings, trajectory.NewObject("message", fmt.Sprintf("unrecognized type '%s' rendered as meta", k), "rawType", k, "count", n))
 	}
-	return trajectory.NewObject("adapter", adapter, "adapterVersion", version, "cliVersionRange", cli, "skippedByType", skipped.list(), "unrecognized", total, "warnings", warnings)
+	// Damage is reported apart from `unrecognized`, which counts record types
+	// nothing classified (R42). A damaged line has no type to count.
+	if unreadable > 0 {
+		noun := "line"
+		if unreadable != 1 {
+			noun = "lines"
+		}
+		warnings = append(warnings, trajectory.NewObject("message", fmt.Sprintf("%d %s could not be read as JSON — the file may be damaged", unreadable, noun), "rawType", "unreadable", "count", unreadable))
+	}
+	return trajectory.NewObject("adapter", adapter, "adapterVersion", version, "cliVersionRange", cli, "skippedByType", skipped.list(), "unrecognized", total, "unreadable", unreadable, "warnings", warnings)
 }
 
 // finalize completes a document (codex and opencode): index events,

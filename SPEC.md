@@ -242,6 +242,26 @@ would order its keys by whichever types appeared first, and this output is compa
 says which kinds of record produced no event, and the second counts the ones nothing classified.
 Together they are what separates correctly ignored bookkeeping from silently lost data.*
 
+**R56.** Input that is not JSON **MUST** be reported as damage, not as an unrecognized record type:
+counted in `parse.unreadable`, never in `parse.unrecognized`, and carrying `rawType: "unreadable"`.
+*The two call for opposite responses: restore the file, or teach the adapter. Rendered identically,
+a reader cannot tell which they are looking at.*
+
+**R57.** Consecutive unreadable lines **MUST** collapse into a single event naming the count and the
+line range. *A captured session held 2,771 consecutive unreadable lines; drawn one cell each they
+are wallpaper a reader scrolls past, which is the opposite of what §7 asks for.*
+
+**R58.** Input in which no record parses **MUST** be reported as damaged rather than unrecognized
+when its bytes are not valid text. *"No recognizable records" is also what a `links.json` beside a
+session produces, so a damaged transcript disappeared behind an expected-looking line. It matters
+most for opencode. Its transcript is a whole JSON document extracted from the CLI's SQL store. A
+damaged extract parses as nothing at all, so unlike a JSONL session it cannot degrade into a partial
+trajectory. The diagnostic is the only report there will be.*
+
+`parse.unreadable` is additive and optional in `schema/trajectory.v1.json`: the current adapters
+always emit it, and documents written before R56 omit it. `schemaVersion` is unchanged, because a
+consumer that ignores the field still renders such a document correctly (R7).
+
 ## 8. The viewer
 
 The index page draws one lane per trajectory, and a trace page draws one card per event. Beside

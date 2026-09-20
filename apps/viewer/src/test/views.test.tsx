@@ -195,3 +195,35 @@ describe("kind filtering is independent of kind colour (T4-01 regression)", () =
     expect(eventCount()).toBe("0");
   });
 });
+
+/* R56's reader-facing half. `unrecognized` and `unreadable` are different
+   problems — an adapter behind its CLI, versus a damaged file — so they must
+   not collapse into one badge. The damaged one is the more serious, and reads
+   as an error rather than a warning. */
+describe("damaged input badges", () => {
+  const damaged = (over: Partial<TraceSummary["parse"]>): LoadedTrace => ({
+    id: "demo",
+    path: "demo",
+    summary: { ...summary, parse: { ...summary.parse, ...over } },
+  });
+
+  it("badges unreadable lines apart from unrecognized types, on both pages", () => {
+    const trace = damaged({ unreadable: 2771, unrecognized: 4 });
+    render(<IndexPage traces={[trace]} links={[]} />);
+    expect(screen.getByText("2771 unreadable")).toBeTruthy();
+    expect(screen.getByText("4 unrecognized")).toBeTruthy();
+    cleanup();
+    render(<TrajectoryPage trace={trace} />);
+    expect(screen.getByText("2771 unreadable")).toBeTruthy();
+    expect(screen.getByText("4 unrecognized")).toBeTruthy();
+  });
+
+  it("shows no unreadable badge for a clean trace, or for an export written before R56", () => {
+    render(<IndexPage traces={[damaged({ unreadable: 0 })]} links={[]} />);
+    expect(screen.queryByText(/unreadable/)).toBeNull();
+    cleanup();
+    // `unreadable` absent entirely: a summary from a pre-R56 cs-tracer.
+    render(<IndexPage traces={[damaged({})]} links={[]} />);
+    expect(screen.queryByText(/unreadable/)).toBeNull();
+  });
+});

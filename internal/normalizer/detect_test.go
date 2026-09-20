@@ -18,6 +18,10 @@ func TestDetectFormat(t *testing.T) {
 		{"codex", `{"type":"session_meta","payload":{}}`, SourceCodex, nil},
 		{"claude", `{"type":"user","uuid":"1"}`, SourceClaudeCode, nil},
 		{"malformed line ignored", "bad\n{\"type\":\"user\",\"uuid\":\"1\"}", SourceClaudeCode, nil},
+		// R58: nothing parsed AND the bytes are not text. "not json" above is
+		// readable prose and stays ErrNoKnownRecords; these were a file once.
+		{"damaged: invalid utf-8", "\xff\xfe\x00\x23\x83\x28", "", ErrDamagedInput},
+		{"damaged: nul byte", "{\"type\":\x00\"user\"}", "", ErrDamagedInput},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

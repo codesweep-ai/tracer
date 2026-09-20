@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"unicode/utf8"
 )
 
 type Source string
@@ -18,6 +19,18 @@ const (
 var (
 	ErrEmptyInput     = errors.New("cannot detect format of an empty file")
 	ErrNoKnownRecords = errors.New("file contains no recognizable records")
+	// ErrDamagedInput separates "this was a session and its bytes are gone"
+	// from "this was never a session" (R58). Both used to be
+	// ErrNoKnownRecords, which is also what a links.json beside a session
+	// produces — so a damaged transcript left one expected-looking line and
+	// disappeared.
+	//
+	// It matters most for opencode, whose transcript is a whole JSON document
+	// extracted from the CLI's SQL store: a damaged extract parses as nothing
+	// at all, so unlike claude-code and codex it cannot degrade into a partial
+	// trajectory. The actionable advice is to run the extraction again, and
+	// that advice needs the reader to know the file is damaged.
+	ErrDamagedInput = errors.New("file is not valid text (binary or damaged); no records could be read")
 )
 
 // DetectFormat implements the reference detector: whole OpenCode documents
@@ -48,6 +61,12 @@ func DetectFormat(input []byte) (Source, error) {
 		}
 	}
 	if len(records) == 0 {
+		// Nothing parsed AND the bytes are not text: damaged, not unrelated.
+		// Both tests are cheap and deterministic; NUL is called out separately
+		// because it is legal UTF-8 but never appears in a transcript.
+		if !utf8.Valid(text) || bytes.IndexByte(text, 0) >= 0 {
+			return "", ErrDamagedInput
+		}
 		return "", ErrNoKnownRecords
 	}
 	for _, record := range records {

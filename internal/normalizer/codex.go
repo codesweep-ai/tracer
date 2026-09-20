@@ -43,6 +43,7 @@ func NormalizeCodex(records []*obj) *obj {
 	counts := map[string]int{}
 	var order []string
 	skipped := skipTally{}
+	damage := &damageRun{}
 	unknown := func(k string, ts any) {
 		if counts[k] == 0 {
 			order = append(order, k)
@@ -80,10 +81,14 @@ func NormalizeCodex(records []*obj) *obj {
 		if payload == nil {
 			payload = trajectory.NewObject()
 		}
+		// Damaged bytes, not an unknown payload type (R56): collapsed per run
+		// (R57), counted in parse.unreadable, never in parse.unrecognized.
 		if truthy(get(r, "__parseError")) {
-			unknown("parse-error", trajectory.Undefined)
+			damage.add(int(num(get(r, "__line"))))
 			continue
 		}
+		// A readable record ends the run, so the collapsed event keeps its place.
+		events = damage.flush(events)
 		typ := str(get(r, "type"))
 		switch typ {
 		case "session_meta":
@@ -215,5 +220,7 @@ func NormalizeCodex(records []*obj) *obj {
 			unknown(fallback(typ, "missing-type"), ts)
 		}
 	}
-	return finalize(meta, events, warningReport("codex", "1.1.0", "0.146.x", skipped, counts, order), nil)
+	// A run reaching the end of the file has no readable record to close it.
+	events = damage.flush(events)
+	return finalize(meta, events, warningReport("codex", "1.1.0", "0.146.x", skipped, counts, order, damage.total), nil)
 }

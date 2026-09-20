@@ -3,6 +3,7 @@ package normalizer
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/codesweep-ai/tracer/internal/oracletest"
@@ -71,5 +72,41 @@ func TestOracleTrees(t *testing.T) {
 	}
 	if fixtureCount != len(oracleDirs) {
 		t.Fatalf("exercised %d fixture directories but %d oracle trees exist — a fixture is missing its golden, or vice versa", fixtureCount, len(oracleDirs))
+	}
+}
+
+// R58: a damaged transcript must not be skipped with the same line an unrelated
+// file gets. It matters most for opencode, whose transcript is one JSON document
+// extracted from the CLI's SQL store: a damaged extract parses as nothing at all
+// and so cannot degrade into a partial trajectory the way a JSONL session does.
+// Before this, both said "file contains no recognizable records" — the line a
+// links.json beside a session also produces — so a damaged session vanished
+// behind an expected-looking diagnostic.
+func TestNormalizeDirectoryNamesDamagedInput(t *testing.T) {
+	dir := t.TempDir()
+	// A whole-document opencode export whose leading bytes were overwritten:
+	// no line parses, and the bytes are not valid text.
+	damaged := append([]byte{0xff, 0xfe, 0x00, 0x23, 0x83, 0x28}, []byte(`ages":[]}`)...)
+	if err := os.WriteFile(filepath.Join(dir, "ses_damaged.json"), damaged, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	result, err := NormalizeDirectory(dir, t.TempDir(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Skipped != 1 {
+		t.Fatalf("Skipped = %d, want 1", result.Skipped)
+	}
+	var found bool
+	for _, d := range result.Diagnostics {
+		if strings.Contains(d, "binary or damaged") {
+			found = true
+		}
+		if strings.Contains(d, "no recognizable records") {
+			t.Fatalf("damaged input reported as unrecognized: %q", d)
+		}
+	}
+	if !found {
+		t.Fatalf("no damage diagnostic in %q", result.Diagnostics)
 	}
 }

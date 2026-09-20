@@ -25,6 +25,7 @@ func NormalizeClaude(records []*obj) *obj {
 	warnings := map[string]int{}
 	var warningOrder []string
 	skipped := skipTally{}
+	damage := &damageRun{}
 	unknown := func(kind string, ts, lane any) {
 		if warnings[kind] == 0 {
 			warningOrder = append(warningOrder, kind)
@@ -33,10 +34,16 @@ func NormalizeClaude(records []*obj) *obj {
 		events = append(events, trajectory.NewObject("kind", "meta", "ts", ts, "lane", lane, "rawType", kind, "text", "unrecognized Claude record/content type: "+kind))
 	}
 	for _, r := range records {
+		// Damaged bytes, not an unknown record type (R56): collapsed into one
+		// event per run (R57) and counted in parse.unreadable, never in
+		// parse.unrecognized.
 		if truthy(get(r, "__parseError")) {
-			unknown("parse-error", trajectory.Undefined, trajectory.Undefined)
+			damage.add(int(num(get(r, "__line"))))
 			continue
 		}
+		// A readable record ends the run, so the collapsed event keeps its
+		// place in the stream rather than drifting to the end.
+		events = damage.flush(events)
 		// Records with no `uuid` are not events — they carry session state and
 		// bookkeeping. They must still be CLASSIFIED, not silently dropped.
 		//
@@ -241,6 +248,8 @@ func NormalizeClaude(records []*obj) *obj {
 			unknown(fallback(typ, "missing-type"), ts, lane)
 		}
 	}
+	// A run reaching the end of the file has no readable record to close it.
+	events = damage.flush(events)
 	if _, exists := meta.Get("sessionId"); !exists {
 		meta.Set("sessionId", fallback(str(get(meta, "agentId")), "unknown-session"))
 	}
@@ -266,11 +275,19 @@ func NormalizeClaude(records []*obj) *obj {
 	meta.Set("durationMs", millis(firstTS, lastTS))
 
 	// Warnings are ordered: unrecognized-type warnings first (in first-seen
-	// order), then the malformed-scalar count, then the TTL-split notice. The
-	// sequence is part of the output, not incidental.
+	// order), then the unreadable-line count, then the malformed-scalar count,
+	// then the TTL-split notice. The sequence is part of the output, not
+	// incidental.
 	ws := []any{}
 	for _, k := range warningOrder {
 		ws = append(ws, trajectory.NewObject("message", fmt.Sprintf("unrecognized type '%s' rendered as meta", k), "rawType", k, "count", warnings[k]))
+	}
+	if damage.total > 0 {
+		noun := "line"
+		if damage.total != 1 {
+			noun = "lines"
+		}
+		ws = append(ws, trajectory.NewObject("message", fmt.Sprintf("%d %s could not be read as JSON — the file may be damaged", damage.total, noun), "rawType", "unreadable", "count", damage.total))
 	}
 	if malformed := sanitizeTokenValues(events); malformed > 0 {
 		ws = append(ws, malformedTokenWarning(malformed))
@@ -279,7 +296,7 @@ func NormalizeClaude(records []*obj) *obj {
 	if partialSplit {
 		ws = append(ws, trajectory.NewObject("message", "cache-write TTL split is incomplete: some usage records carry cache_creation and others do not, so totals.cacheWrite5m/cacheWrite1h are omitted rather than published as a partial sum"))
 	}
-	parse := trajectory.NewObject("adapter", "claude-code", "adapterVersion", "1.0.0", "cliVersionRange", "2.1.x", "skippedByType", skipped.list(), "unrecognized", sumWarnings(warnings), "warnings", ws)
+	parse := trajectory.NewObject("adapter", "claude-code", "adapterVersion", "1.0.0", "cliVersionRange", "2.1.x", "skippedByType", skipped.list(), "unrecognized", sumWarnings(warnings), "unreadable", damage.total, "warnings", ws)
 	return trajectory.NewObject("schemaVersion", 2, "meta", meta, "totals", tot, "events", events, "parse", parse)
 }
 

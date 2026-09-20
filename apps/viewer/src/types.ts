@@ -8,7 +8,11 @@ export interface LinkHint { fromSessionId: string; toSessionId: string; kind: st
  * type. Replaces a bare `skipped` count, which could not distinguish correctly
  * ignored bookkeeping from silently lost data. */
 export interface SkippedType { type: string; count: number }
-export interface ParseReport { adapter: string; adapterVersion: string; cliVersionRange?: string; skippedByType: SkippedType[]; unrecognized: number; warnings: Array<{ message: string; rawType?: string; count?: number }> }
+/** `unrecognized` counts valid records whose type no adapter knows — the adapter
+ * is behind its CLI. `unreadable` counts lines that were not JSON at all — the
+ * file is damaged. They call for opposite responses, so they are reported and
+ * badged apart (R56). Optional: exports written before R56 omit it. */
+export interface ParseReport { adapter: string; adapterVersion: string; cliVersionRange?: string; skippedByType: SkippedType[]; unrecognized: number; unreadable?: number; warnings: Array<{ message: string; rawType?: string; count?: number }> }
 export interface TraceSummary { schemaVersion: number; meta: TraceMeta; totals: TraceTotals; parse: ParseReport; links?: LinkHint[]; chunkSize: number; chunkCount: number; strip: StripEvent[] }
 export interface TraceIndex { schemaVersion: number; generatedAt: string; trajectories: Array<{ id: string; path: string }>; links?: LinkHint[] }
 export interface TraceEvent { i: number; kind: EventKind; ts?: string; text?: string; durationMs?: number; tokens?: TokenUsage; subtask?: boolean; childSessionId?: string; tool?: { name: string; callId?: string; input?: unknown; command?: string }; result?: { text?: string; isError?: boolean; ts?: string; durationMs?: number } }

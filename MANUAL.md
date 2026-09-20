@@ -80,6 +80,9 @@ no conversation. Each one is named on stderr with the reason.
 
 Records are counted separately, inside each trajectory. Session files carry bookkeeping records that
 are not conversation, and `summary.json`'s `parse.skippedByType` breaks those down by record type.
+`parse.unrecognized` counts valid records whose type no adapter knows. `parse.unreadable` counts
+lines that were not JSON at all. The first means an adapter is behind its CLI. The second means the
+file is damaged.
 That is what separates "correctly ignored" from "something was lost".
 
 ### `cs-tracer manual`
@@ -300,6 +303,17 @@ The file parsed but held no conversation. That is common, and usually correct.
 **`skipping <file>: file contains no recognizable records`** (exit 0)
 
 No adapter claimed the file. A `links.json` beside a session produces this line, which is expected.
+
+**`skipping <file>: file is not valid text (binary or damaged); no records could be read`** (exit 0)
+
+Nothing in the file parsed, and its bytes are not text. It was a transcript once. This is the
+counterpart to the line above, for a file that is damaged rather than unrelated. Restore the file.
+For an OpenCode session, run the extraction from its store again.
+
+A file only *partly* damaged is not skipped. It normalizes, and its surviving records are exported.
+The damage is reported in the trace itself. `parse.unreadable` counts the lines that could not be
+read. Each run of them appears as one event naming its line range. The page marks the trajectory
+with an `unreadable` badge. Totals on such a trace describe only what survived.
 
 **`warning: could not read links file <path>`** (exit 0)
 

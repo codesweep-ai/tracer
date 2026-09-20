@@ -159,7 +159,11 @@ func NormalizeOpenCode(doc *obj) *obj {
 			meta.Set("provider", p)
 		}
 	}
-	parse := warningReport("opencode", "1.0.0", "1.18.x", skipped, counts, order)
+	// 0 unreadable: an opencode transcript is one JSON document extracted from
+	// the CLI's SQL store, so there are no per-line records to lose. A damaged
+	// extract fails whole, and is reported at detection (R58) — the fix there
+	// is to run the extraction again, not to salvage part of a file.
+	parse := warningReport("opencode", "1.0.0", "1.18.x", skipped, counts, order, 0)
 	if len(providers) > 1 {
 		var p []string
 		for x := range providers {

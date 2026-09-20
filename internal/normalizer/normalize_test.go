@@ -130,6 +130,9 @@ func TestNormalizeBytesNonObjectLines(t *testing.T) {
 	}
 }
 
+// A line that is not JSON is DAMAGE, not an unrecognized record type (R56):
+// it carries rawType "unreadable", names its line, and is counted in
+// parse.unreadable while leaving parse.unrecognized alone.
 func TestNormalizeBytesParseErrorRecord(t *testing.T) {
 	doc, err := NormalizeBytes([]byte("not json at all\n{\"type\":\"user\",\"uuid\":\"1\",\"sessionId\":\"s\",\"message\":{\"content\":\"hi\"}}"))
 	if err != nil {
@@ -139,11 +142,43 @@ func TestNormalizeBytesParseErrorRecord(t *testing.T) {
 	if len(events) != 2 {
 		t.Fatalf("events = %d", len(events))
 	}
-	if got := str(get(events[0], "rawType")); got != "parse-error" {
+	if got := str(get(events[0], "rawType")); got != "unreadable" {
 		t.Fatalf("first event rawType = %q", got)
 	}
-	if got := str(get(events[0], "text")); !strings.Contains(got, "unrecognized Claude record/content type: parse-error") {
+	if got := str(get(events[0], "text")); !strings.Contains(got, "1 unreadable line (line 1)") {
 		t.Fatalf("first event text = %q", got)
+	}
+	parse := object(get(doc, "parse"))
+	if got := num(get(parse, "unreadable")); got != 1 {
+		t.Fatalf("parse.unreadable = %v, want 1", got)
+	}
+	if got := num(get(parse, "unrecognized")); got != 0 {
+		t.Fatalf("parse.unrecognized = %v, want 0 — damage is not an unknown type", got)
+	}
+}
+
+// R57: a run of consecutive unreadable lines collapses to ONE event naming the
+// range, and a readable record between two runs keeps them apart.
+func TestNormalizeBytesCollapsesDamageRuns(t *testing.T) {
+	doc, err := NormalizeBytes([]byte("bad\nbad\nbad\n{\"type\":\"user\",\"uuid\":\"1\",\"sessionId\":\"s\",\"message\":{\"content\":\"hi\"}}\nbad\nbad"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	events := get(doc, "events").([]*obj)
+	if len(events) != 3 {
+		t.Fatalf("events = %d, want 3 (run, message, run)", len(events))
+	}
+	if got := str(get(events[0], "text")); !strings.Contains(got, "3 unreadable lines (lines 1-3)") {
+		t.Fatalf("first run text = %q", got)
+	}
+	if got := str(get(events[1], "kind")); got != "user" {
+		t.Fatalf("middle event kind = %q, want the readable record in its place", got)
+	}
+	if got := str(get(events[2], "text")); !strings.Contains(got, "2 unreadable lines (lines 5-6)") {
+		t.Fatalf("trailing run text = %q", got)
+	}
+	if got := num(get(object(get(doc, "parse")), "unreadable")); got != 5 {
+		t.Fatalf("parse.unreadable = %v, want 5 lines across both runs", got)
 	}
 }
 

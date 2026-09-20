@@ -464,6 +464,11 @@
           "minimum": 0,
           "description": "Count of records that became fail-soft meta events."
         },
+        "unreadable": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Lines that could not be read as JSON — a damaged file — as opposed to `unrecognized`, which counts valid records whose type no adapter knows. Optional: documents written before R56 omit it."
+        },
         "warnings": {
           "type": "array",
           "items": {
