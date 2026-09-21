@@ -175,18 +175,30 @@ Colour is the event **kind**, and the legend below the strip names each one; cli
 it out. Four kinds carry the conversation and get distinct hues: user, assistant, tool and thinking.
 The structural kinds deliberately do not. They recede to neutral ink so the conversation carries the
 signal. **system** and **meta** take two different neutral steps, because meta recurs at volume and
-the legend filters the two apart. **turn end** shares system's ink on purpose: it is identified by
-its tick, and a mark named by shape does not need a colour of its own.
+the legend filters the two apart. **turn end** shares system's ink on purpose: it sits in a row of its
+own, and a mark named by its place does not need a colour of its own.
+
+The strip has two rows. The upper one holds every event but the turn ends. A thinking step, a reply or
+a tool call rises by the time it took, and any other event stays a square. The lower row holds each
+turn end, hanging by the wait after it.
+
+A thinking step or a reply rises by its **model time**: from the end of the previous work to the end
+of the step, the round trip to the model. A tool call's time also covers running the tool. Hovering
+gives the true figure. Where the CLI records when the model began, the tooltip splits model time into
+the wait and the generation. Claude Code does not record it, so its steps show model time alone.
+
+Both rows use a log scale, so a two-second step and a two-minute one both stay readable. The upper row
+stops at two minutes and the lower at an hour.
 
 Everything else a mark can carry is an **overlay**. An overlay is a property of one event rather than
 a kind of its own, so it is not in the kind list:
 
 | Mark | Meaning |
 |---|---|
-| Filled square | An ordinary event of that kind. |
+| Filled mark | An ordinary event of that kind. Its height is the time it took, and a square has no time to show. |
 | **Hollow square** | **Redacted at source.** The event exists and is counted, but its content was withheld before `cs-tracer` ever saw it: a thinking block that arrived empty. There is nothing to show, and a hollow mark says so rather than implying the event is missing. It is keyed beside the legend. |
 | Cross | The event errored. The **errors** toggle beside the legend narrows to these; it composes with the kind filters and the search box. |
-| Tick | A turn boundary, the last event of a turn. Drawn at the trailing edge of the mark, and every turn-end event has one. |
+| Notch | The time ran past the row's limit. The bar stops there, and the tooltip gives the true figure. |
 | Marker | The event spawned a sub-agent. Its card links to that trajectory when the export contains it, and says so when it does not. |
 
 Hovering any mark names the event and repeats these in words, so the strip is readable without

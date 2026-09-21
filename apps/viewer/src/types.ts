@@ -14,7 +14,7 @@ export interface ReportedTime { covers: "trajectory" | "tree"; elapsedMs?: numbe
 /** How long a trajectory was open, and how much of that was idle or work (R77). */
 export interface TraceTime { elapsedMs?: number | null; idleMs: number; workMs: number; reported?: ReportedTime[] }
 export interface TraceTotals { events: number; toolCalls: number; toolErrors: number; input: number; output: number; cacheRead: number; cacheWrite: number; reasoning?: number; cost?: TraceCost; time?: TraceTime }
-export interface StripEvent { i: number; kind: EventKind; error: boolean; ts?: string; label?: string; size?: number; turnEnd?: boolean; subtask?: boolean; childSessionId?: string; redacted?: boolean }
+export interface StripEvent { i: number; kind: EventKind; error: boolean; ts?: string; label?: string; size?: number; turnEnd?: boolean; subtask?: boolean; childSessionId?: string; redacted?: boolean; workMs?: number; activeMs?: number; idleMs?: number }
 export interface LinkHint { fromSessionId: string; toSessionId: string; kind: string; label?: string; evidence?: string }
 /** Records that produced no event, counted per source record type and sorted by
  * type. Replaces a bare `skipped` count, which could not distinguish correctly

@@ -1,13 +1,27 @@
 import { useEffect, useMemo, useRef } from "react";
 import { EventLanes } from "@codesweep-ai/ui";
 import type { EventLaneEvent } from "@codesweep-ai/ui";
-import { eventLabel } from "./format";
+import { duration, eventLabel } from "./format";
 import { TRACE_EVENT_PALETTE } from "./palette";
 import type { EventKind, StripEvent } from "./types";
 
-/** Cell pitch the strip has always used; exposed as data-cell-width on the
- *  wrapper because the fixture suite computes click coordinates from it. */
-export const STRIP_CELL_WIDTH = 10;
+/** Cell pitch, exposed as data-cell-width on the wrapper because the fixture
+ *  suite and the fork connectors compute coordinates from it. At 13 the mark is
+ *  12 pixels, the width a bar is drawn at. */
+export const STRIP_CELL_WIDTH = 13;
+
+/** A work bar reaches the top of its row at this duration, and anything longer
+ *  carries the notch. One named value, so the scale changes in one place. */
+export const WORK_CEILING_MS = 2 * 60_000;
+
+/** A wait bar reaches the bottom of its row at this duration. */
+export const IDLE_CEILING_MS = 60 * 60_000;
+
+/** Duration to bar length on a log scale: a two-second step and a two-minute
+ *  one both stay readable in a 40-pixel row. */
+function logFraction(ms: number, ceiling: number): number {
+  return Math.log2(1 + Math.min(ms, ceiling) / 1000) / Math.log2(1 + ceiling / 1000);
+}
 
 /** EventLanes reserves equal boundary padding on the axis so the selection
  *  halo's overhang paints whole at both edges (EventLanes.md §Data model); all
@@ -21,6 +35,25 @@ export function stripAxisPadding(cellWidth: number): number {
 }
 
 const LANE_ID = "events";
+
+/** The time part of a cell's tooltip. A turn end reports its wait (R68). A
+ *  model step reports its model time (R70): the round trip from the end of the
+ *  previous work to the end of this step. Where the CLI recorded when the model
+ *  began (R79), the round trip splits into the wait and the generation. A tool
+ *  call's time includes running it. */
+export function timingLabel(event: StripEvent): string {
+  if (event.kind === "turn_end") {
+    if (event.idleMs == null) return "";
+    return ` · waited ${duration(event.idleMs)}${event.idleMs > IDLE_CEILING_MS ? ` (bar stops at ${duration(IDLE_CEILING_MS)})` : ""}`;
+  }
+  if (event.workMs == null) return "";
+  const clipped = event.workMs > WORK_CEILING_MS ? `, bar stops at ${duration(WORK_CEILING_MS)}` : "";
+  const name = event.kind === "tool_call" ? "took" : "model time";
+  const split = event.activeMs == null ? "" : `waited ${duration(event.workMs - event.activeMs)}, ${event.kind === "thinking" ? "thought" : "wrote"} ${duration(event.activeMs)}`;
+  const detail = [split, clipped.slice(2)].filter(Boolean).join(", ");
+  return ` · ${name} ${duration(event.workMs)}${detail ? ` (${detail})` : ""}`;
+}
+const WAIT_LANE_ID = "wait";
 
 /**
  * Scroll `scroller` so cell `index` sits in the middle of it.
@@ -48,7 +81,7 @@ export interface StripFocus { index: number; sequence: number }
 
 /**
  * tracer's strip on ui's EventLanes (TR-20/24): i is already the global index;
- * redacted → hollow, turnEnd → tick, error → the error cross overlay, a spawn →
+ * redacted → hollow, a turn end → a bar in the wait row, error → the error cross overlay, a spawn →
  * a marker. Search/chip dimming maps to `emphasis`; kind filters to
  * `hiddenKinds`. The tooltip body keeps tracer's wording inside EventLanes'
  * ChartTooltip shell (TR-28).
@@ -75,21 +108,32 @@ export function EventStrip({ events, selected, onSelect, label, laneLabel, hidde
   matches?: ReadonlySet<number>;
   textFiltering?: boolean;
 }) {
+  // Work and waiting on separate rows (R77): a step's bar rises by the time it
+  // took (R70), and a turn end hangs in the row below by the wait after it (R68).
   const laneEvents = useMemo<readonly EventLaneEvent<EventKind>[]>(() => events.map((event) => ({
     i: event.i,
-    lane: LANE_ID,
+    lane: event.kind === "turn_end" ? WAIT_LANE_ID : LANE_ID,
+    ...(event.kind === "turn_end"
+      ? { magnitude: logFraction(event.idleMs ?? 0, IDLE_CEILING_MS), clipped: (event.idleMs ?? 0) > IDLE_CEILING_MS || undefined }
+      : event.workMs != null
+        ? { magnitude: logFraction(event.workMs, WORK_CEILING_MS), clipped: event.workMs > WORK_CEILING_MS || undefined }
+        : {}),
     kind: event.kind,
     shape: event.redacted ? "hollow" : "square",
     label: event.label ? `${eventLabel(event.kind)} — ${event.label}` : eventLabel(event.kind),
     at: event.ts ?? "",
     error: event.error || undefined,
-    tick: event.turnEnd || undefined,
     marker: event.subtask && event.childSessionId ? "spawn" : undefined,
   })), [events]);
   const byIndex = useMemo(() => new Map(events.map((event) => [event.i, event])), [events]);
   // EventLanes reseeds/reclamps when lanes/events identity changes — a fresh
   // array per render would reset the active descendant mid-keyboard-walk.
-  const lanes = useMemo(() => [{ id: LANE_ID, label: laneLabel, className: "event-strip-lane-label" }], [laneLabel]);
+  const lanes = useMemo(() => [
+    { id: LANE_ID, label: laneLabel, className: "event-strip-lane-label", height: 40, bars: "up" as const },
+    // Left out of the overview: its sparse bars squeezed the work row there
+    // into a line.
+    { id: WAIT_LANE_ID, label: "", className: "event-strip-lane-label", height: 16, bars: "down" as const, barFloor: 2, overview: false },
+  ], [laneLabel]);
   // Passed straight through: `hiddenKinds` is already keyed by EventKind, which
   // is what TRACE_EVENT_PALETTE and the lane events are keyed by. Projecting it
   // through the many-to-one colour map here is what erased system/meta/turn_end.
@@ -128,12 +172,14 @@ export function EventStrip({ events, selected, onSelect, label, laneLabel, hidde
       emphasis={textFiltering ? matches : undefined}
       cellWidth={STRIP_CELL_WIDTH}
       overview="auto"
+      overviewHeight={14}
+      scrollbar="overview"
       aria-label={`${label}: ${events.length} events`}
       onSelect={onSelect ? (event) => onSelect(event.i) : undefined}
       renderTooltip={(laneEvent) => {
         const event = byIndex.get(laneEvent.i);
         if (!event) return null;
-        return <>#{event.i} · {event.error ? "✕ error · " : ""}{eventLabel(event.kind)}{event.redacted ? " · redacted at source" : event.label ? ` · ${event.label}` : ""}</>;
+        return <>#{event.i} · {event.error ? "✕ error · " : ""}{eventLabel(event.kind)}{event.redacted ? " · redacted at source" : event.label ? ` · ${event.label}` : ""}{timingLabel(event)}</>;
       }}
     />
     {spawns.map((event) => <span key={`${event.i}:${event.childSessionId}`} data-testid="spawn-marker" data-spawn-index={event.i} data-spawn-x={event.i * STRIP_CELL_WIDTH + STRIP_CELL_WIDTH / 2} data-child-session-id={event.childSessionId} aria-hidden="true" className="spawn-marker-census" />)}
