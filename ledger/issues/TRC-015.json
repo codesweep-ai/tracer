@@ -1,0 +1,22 @@
+{
+  "id": "TRC-015",
+  "title": "Time between records lands on bookkeeping, so model latency is drawn nowhere",
+  "type": "defect",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "session agent, measuring where elapsed time sits in thirty captured unattended trajectories",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": "2026-09-21 time accounting",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "No event says how long it took, apart from a tool call's own run time. A reader who wants the time a model response took has to subtract timestamps across neighbours, and most neighbours are bookkeeping.\n\nClaude Code writes a context attachment after nearly every tool result, and codex writes an `item_completed` notice beside every item. The model's latency sits between those records and the reply. Measured over thirty captured trajectories, 8% to 26% of elapsed time belongs to no event even after idle is set aside.\n\nThe codex notices make it worse, because the adapter does not recognize them. They reach the strip as 3,404 unrecognized events, and every codex trajectory carries a warning badge for records that only repeat items the adapter already reads. Claude Code's `atis-latch`, `agent-color` and `relocated` records are flagged the same way, though each carries no timestamp and holds one constant value.\n\nThe time should land on the work that consumed it. A thinking step, an assistant message or a tool call owns the interval from the end of the previous piece of work to its own end, stepping over bookkeeping. A tool call ends when its result arrives.\n\nTo reproduce, normalize a codex session and count the `event_msg:item_completed` warnings.",
+  "notes": [],
+  "links": [
+    "TRC-014"
+  ]
+}
