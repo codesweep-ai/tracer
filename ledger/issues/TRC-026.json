@@ -3,17 +3,19 @@
   "title": "A --split index links to 404s when the export sits under a directory named traces",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "consumer report (another agent session), on 8501cf6 and d5ff8c2: \"every trace link on it returns 404\"",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "d0e9d33"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "The attended Claude Code set was exported with `--split` into a directory named `traces`, then opened over `file://` and over HTTP. On both, all 30 lane links mounted their trace pages, the back link returned to the index, and no page raised an error. Parity now writes its split export into a directory with that name. It fails when the old path test is restored, and `make ci` passes with the fix."
   },
-  "resolution": null,
+  "resolution": "Each split page now declares its kind in its `#mode` block, as `index` or `trace`, and the viewer routes from that declaration alone (R80). The directory's name no longer matters. Parity writes its split export under a directory named `traces`, so a return to reading the path fails the gate.",
   "details": "`isTracePage` in `apps/viewer/src/routes.ts` decides whether a page is a trace page from the URL alone, with `/(?:^|\\/)traces\\/[^/]+\\.html$/`. It adds the `traces/` prefix to links only on the index.\n\nAn export written with `--split -o traces` and served over HTTP opens its index at `/traces/index.html`. That path matches the pattern, so the index takes itself for a trace page and drops the prefix. The browser then requests `/traces/<id>.html`, where the page is `/traces/traces/<id>.html`.\n\nThe export directory's name is the user's choice, and the links must not depend on it. The viewer should learn which kind of page it is on from something the export writes, such as a marker in the page, never from the path.\n\nTo reproduce, run `cs-tracer <sessions> --split -o traces`, serve the parent directory, open `/traces/index.html` and click a trace. The same export written to `member-traces` works.",
   "notes": [
     {
