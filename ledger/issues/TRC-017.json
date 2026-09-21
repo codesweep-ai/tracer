@@ -3,17 +3,21 @@
   "title": "A trajectory's cost field holds a reported figure for one CLI and an estimate for the others",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "user, while reviewing how Claude Code's cost-state record should be handled: \"the normalized model should be able to handle the superset of costs and not be cli dependent, but just dependent on it's schema\"",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 time accounting",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "578c4da",
+      "7c06b8b",
+      "e5b54b8"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled, and schema conformance passes on version 3. Four new normalizer tests cover the rule, and six viewer tests cover what is shown and how a total counts a tree.\n\nThe goldens were checked summary by summary against the previous ones. Every one of 22 estimates is unchanged, and each of the 5 OpenCode figures became a reported figure agreeing with its steps. Nothing else changed beyond event sizes.\n\nAgainst the captured corpora, no trajectory reports an unrecognized record or a disagreement. All five attended Claude Code sessions carry a figure covering their tree, between 6% and 13% above tracer's estimates for the same trees. The rendered index totals them once, at $785.34, with no estimate mark."
   },
-  "resolution": null,
+  "resolution": "Schema version 3 turns `totals.cost` into an object with three members. The member `reported` lists each figure the CLI stated, with what it covers, and `reportedByEvents` sums the events' own costs with a count of those priced. The member `estimated` holds tracer's figure, made the same way for every adapter. The adapters leave a member absent when its CLI gives no source for it.\n\nThe OpenCode adapter reports its session figure as covering the trajectory, and warns when it disagrees with its steps. The Claude Code adapter reads the last `cost-state` as covering the tree, with its per-model breakdown. The pricing pass no longer names any adapter.\n\nSPEC section 9 states the rule as R71 to R76. The viewer shows a reported figure first and marks an estimate, and a total counts each tree once.",
   "details": "The field `totals.cost` holds OpenCode's own figure for an OpenCode trajectory and tracer's price-table estimate for the other two adapters. Only `costEstimated` tells them apart, and the index adds both kinds into one total. The shared pricing pass skips OpenCode by name, which is knowledge of one CLI outside its adapter.\n\nThe OpenCode adapter also lets the session's own figure replace the sum of its per-step costs without saying so. The two agree in every captured session, but nothing checks it.\n\nClaude Code writes a `cost-state` record with its own figure, and the adapter reports it as unrecognized. That figure covers the session and its sub-agents together, plus calls never written to any transcript. Stored on one trajectory as that trajectory's cost, it would count the sub-agents twice in any total.\n\nThe schema should hold every cost a CLI reports, named for its provenance and for what it covers, beside tracer's own estimate. An adapter fills what its CLI provides and leaves the rest absent. No field falls back to another. The viewer shows a reported figure where one exists, and otherwise the estimate marked as one.",
   "notes": [],
   "links": [
