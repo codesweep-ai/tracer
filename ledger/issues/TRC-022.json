@@ -1,0 +1,23 @@
+{
+  "id": "TRC-022",
+  "title": "OpenCode stamps reasoning and text when they start, so their model time lands on the next event",
+  "type": "defect",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "user asked whether long thinking times were real; session agent checked them against the start and end times OpenCode records",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": "2026-09-21 time accounting",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "R70 measures each step from the end of the previous work to the end of this one, reading an event's timestamp as the moment the step finished. Claude Code and Codex stamp a block when it finishes. The OpenCode adapter stamps a reasoning or text part with `time.start`, when it began.\n\nSo each OpenCode step is charged the wait before it, and its own generation is charged to the event after it. In one captured session a reasoning part ran 59.0 seconds and the reply after it 3.8. The strip showed 1.0 second on the reasoning and 59.0 on the reply.\n\nAcross 24 captured OpenCode trajectories, 28 reasoning parts ran over 40 seconds, and the strip showed one. It showed 22 replies over 40 seconds, where six ran that long.\n\nThe part records `time.end`. A reasoning or text part should be stamped with it, as the other adapters stamp a finished block.",
+  "notes": [],
+  "links": [
+    "TRC-015",
+    "TRC-019"
+  ]
+}
