@@ -1,0 +1,20 @@
+{
+  "id": "TRC-012",
+  "title": "A codex turn that failed is reported as a turn that completed",
+  "type": "defect",
+  "severity": "high",
+  "status": "in-progress",
+  "opened": "2026-09-21",
+  "foundBy": "the user, who asked whether calls rejected for rate limits would show in the strip; the check that followed found the dropped field",
+  "resolved": null,
+  "stint": "codex-turn-errors",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The codex adapter maps a `task_complete` record to a `turn_end` event and hardcodes its text to \"turn complete\". The record's `error` field is never read.\n\nCodex writes that field when a turn ends in failure. In a captured corpus of twenty codex trajectories, twenty three turns carried one. Twenty one read \"rate limit exceeded\" and two read \"Selected model is at capacity\". Seven of the eight members in that corpus had at least one.\n\nEvery one of those turns normalizes to the text \"turn complete\", and none of the affected trajectories carries a single event marked as an error. A turn that died on a provider limit is therefore drawn exactly like a turn that succeeded. The strip shows no mark, the errors-only filter finds nothing, and the event card states that the turn completed.\n\nThat inverts the meaning of the run. A reader counting successful turns counts the failures among them, and a reader hunting for why a member stalled finds no trace of the reason.\n\nErrors reach the strip only through `result.isError`, which the adapters set on tool calls alone. No adapter carries a turn level failure today, so the same hole exists wherever another CLI reports one.\n\nTo reproduce, normalize a codex session whose `task_complete` payload carries an `error`, then read the resulting turn_end event.",
+  "notes": [],
+  "links": []
+}
