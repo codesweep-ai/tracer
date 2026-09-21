@@ -190,3 +190,38 @@ func TestClaudeRestatedSettingsAreIgnored(t *testing.T) {
 		t.Fatalf("skippedByType has %d types, want 3", got)
 	}
 }
+
+// TRC-016. The echo of a local command is Claude Code's own record, not an
+// instruction, so the wait runs past it. An isMeta record with any other parent,
+// such as a sub-agent's hand-back, still starts work.
+func TestClaudeLocalCommandEchoDoesNotEndIdle(t *testing.T) {
+	rec := func(uuid, parent, typ, ts string, kv ...any) *obj {
+		o := trajectory.NewObject("uuid", uuid, "parentUuid", parent, "sessionId", "s", "type", typ, "timestamp", ts)
+		for i := 0; i < len(kv); i += 2 {
+			o.Set(kv[i].(string), kv[i+1])
+		}
+		return o
+	}
+	text := func(s string) *obj { return trajectory.NewObject("role", "user", "content", s) }
+	doc := NormalizeClaude([]*obj{
+		rec("a", "", "system", "2026-01-01T10:00:00.000Z", "subtype", "turn_duration"),
+		rec("b", "a", "system", "2026-01-01T10:05:00.000Z", "subtype", "local_command", "content", "<command-name>/context</command-name>"),
+		rec("c", "b", "user", "2026-01-01T10:05:00.000Z", "isMeta", true, "message", text("## Context Usage")),
+		rec("d", "c", "user", "2026-01-01T12:00:00.000Z", "message", text("carry on")),
+		rec("e", "d", "system", "2026-01-01T12:10:00.000Z", "subtype", "turn_duration"),
+		rec("f", "e", "user", "2026-01-01T13:00:00.000Z", "isMeta", true, "message", text("Another Claude session sent a message")),
+	})
+	events := get(doc, "events").([]*obj)
+	if got := str(get(events[2], "kind")); got != "system" {
+		t.Fatalf("the local command's echo is kind %q, want system", got)
+	}
+	if got := num(get(events[0], "idleMs")); got != 2*60*60*1000 {
+		t.Fatalf("idleMs = %v, want two hours — the echo does not end the wait", got)
+	}
+	if got := str(get(events[5], "kind")); got != "user" {
+		t.Fatalf("a hand-back is kind %q, want user", got)
+	}
+	if got := num(get(events[4], "idleMs")); got != 50*60*1000 {
+		t.Fatalf("idleMs = %v, want fifty minutes — a hand-back does end the wait", got)
+	}
+}

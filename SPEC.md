@@ -286,7 +286,9 @@ captured trajectories, 31% of every strip, against three real endings each. The 
 and read as `meta`, keeping their reason, so a reader still sees what they were.*
 
 A record carrying no work does not end the wait. Bookkeeping lands while the agent sits still, and
-stopping at one of those reported two seconds of idle for a wait of hours (TRC-014).
+stopping at one of those reported two seconds of idle for a wait of hours (TRC-014). An adapter
+reports a user instruction only for a message the agent is meant to act on. A CLI's echo of its own
+local command is not one, and read as one it ended waits of hours (TRC-016).
 
 Idle travels as `idleMs` on the event that ends the turn and on its strip entry, so the viewer never
 subtracts timestamps across neighbours a filter removed. A turn end with nothing after it carries no

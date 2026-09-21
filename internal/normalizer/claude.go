@@ -26,6 +26,9 @@ func NormalizeClaude(records []*obj) *obj {
 	var warningOrder []string
 	skipped := skipTally{}
 	damage := &damageRun{}
+	// Records that ran a local command, such as /context, by uuid. What Claude
+	// Code writes back names one as its parent.
+	localCommands := map[string]bool{}
 	unknown := func(kind string, ts, lane any) {
 		if warnings[kind] == 0 {
 			warningOrder = append(warningOrder, kind)
@@ -151,6 +154,12 @@ func NormalizeClaude(records []*obj) *obj {
 						}
 					}
 				}
+			} else if truthy(get(r, "isMeta")) && localCommands[str(get(r, "parentUuid"))] {
+				// The echo of a local command, written by Claude Code rather than
+				// sent by the user, and never answered. Read as an instruction, it
+				// ended the wait while the agent sat still (R68, TRC-016). Other
+				// isMeta records, a sub-agent's hand-back among them, do start work.
+				events = append(events, trajectory.NewObject("kind", "system", "ts", ts, "lane", lane, "rawType", "local_command", "text", blockTextClaude(content)))
 			} else {
 				events = append(events, trajectory.NewObject("kind", "user", "ts", ts, "lane", lane, "text", blockTextClaude(content)))
 			}
@@ -250,6 +259,9 @@ func NormalizeClaude(records []*obj) *obj {
 			}
 			events = append(events, trajectory.NewObject("kind", "turn_end", "ts", ts, "lane", lane, "durationMs", keepOrUndef(r, "durationMs"), "text", text))
 		} else if typ == "system" {
+			if str(get(r, "subtype")) == "local_command" {
+				localCommands[str(get(r, "uuid"))] = true
+			}
 			events = append(events, trajectory.NewObject("kind", "system", "ts", ts, "lane", lane, "rawType", fallback(str(get(r, "subtype")), "system"), "text", blockTextClaude(firstNonNull(get(r, "message"), get(r, "content"), get(r, "subtype"), "system"))))
 		} else if typ == "attachment" {
 			a := object(get(r, "attachment"))
