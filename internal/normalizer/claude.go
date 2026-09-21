@@ -201,6 +201,12 @@ func NormalizeClaude(records []*obj) *obj {
 				b := object(x)
 				// const base = { ts, lane, ...(token ? { tokens: token } : {}) }
 				base := trajectory.NewObject("ts", ts, "lane", lane)
+				// Claude Code writes some replies itself, without calling a model:
+				// "No response requested." after a local command, or an API error.
+				// The time before one is not the model's work (R70).
+				if str(get(m, "model")) == "<synthetic>" {
+					base.Set("synthetic", true)
+				}
 				if token != nil {
 					base.Set("tokens", token)
 					placed[id] = true

@@ -384,6 +384,10 @@
           "type": "boolean",
           "description": "The event itself failed, for events that have no result of their own. A tool call reports failure through result.isError; a turn that a provider error ended reports it here. Additive and optional: documents written before it omit it."
         },
+        "synthetic": {
+          "type": "boolean",
+          "description": "The CLI wrote this reply itself without calling a model, as Claude Code does for an API error or after a local command. Such a reply carries no workMs. Additive and optional: documents written before it omit it."
+        },
         "idleMs": {
           "type": [
             "number",

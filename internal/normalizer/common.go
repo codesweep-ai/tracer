@@ -388,7 +388,9 @@ func markWork(events []*obj) {
 	var last time.Time
 	for _, e := range events {
 		kind := str(get(e, "kind"))
-		if !resumesWork[kind] && kind != "turn_end" {
+		// A reply the CLI wrote itself neither owns the interval nor ends it, so
+		// a wait on the provider lands on the reply that finally came.
+		if (!resumesWork[kind] && kind != "turn_end") || truthy(get(e, "synthetic")) {
 			continue
 		}
 		at, ok := parseTS(get(e, "ts"))

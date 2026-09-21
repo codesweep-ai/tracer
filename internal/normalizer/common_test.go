@@ -357,3 +357,21 @@ func TestWorkStartsWhereIdleStops(t *testing.T) {
 		t.Fatalf("workMs = %v, want 3000 — the hour before the user spoke is idle", got)
 	}
 }
+
+// A reply Claude Code wrote without calling a model is not the model's work. A
+// captured session charged one of them the 37 minutes the user took to return.
+func TestWorkSkipsSyntheticReplies(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "user", "ts", "2026-01-01T00:00:00.000Z"),
+		trajectory.NewObject("kind", "assistant", "ts", "2026-01-01T00:37:00.000Z", "synthetic", true),
+		trajectory.NewObject("kind", "user", "ts", "2026-01-01T00:37:20.000Z"),
+		trajectory.NewObject("kind", "assistant", "ts", "2026-01-01T00:37:25.000Z"),
+	}
+	markWork(events)
+	if _, ok := events[1].Get("workMs"); ok {
+		t.Fatal("a synthetic reply carries workMs")
+	}
+	if got := num(get(events[3], "workMs")); got != 5000 {
+		t.Fatalf("workMs = %v, want 5000", got)
+	}
+}

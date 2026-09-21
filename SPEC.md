@@ -304,9 +304,10 @@ belonged to no event, since a tool call already reports its own run time. It cam
 elapsed time across thirty captured trajectories, most of it sitting on bookkeeping records.*
 
 The interval travels as `workMs` on the event and on its strip entry, for the reason `idleMs` does.
-An event with no earlier work to measure from carries no field. Tool calls running at once overlap,
-so each is measured from its own timestamp, and the work after them from the latest result. The field
-is additive and optional, so `schemaVersion` is unchanged (R7).
+An event with no earlier work to measure from carries no field. A reply the CLI wrote without
+calling a model carries `synthetic` and no `workMs`, and the interval runs past it. Tool calls
+running at once overlap, so each is measured from its own timestamp, and the work after them from
+the latest result. Both fields are additive and optional, so `schemaVersion` is unchanged (R7).
 
 `parse.unreadable` is additive and optional in `schema/trajectory.v1.json`: the current adapters
 always emit it, and documents written before R56 omit it. `schemaVersion` is unchanged, because a
