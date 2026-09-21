@@ -3,17 +3,19 @@
   "title": "The strip shows which events ran but not how long they took, or how long the agent waited",
   "type": "improvement",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "user, designing the strip from measured traces: every event drawn at one size says nothing about time, and waiting holds most of it",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 time accounting",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "7d8a051"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled, and the fixture suite passes all 35 checks. Two new viewer tests cover every form the tooltip's time takes. Three fixture expectations were recorded with their reasons: the cell pitch, and one fewer card on the first screen of the large session because the strip is six pixels taller.\n\nThe viewer installs from npm the ui dev build of the commit that adds bars, pinned exactly in its `package.json`. The user reviewed the rendered strip on the four captured corpora before it was committed."
   },
-  "resolution": null,
+  "resolution": "The strip now has two rows. A thinking step, a reply or a tool call rises by its time in the upper row, and a turn end hangs by its wait in the lower one. Both use a log scale, with ceilings of two minutes and one hour named once beside the cell width, and a notch on a bar that reached its ceiling. The lower row stays out of the overview, and the overview stands in for the scrollbar.\n\nThe tooltip names model time and splits it where the CLI recorded the start. The MANUAL describes both rows. The strip is drawn by EventLanes from the ui build that adds bars.",
   "details": "The strip draws every event as the same square, coloured by kind. A two-second step and a two-minute one look the same, and a turn end after a three-hour wait looks like one after three seconds.\n\nThe normalizer now reports both quantities. R70 gives each thinking step, reply and tool call the time it accounts for, and R68 gives each turn end the wait after it. The strip draws neither.\n\nA step should rise by its time, and a turn end should hang by its wait in a row of its own. Each row should use a log scale with a named ceiling. The tooltip should give the true figure, and name model time as the round trip it is. Where a CLI records when the model began, the tooltip should split it into the wait and the generation.",
   "notes": [],
   "links": [
