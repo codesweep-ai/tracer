@@ -3,18 +3,25 @@
   "title": "A codex turn that failed is reported as a turn that completed",
   "type": "defect",
   "severity": "high",
-  "status": "in-progress",
+  "status": "closed",
   "opened": "2026-09-21",
   "foundBy": "the user, who asked whether calls rejected for rate limits would show in the strip; the check that followed found the dropped field",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "codex-turn-errors",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "0e9883c"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled: DOM, pixels and the interaction end state all match across both transports, and prose, refs, oss and surface report no errors. The Go suite passes. A new adapter test asserts that a failed turn carries the flag, the reason and the provider's message. It also asserts that a turn which finished carries none of them. Fifty viewer tests pass, including a new one on the card.\n\nNo golden moved, because no fixture holds a `task_complete` that failed. So the fix was checked against the input that exposed it. Eighteen codex trajectories were re-normalized with the new binary. Twenty three turn_end events now carry `isError`, twenty one reading `rate_limit_exceeded` and two reading `server_overloaded`. All twenty three reach the strip's error channel. Before the change that count was zero."
   },
-  "resolution": null,
+  "resolution": "R67. A record reporting that a turn ended in failure now produces an event marked as an error.\n\nThe adapter reads `error` on `task_complete`. The provider's own sentence becomes the event text, and `codex_error_info` becomes the label, so the machine-readable reason names the cell and the sentence is what a reader sees. A turn that finished still reads \"turn complete\".\n\nAn event carries `isError` when it has no result to report failure through. A tool call keeps reporting through `result.isError`, and `stripEvent` reads either, which is how the failure reaches the strip and the errors-only filter. The field is additive and optional in the schema, so `schemaVersion` is unchanged and older documents still validate (R7).\n\nThe change stays in the codex adapter. The other two adapters were checked against the same corpus. Claude wrote no turn-level failure in it, and opencode already reports one through the tool state its adapter reads.",
   "details": "The codex adapter maps a `task_complete` record to a `turn_end` event and hardcodes its text to \"turn complete\". The record's `error` field is never read.\n\nCodex writes that field when a turn ends in failure. In a captured corpus of twenty codex trajectories, twenty three turns carried one. Twenty one read \"rate limit exceeded\" and two read \"Selected model is at capacity\". Seven of the eight members in that corpus had at least one.\n\nEvery one of those turns normalizes to the text \"turn complete\", and none of the affected trajectories carries a single event marked as an error. A turn that died on a provider limit is therefore drawn exactly like a turn that succeeded. The strip shows no mark, the errors-only filter finds nothing, and the event card states that the turn completed.\n\nThat inverts the meaning of the run. A reader counting successful turns counts the failures among them, and a reader hunting for why a member stalled finds no trace of the reason.\n\nErrors reach the strip only through `result.isError`, which the adapters set on tool calls alone. No adapter carries a turn level failure today, so the same hole exists wherever another CLI reports one.\n\nTo reproduce, normalize a codex session whose `task_complete` payload carries an `error`, then read the resulting turn_end event.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-21",
+      "text": "`totals.toolErrors` counts events whose result failed, so a failed turn is not counted there. The count stays true to its name, and the index badge that renders it will not show these failures. Whether totals should carry a turn-level count is left open."
+    }
+  ],
   "links": []
 }
