@@ -191,6 +191,11 @@ and that file **MUST** open from `file://` with React mounting and zero page err
 **R29.** `--split` **MUST** emit `index.html`, a shared `assets/app.js` and `assets/app.css`, and
 one page per trajectory under `traces/`. A trace page points at `../assets/`, never `./assets/`.
 
+**R80.** Each `--split` page **MUST** declare its kind, index or trace, in its `#mode` block, and the
+viewer **MUST** route from that declaration rather than from the URL. *The export directory's name
+is the user's choice. Read from the path, an export written to a directory named `traces` took its
+own index for a trace page, and every lane link led to a missing page.*
+
 **R30.** The two modes **MUST** render identically: DOM digest, full-page pixels, and interaction
 end-state. *Only the transport differs, and that equivalence is the product's central claim.*
 

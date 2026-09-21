@@ -159,7 +159,7 @@ func TestExportSplitLayoutAndManifest(t *testing.T) {
 		t.Fatalf("trace page does not reference ../assets relatively")
 	}
 	blocks := extractBlocks(t, page)
-	if blocks["mode"] != "{\"mode\":\"split\"}\n" {
+	if blocks["mode"] != "{\"mode\":\"split\",\"page\":\"trace\"}\n" {
 		t.Fatalf("mode: %q", blocks["mode"])
 	}
 	// The reduced form is identified by what it OMITS (per-trajectory `path`)
@@ -177,6 +177,11 @@ func TestExportSplitLayoutAndManifest(t *testing.T) {
 	}
 	if !strings.Contains(extractBlocks(t, root)["index"], `"schemaVersion": 1`) {
 		t.Fatal("root index lost the full index")
+	}
+	// The root names itself the index, so a viewer never infers the page's kind
+	// from a URL path the user chose (R80).
+	if got := extractBlocks(t, root)["mode"]; got != "{\"mode\":\"split\",\"page\":\"index\"}\n" {
+		t.Fatalf("root mode: %q", got)
 	}
 }
 

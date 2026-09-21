@@ -88,8 +88,7 @@ describe("DOM data-block transport", () => {
   });
 
   it("surfaces only the page's own trace on a split-mode trace page", async () => {
-    block("mode", { mode: "split" });
-    history.replaceState(null, "", "/out/traces/a.html");
+    block("mode", { mode: "split", page: "trace" });
     // reduced index: {id, safeId, title} per trajectory, no path, no other summaries
     block("index", { schemaVersion: 3, generatedAt: "", trajectories: [{ id: "a", safeId: "a", title: "Mine" }, { id: "b", safeId: "b", title: "Other" }] });
     block("s-a", summaryFor("a"));

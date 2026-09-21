@@ -276,7 +276,11 @@ try {
 
     // Both transports, from the same input, with the same binary.
     const singleFile = path.join(work, `${safeId(fixture)}.html`);
-    const splitDir = path.join(work, `${safeId(fixture)}-split`);
+    // The split export sits in a directory named traces, which is also the
+    // name of its trace-page folder. A viewer that judged the page's kind by
+    // its path took that index for a trace page and dropped the prefix from
+    // every lane link (TRC-026), so the digests below catch it.
+    const splitDir = path.join(work, `${safeId(fixture)}-split`, "traces");
     execFileSync(binary, [source, "--single", "-o", singleFile, ...links], { stdio: "pipe" });
     execFileSync(binary, [source, "--split", "-o", splitDir, ...links], { stdio: "pipe" });
 

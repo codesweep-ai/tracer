@@ -3,11 +3,11 @@
   "title": "A --split index links to 404s when the export sits under a directory named traces",
   "type": "defect",
   "severity": "med",
-  "status": "open",
+  "status": "in-progress",
   "foundBy": "consumer report (another agent session), on 8501cf6 and d5ff8c2: \"every trace link on it returns 404\"",
   "opened": "2026-09-21",
   "resolved": null,
-  "stint": null,
+  "stint": "2026-09-21 strip changes",
   "evidence": {
     "commits": [],
     "integrated": [],
@@ -15,6 +15,11 @@
   },
   "resolution": null,
   "details": "`isTracePage` in `apps/viewer/src/routes.ts` decides whether a page is a trace page from the URL alone, with `/(?:^|\\/)traces\\/[^/]+\\.html$/`. It adds the `traces/` prefix to links only on the index.\n\nAn export written with `--split -o traces` and served over HTTP opens its index at `/traces/index.html`. That path matches the pattern, so the index takes itself for a trace page and drops the prefix. The browser then requests `/traces/<id>.html`, where the page is `/traces/traces/<id>.html`.\n\nThe export directory's name is the user's choice, and the links must not depend on it. The viewer should learn which kind of page it is on from something the export writes, such as a marker in the page, never from the path.\n\nTo reproduce, run `cs-tracer <sessions> --split -o traces`, serve the parent directory, open `/traces/index.html` and click a trace. The same export written to `member-traces` works.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-21",
+      "text": "The function is `inTracePage`, not `isTracePage` as the details say. The wrong guess did more than break links: an index taking itself for a trace page also skips a missing summary block silently, where it should report a corrupt export. The export already writes a `#mode` block into every page, so the page's kind now goes there."
+    }
+  ],
   "links": []
 }

@@ -34,10 +34,10 @@ describe("linkTo", () => {
   });
 
   it("uses the filename in split mode: traces/<safeId>.html from the index, sibling from a trace page", () => {
-    block("mode", { mode: "split" });
-    history.replaceState(null, "", "/out/index.html");
+    block("mode", { mode: "split", page: "index" });
     expect(linkTo("abc123", 7)).toBe("traces/abc123.html#ev-7");
-    history.replaceState(null, "", "/out/traces/abc123.html");
+    document.getElementById("mode")!.remove();
+    block("mode", { mode: "split", page: "trace" });
     expect(linkTo("def456", 3)).toBe("def456.html#ev-3");
     expect(linkTo("def456")).toBe("def456.html");
   });
@@ -81,21 +81,28 @@ describe("hasTrace", () => {
 describe("indexLink", () => {
   it("is a query-only reset in single mode and a relative path in split mode", () => {
     expect(indexLink()).toBe("?");
-    block("mode", { mode: "split" });
-    history.replaceState(null, "", "/out/index.html");
+    block("mode", { mode: "split", page: "index" });
     expect(indexLink()).toBe("index.html");
-    history.replaceState(null, "", "/out/traces/abc.html");
+    document.getElementById("mode")!.textContent = JSON.stringify({ mode: "split", page: "trace" });
     expect(indexLink()).toBe("../index.html");
   });
 });
 
 describe("inTracePage", () => {
-  it("matches only traces/<file>.html", () => {
+  it("reads the page's kind from the mode block, never from the URL (R80)", () => {
     expect(inTracePage()).toBe(false);
-    history.replaceState(null, "", "/out/traces/abc.html");
+    block("mode", { mode: "split", page: "trace" });
     expect(inTracePage()).toBe(true);
-    history.replaceState(null, "", "/out/traces/"); // a bare directory is the index, not a trace
+    document.getElementById("mode")!.textContent = JSON.stringify({ mode: "single", page: "trace" });
+    expect(inTracePage()).toBe(false); // single mode has no trace pages
+  });
+
+  it("keeps an index exported to a directory named traces an index", () => {
+    block("mode", { mode: "split", page: "index" });
+    history.replaceState(null, "", "/traces/index.html");
     expect(inTracePage()).toBe(false);
+    expect(linkTo("abc")).toBe("traces/abc.html");
+    expect(indexLink()).toBe("index.html");
   });
 });
 
@@ -109,11 +116,10 @@ describe("currentTraceId", () => {
   });
 
   it("lets the filename do the job of ?trace= on split trace pages only", () => {
-    block("mode", { mode: "split" });
-    history.replaceState(null, "", "/out/traces/abc.html");
+    block("mode", { mode: "split", page: "trace" });
     expect(currentTraceId([trace("abc")])).toBe("abc");
     expect(currentTraceId([trace("a"), trace("b")])).toBeNull(); // corrupt page: refuse to guess
-    history.replaceState(null, "", "/out/index.html");
+    document.getElementById("mode")!.textContent = JSON.stringify({ mode: "split", page: "index" });
     expect(currentTraceId([trace("only")])).toBeNull(); // a one-trace corpus still shows the IndexPage
   });
 });

@@ -145,8 +145,17 @@ func reducedIndex(set dataSet) []byte {
 // dataBlocks assembles the blocks for one output page: #mode, #index (full on
 // the root page, reduced on trace pages), then the #s-<id> summary and
 // #c-<id>-NNN chunk blocks for every trace the page carries (SPEC.md §5).
+// A split page names its kind in #mode (R80): the viewer read it from the URL,
+// and an export written to a directory named traces took its index for a trace.
 func dataBlocks(sb *strings.Builder, set dataSet, mode string, one *trajectory) {
-	writeBlock(sb, "mode", fmt.Appendf(nil, "{\"mode\":%q}\n", mode))
+	switch {
+	case mode != "split":
+		writeBlock(sb, "mode", fmt.Appendf(nil, "{\"mode\":%q}\n", mode))
+	case one == nil:
+		writeBlock(sb, "mode", []byte("{\"mode\":\"split\",\"page\":\"index\"}\n"))
+	default:
+		writeBlock(sb, "mode", []byte("{\"mode\":\"split\",\"page\":\"trace\"}\n"))
+	}
 	if one == nil {
 		writeBlock(sb, "index", set.Index)
 	} else {

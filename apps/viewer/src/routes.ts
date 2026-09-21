@@ -3,9 +3,12 @@ import type { LoadedTrace } from "./types";
 // Mode-aware routing for the two export artifacts (SPEC.md §5). One bundle
 // serves both modes; the export assembler injects
 //   <script type="application/json" id="mode">{"mode":"single"|"split"}</script>
-// and linkTo() resolves at runtime. The URL scheme is unchanged: single mode
-// keeps `?trace=<id>#ev-<n>`; split mode lets the filename do the job of
-// `?trace=` (`traces/<safeId>.html#ev-<n>`), with `../index.html` breadcrumbs.
+// and linkTo() resolves at runtime. A split page also names its kind,
+//   {"mode":"split","page":"index"|"trace"}
+// because the export directory's name is the user's. The URL scheme is
+// unchanged: single mode keeps `?trace=<id>#ev-<n>`; split mode lets the
+// filename do the job of `?trace=` (`traces/<safeId>.html#ev-<n>`), with
+// `../index.html` breadcrumbs.
 
 export type ViewerMode = "single" | "split";
 
@@ -15,20 +18,30 @@ export type ViewerMode = "single" | "split";
 // parity gate fails — so routing reads only the fields both blocks carry.
 type RouteIndexEntry = { id?: string; path?: string; safeId?: string };
 
-/** The injected `#mode` data block, defaulting to "single" when absent (dev server, tests). */
-export function mode(): ViewerMode {
+/** The injected `#mode` data block, or {} when absent (dev server, tests) or corrupt. */
+function modeBlock(): { mode?: string; page?: string } {
   const block = document.getElementById("mode");
-  if (!block) return "single";
+  if (!block) return {};
   try {
-    return (JSON.parse(block.textContent ?? "") as { mode?: string }).mode === "split" ? "split" : "single";
+    return (JSON.parse(block.textContent ?? "") as { mode?: string; page?: string } | null) ?? {};
   } catch {
-    return "single"; // a corrupt mode block must not break routing; loadIndex reports data errors
+    return {}; // a corrupt mode block must not break routing; loadIndex reports data errors
   }
 }
 
-/** True on split-mode trace pages (`traces/<safeId>.html`), false on both index pages. */
+/** The export mode, defaulting to "single" when the block is absent or corrupt. */
+export function mode(): ViewerMode {
+  return modeBlock().mode === "split" ? "split" : "single";
+}
+
+/**
+ * True on split-mode trace pages, false on both index pages. The export names
+ * the page's kind in `#mode` (R80). This once read the URL path, and an export
+ * written to a directory named `traces` took its own index for a trace page.
+ */
 export function inTracePage(): boolean {
-  return /(?:^|\/)traces\/[^/]+\.html$/.test(location.pathname);
+  const block = modeBlock();
+  return block.mode === "split" && block.page === "trace";
 }
 
 /** Entries of the `#index` block — full ({id, path}) on index pages, reduced ({id, safeId, title}) on trace pages. */
