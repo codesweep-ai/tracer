@@ -1005,8 +1005,28 @@
    "large-session/light": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
    "codex-multi-agent-run/dark": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
    "codex-multi-agent-run/light": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
-   "subagent-run/dark": "3 lanes · 56 events · 5.2K tokens · ~$1.6279 est.",
-   "subagent-run/light": "3 lanes · 56 events · 5.2K tokens · ~$1.6279 est."
+   "subagent-run/dark": "3 lanes · 56 events · 8K tokens · ~$1.7706 est.",
+   "subagent-run/light": "3 lanes · 56 events · 8K tokens · ~$1.7706 est."
+  },
+  "approval": {
+   "id": "TRC-021",
+   "reason": "The rollup follows the token and cost totals the goldens have carried since the cost fixes; main's goldens already sum to these figures.",
+   "previous": {
+    "large-session/dark": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
+    "large-session/light": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
+    "codex-multi-agent-run/dark": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
+    "codex-multi-agent-run/light": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
+    "subagent-run/dark": "3 lanes · 56 events · 5.2K tokens · ~$1.6279 est.",
+    "subagent-run/light": "3 lanes · 56 events · 5.2K tokens · ~$1.6279 est."
+   },
+   "measured": {
+    "large-session/dark": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
+    "large-session/light": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
+    "codex-multi-agent-run/dark": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
+    "codex-multi-agent-run/light": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
+    "subagent-run/dark": "3 lanes · 56 events · 8K tokens · ~$1.7706 est.",
+    "subagent-run/light": "3 lanes · 56 events · 8K tokens · ~$1.7706 est."
+   }
   }
  },
  {
@@ -1084,7 +1104,7 @@
      {
       "label": "user",
       "on": true,
-      "count": 68
+      "count": 64
      },
      {
       "label": "assistant",
@@ -1104,7 +1124,7 @@
      {
       "label": "system",
       "on": true,
-      "count": 8
+      "count": 12
      },
      {
       "label": "meta",
@@ -1129,7 +1149,7 @@
      {
       "label": "user",
       "on": true,
-      "count": 68
+      "count": 64
      },
      {
       "label": "assistant",
@@ -1149,7 +1169,7 @@
      {
       "label": "system",
       "on": true,
-      "count": 8
+      "count": 12
      },
      {
       "label": "meta",
@@ -1348,6 +1368,554 @@
     },
     "allDisabled": true,
     "noneDisabled": false
+   }
+  },
+  "approval": {
+   "id": "TRC-016",
+   "reason": "A local command's echo is a system event rather than a user message, which moves four events from the user chip to the system chip.",
+   "previous": {
+    "large-session/dark": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 68
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 354
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 449
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 326
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 8
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 101
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 60
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "large-session/light": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 68
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 354
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 449
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 326
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 8
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 101
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 60
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "codex-multi-agent-run/dark": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 2
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 7
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 4
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 1
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "codex-multi-agent-run/light": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 2
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 7
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 4
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 1
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "subagent-run/dark": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 1
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 3
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 9
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 0
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 6
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 1
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "subagent-run/light": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 1
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 3
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 9
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 0
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 6
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 1
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    }
+   },
+   "measured": {
+    "large-session/dark": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 64
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 354
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 449
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 326
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 12
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 101
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 60
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "large-session/light": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 64
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 354
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 449
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 326
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 12
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 101
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 60
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "codex-multi-agent-run/dark": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 2
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 7
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 4
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 1
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "codex-multi-agent-run/light": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 2
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 7
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 4
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 1
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "subagent-run/dark": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 1
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 3
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 9
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 0
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 6
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 1
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    },
+    "subagent-run/light": {
+     "chips": [
+      {
+       "label": "user",
+       "on": true,
+       "count": 1
+      },
+      {
+       "label": "assistant",
+       "on": true,
+       "count": 3
+      },
+      {
+       "label": "tool",
+       "on": true,
+       "count": 9
+      },
+      {
+       "label": "thinking",
+       "on": true,
+       "count": 5
+      },
+      {
+       "label": "system",
+       "on": true,
+       "count": 0
+      },
+      {
+       "label": "meta",
+       "on": true,
+       "count": 6
+      },
+      {
+       "label": "turn end",
+       "on": true,
+       "count": 1
+      }
+     ],
+     "errorsOnly": {
+      "label": "error",
+      "on": false
+     },
+     "allDisabled": true,
+     "noneDisabled": false
+    }
    }
   }
  },
@@ -1925,6 +2493,7 @@
     "button:meta",
     "button:turn end",
     "button:error",
+    "button:raw JSON",
     "button:none",
     "div[listbox]:e44bcdfa-eaf1-cf69-51de-20d7e925af16 event strip: 1366 events"
    ],
@@ -1943,6 +2512,7 @@
     "button:meta",
     "button:turn end",
     "button:error",
+    "button:raw JSON",
     "button:none",
     "div[listbox]:77f0e564-f5d7-a937-aa50-ed64762175c7 event strip: 29 events"
    ],
@@ -1961,15 +2531,17 @@
     "button:meta",
     "button:turn end",
     "button:error",
+    "button:raw JSON",
     "button:none",
     "div[listbox]:4f00d255-46e9-4373-7232-09f72fda039e event strip: 25 events"
    ]
   },
   "approval": {
-   "id": "host",
-   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "id": "TRC-011",
+   "reason": "Tool inputs gained a raw JSON toggle, one more Tab stop ahead of the strip.",
    "previous": {
     "large-session": [
+     "a:cs-tracer",
      "a:Trajectories",
      "button:Toggle theme. Current: dark",
      "a:← All trajectories",
@@ -1987,6 +2559,7 @@
      "div[listbox]:e44bcdfa-eaf1-cf69-51de-20d7e925af16 event strip: 1366 events"
     ],
     "codex-multi-agent-run": [
+     "a:cs-tracer",
      "a:Trajectories",
      "button:Toggle theme. Current: dark",
      "a:← All trajectories",
@@ -2004,6 +2577,7 @@
      "div[listbox]:77f0e564-f5d7-a937-aa50-ed64762175c7 event strip: 29 events"
     ],
     "subagent-run": [
+     "a:cs-tracer",
      "a:Trajectories",
      "button:Toggle theme. Current: dark",
      "a:← All trajectories",
@@ -2037,6 +2611,7 @@
      "button:meta",
      "button:turn end",
      "button:error",
+     "button:raw JSON",
      "button:none",
      "div[listbox]:e44bcdfa-eaf1-cf69-51de-20d7e925af16 event strip: 1366 events"
     ],
@@ -2055,6 +2630,7 @@
      "button:meta",
      "button:turn end",
      "button:error",
+     "button:raw JSON",
      "button:none",
      "div[listbox]:77f0e564-f5d7-a937-aa50-ed64762175c7 event strip: 29 events"
     ],
@@ -2073,6 +2649,7 @@
      "button:meta",
      "button:turn end",
      "button:error",
+     "button:raw JSON",
      "button:none",
      "div[listbox]:4f00d255-46e9-4373-7232-09f72fda039e event strip: 25 events"
     ]
@@ -2087,46 +2664,46 @@
   "value": {
    "large-session": {
     "reachable": true,
-    "stop": 16
+    "stop": 17
    },
    "codex-multi-agent-run": {
     "reachable": true,
-    "stop": 16
+    "stop": 17
    },
    "subagent-run": {
     "reachable": true,
-    "stop": 16
+    "stop": 17
    }
   },
   "approval": {
-   "id": "host",
-   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "id": "TRC-011",
+   "reason": "Tool inputs gained a raw JSON toggle, one more Tab stop ahead of the strip.",
    "previous": {
     "large-session": {
      "reachable": true,
-     "stop": 15
+     "stop": 16
     },
     "codex-multi-agent-run": {
      "reachable": true,
-     "stop": 15
+     "stop": 16
     },
     "subagent-run": {
      "reachable": true,
-     "stop": 15
+     "stop": 16
     }
    },
    "measured": {
     "large-session": {
      "reachable": true,
-     "stop": 16
+     "stop": 17
     },
     "codex-multi-agent-run": {
      "reachable": true,
-     "stop": 16
+     "stop": 17
     },
     "subagent-run": {
      "reachable": true,
-     "stop": 16
+     "stop": 17
     }
    }
   }
@@ -2268,36 +2845,22 @@
   "note": "embedded data bytes and block count — the transport payload must not change",
   "value": {
    "large-session": {
-    "data": 789978,
+    "data": 823752,
     "blocks": 5
    },
    "codex-multi-agent-run": {
-    "data": 38875,
+    "data": 40003,
     "blocks": 8
    },
    "subagent-run": {
-    "data": 34834,
+    "data": 36183,
     "blocks": 8
    }
   },
   "approval": {
-   "id": "host",
-   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "id": "TRC-018",
+   "reason": "The embedded data grew by the time and cost fields in schema version 3.",
    "previous": {
-    "large-session": {
-     "data": 789978,
-     "blocks": 5
-    },
-    "codex-multi-agent-run": {
-     "data": 38670,
-     "blocks": 8
-    },
-    "subagent-run": {
-     "data": 34834,
-     "blocks": 8
-    }
-   },
-   "measured": {
     "large-session": {
      "data": 789978,
      "blocks": 5
@@ -2308,6 +2871,20 @@
     },
     "subagent-run": {
      "data": 34834,
+     "blocks": 8
+    }
+   },
+   "measured": {
+    "large-session": {
+     "data": 823752,
+     "blocks": 5
+    },
+    "codex-multi-agent-run": {
+     "data": 40003,
+     "blocks": 8
+    },
+    "subagent-run": {
+     "data": 36183,
      "blocks": 8
     }
    }
