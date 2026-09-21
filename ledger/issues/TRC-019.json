@@ -1,0 +1,23 @@
+{
+  "id": "TRC-019",
+  "title": "OpenCode's step finish is stamped when the step started, so idle overlaps the step's work",
+  "type": "defect",
+  "severity": "low",
+  "status": "in-progress",
+  "foundBy": "session agent, checking that idle and work fit inside elapsed time for every captured trajectory under R77",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": "2026-09-21 time accounting",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "An OpenCode `step-finish` part carries no time of its own, so the adapter stamps it with its message's creation time. That is when the step started, not when it finished.\n\nThe step whose reason is `stop` ends a turn (R69), and R68 starts the idle interval at it. So idle begins before the step's own reply was written, and overlaps the work R70 charges to that reply. In nine of 24 captured OpenCode trajectories, idle and work together exceed the trajectory's elapsed time, by 35 seconds in all.\n\nThe message records `time.completed`, the moment the step finished. A step finish should carry that, and fall back to the creation time only when a message has no completion time.\n\nTo reproduce, normalize a captured OpenCode session and compare `totals.time` idle plus work against elapsed.",
+  "notes": [],
+  "links": [
+    "TRC-013",
+    "TRC-018"
+  ]
+}
