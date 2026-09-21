@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "meta": {
     "source": "claude-code",
     "sessionId": "demo-root",
@@ -12,8 +12,7 @@
     "cwd": "/home/user/project",
     "startedAt": "2026-08-01T00:00:00.000Z",
     "endedAt": "2026-08-01T00:00:31.500Z",
-    "durationMs": 31500,
-    "cost": 0.0142
+    "durationMs": 31500
   },
   "totals": {
     "events": 6,
@@ -24,8 +23,11 @@
     "cacheRead": 40210,
     "cacheWrite": 3120,
     "reasoning": 210,
-    "cost": 0.0142,
-    "costEstimated": true
+    "cost": {
+      "estimated": {
+        "usd": 0.0142
+      }
+    }
   },
   "parse": {
     "adapter": "claude-code",
