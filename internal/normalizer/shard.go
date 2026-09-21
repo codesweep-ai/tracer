@@ -59,6 +59,10 @@ func stripEvent(e *obj) *obj {
 			out.Set("idleMs", idle)
 		}
 	}
+	// Bar height is drawn from the strip alone, for the same reason (R70).
+	if work, ok := e.Get("workMs"); ok {
+		out.Set("workMs", work)
+	}
 	if str(get(e, "kind")) == "thinking" && str(get(e, "text")) == "" {
 		out.Set("redacted", true)
 	}

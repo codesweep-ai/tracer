@@ -266,6 +266,7 @@ func NormalizeClaude(records []*obj) *obj {
 		e.Set("i", i)
 	}
 	markIdle(events)
+	markWork(events)
 	var firstTS, lastTS string
 	for _, e := range events {
 		if ts := str(get(e, "ts")); ts != "" {

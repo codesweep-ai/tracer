@@ -289,3 +289,71 @@ func TestOpenCodeStepFinishEndsATurnOnlyWhenItStopped(t *testing.T) {
 		}
 	}
 }
+
+// R70, TRC-015. The model's latency after a tool result lands on the reply it
+// produced, past the bookkeeping written in between, and a tool call owns its
+// own run as well as the time spent issuing it.
+func TestWorkLandsOnTheReplyPastBookkeeping(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "user", "ts", "2026-01-01T00:00:00.000Z"),
+		trajectory.NewObject("kind", "tool_call", "ts", "2026-01-01T00:00:02.000Z",
+			"result", trajectory.NewObject("ts", "2026-01-01T00:00:05.000Z")),
+		trajectory.NewObject("kind", "meta", "ts", "2026-01-01T00:00:05.100Z", "text", "context attachment"),
+		trajectory.NewObject("kind", "meta"),
+		trajectory.NewObject("kind", "thinking", "ts", "2026-01-01T00:00:09.000Z"),
+		trajectory.NewObject("kind", "assistant", "ts", "2026-01-01T00:00:10.000Z"),
+	}
+	markWork(events)
+	for i, want := range map[int]float64{1: 5000, 4: 4000, 5: 1000} {
+		if got := num(get(events[i], "workMs")); got != want {
+			t.Fatalf("events[%d].workMs = %v, want %v", i, got, want)
+		}
+	}
+	for _, i := range []int{0, 2, 3} {
+		if _, ok := events[i].Get("workMs"); ok {
+			t.Fatalf("events[%d] (%s) carries workMs", i, str(get(events[i], "kind")))
+		}
+	}
+	if got := num(get(stripEvent(events[4]), "workMs")); got != 4000 {
+		t.Fatalf("strip workMs = %v, want 4000 — the bar is drawn from the strip", got)
+	}
+}
+
+// A tool call issued beside a slower one is charged from its own timestamp, and
+// the reply after both from the slower one's result, not from the last one listed.
+func TestWorkUnderParallelToolCalls(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "user", "ts", "2026-01-01T00:00:00.000Z"),
+		trajectory.NewObject("kind", "tool_call", "ts", "2026-01-01T00:00:01.000Z",
+			"result", trajectory.NewObject("ts", "2026-01-01T00:00:10.000Z")),
+		trajectory.NewObject("kind", "tool_call", "ts", "2026-01-01T00:00:02.000Z",
+			"result", trajectory.NewObject("ts", "2026-01-01T00:00:03.000Z")),
+		trajectory.NewObject("kind", "assistant", "ts", "2026-01-01T00:00:12.000Z"),
+	}
+	markWork(events)
+	for i, want := range map[int]float64{1: 10000, 2: 1000, 3: 2000} {
+		if got := num(get(events[i], "workMs")); got != want {
+			t.Fatalf("events[%d].workMs = %v, want %v", i, got, want)
+		}
+	}
+}
+
+// The wait after a turn end is idle (R68), so the work after it starts where
+// the wait stops rather than at the turn end.
+func TestWorkStartsWhereIdleStops(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "assistant", "ts", "2026-01-01T00:00:00.000Z"),
+		trajectory.NewObject("kind", "turn_end", "ts", "2026-01-01T00:00:01.000Z"),
+		trajectory.NewObject("kind", "meta", "ts", "2026-01-01T00:30:00.000Z"),
+		trajectory.NewObject("kind", "user", "ts", "2026-01-01T01:00:00.000Z"),
+		trajectory.NewObject("kind", "thinking", "ts", "2026-01-01T01:00:03.000Z"),
+	}
+	markIdle(events)
+	markWork(events)
+	if _, ok := events[0].Get("workMs"); ok {
+		t.Fatal("the first event carries workMs, with no earlier work to measure from")
+	}
+	if got := num(get(events[4], "workMs")); got != 3000 {
+		t.Fatalf("workMs = %v, want 3000 — the hour before the user spoke is idle", got)
+	}
+}

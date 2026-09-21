@@ -391,6 +391,13 @@
           ],
           "description": "Milliseconds the agent spent waiting for its next instruction, from this event until work resumes at a user instruction, an assistant message, a thinking step or a tool call. A record carrying no work does not end the wait. Present only on an event that ends a turn, and absent when no work follows it. A long gap after a tool call is a slow tool, which is work, not idle. Additive and optional: documents written before it omit it."
         },
+        "workMs": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Milliseconds of work this event accounts for, from the end of the previous piece of work to the end of this one. A tool call ends when its result arrives, so the figure covers issuing the call and running it. The model's latency before a reply lands on that reply, and records carrying no work are stepped over. Present only on a thinking step, an assistant message or a tool call, and absent when no earlier work bounds it. Additive and optional: documents written before it omit it."
+        },
         "tokens": {
           "$ref": "#/$defs/tokens"
         },
@@ -608,6 +615,13 @@
             "null"
           ],
           "description": "Milliseconds the agent spent waiting for its next instruction, from this event until work resumes at a user instruction, an assistant message, a thinking step or a tool call. A record carrying no work does not end the wait. Present only on an event that ends a turn, and absent when no work follows it. A long gap after a tool call is a slow tool, which is work, not idle. Additive and optional: documents written before it omit it."
+        },
+        "workMs": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Milliseconds of work this event accounts for, from the end of the previous piece of work to the end of this one. A tool call ends when its result arrives, so the figure covers issuing the call and running it. The model's latency before a reply lands on that reply, and records carrying no work are stepped over. Present only on a thinking step, an assistant message or a tool call, and absent when no earlier work bounds it. Additive and optional: documents written before it omit it."
         },
         "redacted": {
           "type": "boolean",

@@ -83,6 +83,13 @@ func tsOrUndef(v any) any {
 	}
 	return trajectory.Undefined
 }
+
+// parseTS reads a timestamp the way millis does, for arithmetic past two ends.
+func parseTS(v any) (time.Time, bool) {
+	t, e := time.Parse(time.RFC3339Nano, str(v))
+	return t, e == nil
+}
+
 func millis(a, b string) any {
 	if a == "" || b == "" {
 		return trajectory.Undefined

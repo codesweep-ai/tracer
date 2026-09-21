@@ -293,6 +293,21 @@ subtracts timestamps across neighbours a filter removed. A turn end with nothing
 field rather than a zero, because waiting for nothing and waiting no time are different claims. Both
 fields are additive and optional, so `schemaVersion` is unchanged (R7).
 
+**R70.** Every thinking step, assistant message and tool call **MUST** report the time it accounts
+for, consistently across every adapter. The interval runs from the end of the previous piece of work
+to the end of this one. A tool call ends when its result arrives, and a turn end ends once its idle is
+over. A record carrying no work is stepped over, as R68 steps over it.
+
+*The interval looks backward because a record is written when its block is done, so the model's
+latency before a reply is what produced that reply. Measured forward from each response, that latency
+belonged to no event, since a tool call already reports its own run time. It came to 8% to 26% of
+elapsed time across thirty captured trajectories, most of it sitting on bookkeeping records.*
+
+The interval travels as `workMs` on the event and on its strip entry, for the reason `idleMs` does.
+An event with no earlier work to measure from carries no field. Tool calls running at once overlap,
+so each is measured from its own timestamp, and the work after them from the latest result. The field
+is additive and optional, so `schemaVersion` is unchanged (R7).
+
 `parse.unreadable` is additive and optional in `schema/trajectory.v1.json`: the current adapters
 always emit it, and documents written before R56 omit it. `schemaVersion` is unchanged, because a
 consumer that ignores the field still renders such a document correctly (R7).

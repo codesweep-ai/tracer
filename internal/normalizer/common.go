@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf16"
 
 	"github.com/codesweep-ai/tracer/internal/trajectory"
@@ -363,6 +364,57 @@ func markIdle(events []*obj) {
 	}
 }
 
+// drawsWork is the set of kinds that carry `workMs` (R70): the model thinking,
+// speaking or calling a tool. A user instruction bounds the interval without
+// owning it, since the time before it is the agent's, not the user's.
+var drawsWork = map[string]bool{"assistant": true, "thinking": true, "tool_call": true}
+
+// markWork stamps `workMs` on every event that does the model's work (R70): the
+// interval from the end of the previous piece of work to the end of this one. A
+// tool call ends when its result arrives, and a turn end once its idle is over.
+//
+// The interval looks BACKWARD, not forward. The model's latency sits between a
+// tool result and the reply, and a record is written when its block is done, so
+// the reply is what the time produced. Measured forward, from each response to
+// the next event, that latency belonged to nothing, because a tool call already
+// has its own run time. It was 8% to 26% of elapsed time across thirty captured
+// trajectories, most of it on bookkeeping records (TRC-015).
+//
+// Bookkeeping is stepped over for the same reason markIdle steps over it: a
+// context attachment landing mid-wait marks no work. The end only moves forward,
+// so a tool call issued in parallel with a slower one is charged from its own
+// timestamp, and the reply after both is charged from the slower one's result.
+func markWork(events []*obj) {
+	var last time.Time
+	for _, e := range events {
+		kind := str(get(e, "kind"))
+		if !resumesWork[kind] && kind != "turn_end" {
+			continue
+		}
+		at, ok := parseTS(get(e, "ts"))
+		if !ok {
+			continue
+		}
+		end := at
+		if done, ok := parseTS(get(object(get(e, "result")), "ts")); ok && done.After(end) {
+			end = done
+		}
+		if idle, ok := e.Get("idleMs"); ok && isJSNumber(idle) {
+			end = at.Add(time.Duration(num(idle)) * time.Millisecond)
+		}
+		if drawsWork[kind] && !last.IsZero() {
+			start := last
+			if at.Before(start) {
+				start = at
+			}
+			e.Set("workMs", end.Sub(start).Milliseconds())
+		}
+		if end.After(last) {
+			last = end
+		}
+	}
+}
+
 // finalize completes a document (codex and opencode): index events,
 // sanitize hostile scalars, roll totals, stamp meta. sessionCost is the
 // opencode info.cost override (nil = absent).
@@ -375,6 +427,7 @@ func finalize(meta *obj, events []*obj, parse *obj, sessionCost any) *obj {
 		parse.Set("warnings", append(warnings, malformedTokenWarning(malformed)))
 	}
 	markIdle(events)
+	markWork(events)
 	tot := trajectory.NewObject("events", len(events), "toolCalls", 0, "toolErrors", 0, "input", 0, "output", 0, "cacheRead", 0, "cacheWrite", 0, "reasoning", 0)
 	for _, e := range events {
 		if str(get(e, "kind")) == "tool_call" {
