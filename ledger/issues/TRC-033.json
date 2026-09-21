@@ -3,17 +3,19 @@
   "title": "A deep link to an event sometimes scrolls the event list to the wrong position",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "another agent session, checking deep links for tools that will link into the tracer; the session agent saw it too while verifying TRC-027",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "40ab252"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "Deep links were swept on cold loads. On the 1027-event attended trace, misses fell from 63 of 147 to none at 1280 by 900, and none of 94 at 1000 by 1300. On the fixtures, the old build missed 10 of 39 on one and 10 of 24 on another, and the fix missed none. After landing, a wheel, Page Down or direct scroll still moves the list, and the hash follows. TF-36 fails against the old build. `make ci` passes, and the maintainer checked links in the viewer."
   },
-  "resolution": null,
+  "resolution": "A navigation now lands only when every card above the target in the rendered window is measured and the list sits at the target's offset, or at its end. Until then each measurement re-aims the scroll. Once landed, the card stays anchored through later re-measurement while the list has not moved, and any reader input ends both. R81 states the rule, and TF-36 checks eight cold deep links per fixture.",
   "details": "Opening a trajectory page with `#ev-N` in the URL selects event N on the strip correctly. The event list below it does not always scroll so that card N sits at the top. Sometimes the next card is at the top, with card N just above the visible area. Sometimes card N is at the top but cut off partway down.\n\nCard N's header should be the first thing visible in the list, every time, for any N. Other tools will link into the tracer by event, so a link has to land on the event it names.\n\nTo reproduce, open a trajectory with a few hundred events at `#ev-N` in a fresh tab and try several values of N. On one 372-event trace, N=123 opened with #124 at the top on every attempt, while N=5, 120 and 300 landed. On a 702-event trace, N=252 opened partway down its card at two window sizes. Whether a given N fails is repeatable, but it depends on N.",
   "notes": [
     {
