@@ -258,6 +258,17 @@ most for opencode. Its transcript is a whole JSON document extracted from the CL
 damaged extract parses as nothing at all, so unlike a JSONL session it cannot degrade into a partial
 trajectory. The diagnostic is the only report there will be.*
 
+**R67.** An input record reporting that a turn ended in failure **MUST** produce an event marked
+as an error, never one that reads as a completed turn. *The codex adapter mapped `task_complete` to
+a turn end whose text was always "turn complete" and never read the record's `error` field. In a
+captured corpus of twenty codex trajectories, twenty three turns had died on a provider limit.
+Every one of them normalized to that text, and no event in those trajectories was marked as an
+error. A reader counting completed turns counted the failures among them.*
+
+An event carries `isError` when it has no result of its own to report failure through. A tool call
+keeps reporting failure through `result.isError`, and `stripEvent` reads either. The field is
+additive and optional in `schema/trajectory.v1.json`, so `schemaVersion` is unchanged (R7).
+
 `parse.unreadable` is additive and optional in `schema/trajectory.v1.json`: the current adapters
 always emit it, and documents written before R56 omit it. `schemaVersion` is unchanged, because a
 consumer that ignores the field still renders such a document correctly (R7).

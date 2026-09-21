@@ -380,6 +380,10 @@
         "result": {
           "$ref": "#/$defs/result"
         },
+        "isError": {
+          "type": "boolean",
+          "description": "The event itself failed, for events that have no result of their own. A tool call reports failure through result.isError; a turn that a provider error ended reports it here. Additive and optional: documents written before it omit it."
+        },
         "tokens": {
           "$ref": "#/$defs/tokens"
         },

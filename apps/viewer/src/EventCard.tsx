@@ -9,7 +9,9 @@ import type { TraceEvent } from "./types";
 // input renders escaped and uncoloured, which looks like a styling bug.
 const stringify = (value: unknown) => typeof value === "string" ? value : JSON.stringify(value, null, 2);
 export function EventCard({ event, query }: { event: TraceEvent; query?: string }) {
-  const errored = event.result?.isError === true;
+  // A tool call fails through its result; an event with none of its own
+  // reports it directly (R67). A turn a provider error ended is the case.
+  const errored = event.isError === true || event.result?.isError === true;
   const redactedThinking = event.kind === "thinking" && !event.text;
   if (redactedThinking) return <article id={`ev-${event.i}`} data-card-index={event.i} data-compact="true" className="event-card event-card-compact"><Card variant="tight"><div className="event-card-head"><span className="text-label-upper">#{event.i} · thinking</span><span className="muted">thinking (redacted at source)</span>{event.tokens && <span className="muted">Tokens · reasoning {event.tokens.reasoning ?? 0}</span>}</div></Card></article>;
   return <article id={`ev-${event.i}`} data-card-index={event.i} className="event-card">

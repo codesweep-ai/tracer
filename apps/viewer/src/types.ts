@@ -15,6 +15,6 @@ export interface SkippedType { type: string; count: number }
 export interface ParseReport { adapter: string; adapterVersion: string; cliVersionRange?: string; skippedByType: SkippedType[]; unrecognized: number; unreadable?: number; warnings: Array<{ message: string; rawType?: string; count?: number }> }
 export interface TraceSummary { schemaVersion: number; meta: TraceMeta; totals: TraceTotals; parse: ParseReport; links?: LinkHint[]; chunkSize: number; chunkCount: number; strip: StripEvent[] }
 export interface TraceIndex { schemaVersion: number; generatedAt: string; trajectories: Array<{ id: string; path: string }>; links?: LinkHint[] }
-export interface TraceEvent { i: number; kind: EventKind; ts?: string; text?: string; durationMs?: number; tokens?: TokenUsage; subtask?: boolean; childSessionId?: string; tool?: { name: string; callId?: string; input?: unknown; command?: string }; result?: { text?: string; isError?: boolean; ts?: string; durationMs?: number } }
+export interface TraceEvent { i: number; kind: EventKind; ts?: string; text?: string; durationMs?: number; isError?: boolean; tokens?: TokenUsage; subtask?: boolean; childSessionId?: string; tool?: { name: string; callId?: string; input?: unknown; command?: string }; result?: { text?: string; isError?: boolean; ts?: string; durationMs?: number } }
 export interface TraceChunk { chunk: number; events: TraceEvent[] }
 export interface LoadedTrace { id: string; path: string; summary: TraceSummary }

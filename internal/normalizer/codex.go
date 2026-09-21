@@ -206,7 +206,23 @@ func NormalizeCodex(records []*obj) *obj {
 			case "task_started":
 				events = append(events, trajectory.NewObject("kind", "meta", "ts", ts, "text", "turn started"))
 			case "task_complete":
-				events = append(events, trajectory.NewObject("kind", "turn_end", "ts", ts, "durationMs", keepOrUndef(payload, "duration_ms"), "text", "turn complete"))
+				turn := trajectory.NewObject("kind", "turn_end", "ts", ts, "durationMs", keepOrUndef(payload, "duration_ms"), "text", "turn complete")
+				// A turn that died carries `error`; a turn that finished carries
+				// null there. Reported identically, a run that a provider limit
+				// killed reads as a run that worked (R67). `codex_error_info` is
+				// the machine-readable reason and `message` the provider's own
+				// sentence, so the reason labels the cell and the sentence is
+				// the text a reader needs.
+				if failure := object(get(payload, "error")); failure != nil {
+					reason := str(get(failure, "codex_error_info"))
+					message := str(get(failure, "message"))
+					turn.Set("isError", true)
+					turn.Set("text", fallback(message, fallback(reason, "turn failed")))
+					if reason != "" {
+						turn.Set("label", reason)
+					}
+				}
+				events = append(events, turn)
 			case "user_message", "agent_message", "patch_apply_end", "thread_settings_applied":
 				// Notifications duplicating content that arrives via response
 				// items. Rendering them would double every turn.

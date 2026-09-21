@@ -35,7 +35,9 @@ func pretty(v any) ([]byte, error) {
 func stripEvent(e *obj) *obj {
 	raw, _ := trajectory.Marshal(e, false)
 	r := object(get(e, "result"))
-	out := trajectory.NewObject("i", get(e, "i"), "kind", get(e, "kind"), "error", r != nil && truthy(get(r, "isError")))
+	// A tool reports failure through its result; an event with no result reports
+	// its own (R67), which is how a failed turn reaches the strip's error channel.
+	out := trajectory.NewObject("i", get(e, "i"), "kind", get(e, "kind"), "error", truthy(get(e, "isError")) || (r != nil && truthy(get(r, "isError"))))
 	if present(get(e, "ts")) {
 		out.Set("ts", get(e, "ts"))
 	}

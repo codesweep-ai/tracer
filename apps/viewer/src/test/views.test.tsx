@@ -112,6 +112,19 @@ describe("P0 views", () => {
     expect(scrollTo).toHaveBeenCalledWith({ top: 5 * 224, behavior: "auto" });
     expect(location.hash).toBe("#ev-5");
   });
+  // R67. A turn that a provider error ended has no result to report through,
+  // so the card reads the event's own flag. Without it the failure rendered as
+  // an ordinary turn end.
+  it("marks an event that carries its own failure, with no result of its own", () => {
+    const failed: TraceEvent = { i: 7, kind: "turn_end", isError: true, text: "rate limit exceeded: try again in 14s" };
+    const { rerender } = render(<EventCard event={failed} />);
+    expect(screen.getByText("error")).toBeInTheDocument();
+    expect(screen.getByText("rate limit exceeded: try again in 14s")).toBeInTheDocument();
+    expect(screen.queryByText(/Tool output/)).not.toBeInTheDocument();
+    const done: TraceEvent = { i: 8, kind: "turn_end", text: "turn complete" };
+    rerender(<EventCard event={done} />);
+    expect(screen.queryByText("error")).not.toBeInTheDocument();
+  });
   it("labels empty thinking as a compact source-redaction marker without changing non-empty thinking", () => { const empty: TraceEvent = { i: 3, kind: "thinking", text: "", tokens: { reasoning: 12 } }; const { rerender } = render(<EventCard event={empty} />); expect(screen.getByText("thinking (redacted at source)")).toBeInTheDocument(); expect(screen.getByText("thinking (redacted at source)").closest("article")).toHaveAttribute("data-compact", "true"); const nonEmpty: TraceEvent = { i: 4, kind: "thinking", text: "Visible reasoning" }; rerender(<EventCard event={nonEmpty} />); expect(screen.getByText("Visible reasoning")).toBeInTheDocument(); expect(screen.queryByText("thinking (redacted at source)")).not.toBeInTheDocument(); expect(screen.getByText("Visible reasoning").closest("article")).not.toHaveAttribute("data-compact", "true"); });
 });
 
