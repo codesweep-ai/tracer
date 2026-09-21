@@ -101,3 +101,25 @@ func TestOpenCodeStepFinishIsStampedWhenTheStepFinished(t *testing.T) {
 		t.Fatalf("idle %v + work %v exceeds elapsed %v", idle, work, elapsed)
 	}
 }
+
+// TRC-022. OpenCode's model output is stamped when it finished, so a long
+// reasoning part carries its own time instead of handing it to the reply after it.
+func TestOpenCodeModelTimeLandsOnTheStepThatTookIt(t *testing.T) {
+	doc, err := NormalizeBytes([]byte(`{"info":{"id":"s1"},"messages":[
+		{"info":{"role":"user","time":{"created":1767225600000}},"parts":[{"type":"text","text":"go","time":{"start":1767225600000}}]},
+		{"info":{"role":"assistant","time":{"created":1767225601000,"completed":1767225664000}},"parts":[
+			{"type":"reasoning","text":"hm","time":{"start":1767225601000,"end":1767225660000}},
+			{"type":"text","text":"done","time":{"start":1767225660000,"end":1767225664000}}]}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]float64{}
+	for _, e := range get(doc, "events").([]*obj) {
+		if v, ok := e.Get("workMs"); ok {
+			got[str(get(e, "kind"))] = num(v)
+		}
+	}
+	if got["thinking"] != 60000 || got["assistant"] != 4000 {
+		t.Fatalf("workMs = %v, want thinking 60000 and assistant 4000", got)
+	}
+}

@@ -90,18 +90,25 @@ func NormalizeOpenCode(doc *obj) *obj {
 			tm := object(get(p, "time"))
 			mit := object(get(mi, "time"))
 			ts := firstISO(get(tm, "start"), get(tm, "created"), get(mit, "created"))
+			// The model's output is stamped when it finished, as Claude Code and
+			// codex stamp a finished block: R70 reads a timestamp as the end of the
+			// step. Stamped at its start, a step was charged the wait before it and
+			// its own generation landed on the event after it (TRC-022).
+			finished := firstISO(get(tm, "end"), ts)
 			switch typ := str(get(p, "type")); typ {
 			case "text":
 				kind := "system"
+				at := ts
 				switch role {
 				case "assistant":
 					kind = "assistant"
+					at = finished
 				case "user":
 					kind = "user"
 				}
-				events = append(events, trajectory.NewObject("kind", kind, "ts", ts, "text", nullishOr(get(p, "text"), "")))
+				events = append(events, trajectory.NewObject("kind", kind, "ts", at, "text", nullishOr(get(p, "text"), "")))
 			case "reasoning":
-				events = append(events, trajectory.NewObject("kind", "thinking", "ts", ts, "text", nullishOr(get(p, "text"), "")))
+				events = append(events, trajectory.NewObject("kind", "thinking", "ts", finished, "text", nullishOr(get(p, "text"), "")))
 			case "tool":
 				state := object(get(p, "state"))
 				st := object(get(state, "time"))
