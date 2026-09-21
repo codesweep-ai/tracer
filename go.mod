@@ -13,9 +13,9 @@ tool (
 require (
 	github.com/bmatcuk/doublestar/v4 v4.10.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
-	github.com/codesweep-ai/ledger v0.0.0-20260918043804-bbe29a48e449 // indirect
-	github.com/codesweep-ai/lint v0.0.0-20260918041056-8bdc0656c767 // indirect
-	github.com/codesweep-ai/npmrevs v0.0.0-20260920020255-40937e144093 // indirect
+	github.com/codesweep-ai/ledger v0.0.0-20260921044937-63578cb472f8 // indirect
+	github.com/codesweep-ai/lint v0.0.0-20260921044852-bfacc99eb226 // indirect
+	github.com/codesweep-ai/npmrevs v0.0.0-20260921040735-e92f1c0bd295 // indirect
 	github.com/docker/cli v29.7.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/fatih/color v1.19.0 // indirect
