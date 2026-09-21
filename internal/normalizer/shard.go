@@ -62,6 +62,13 @@ func stripEvent(e *obj) *obj {
 	// Bar height is drawn from the strip alone, for the same reason (R70).
 	if work, ok := e.Get("workMs"); ok {
 		out.Set("workMs", work)
+		// How much of that the model spent generating, where the CLI recorded
+		// when the step began (TRC-023). The rest was the wait before it.
+		// Capped at the model time: a step that began before the previous work
+		// ended overlaps it, and the wait cannot come out negative.
+		if active := millis(str(get(e, "startTs")), str(get(e, "ts"))); isJSNumber(active) && num(active) >= 0 {
+			out.Set("activeMs", integer(min(num(active), num(work))))
+		}
 	}
 	if str(get(e, "kind")) == "thinking" && str(get(e, "text")) == "" {
 		out.Set("redacted", true)

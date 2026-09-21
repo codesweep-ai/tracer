@@ -122,4 +122,50 @@ func TestOpenCodeModelTimeLandsOnTheStepThatTookIt(t *testing.T) {
 	if got["thinking"] != 60000 || got["assistant"] != 4000 {
 		t.Fatalf("workMs = %v, want thinking 60000 and assistant 4000", got)
 	}
+	// TRC-023: the part's start separates its generation from the wait.
+	for _, e := range get(doc, "events").([]*obj) {
+		if str(get(e, "kind")) == "thinking" {
+			if got := num(get(stripEvent(e), "activeMs")); got != 59000 {
+				t.Fatalf("thinking activeMs = %v, want 59000", got)
+			}
+		}
+	}
+}
+
+// TRC-023. Codex's item_completed notice says when the model began a reasoning
+// item or a message; it pairs with the item by id, in either order, and the
+// strip carries the part of the model time spent generating.
+func TestCodexStepStartSplitsModelTime(t *testing.T) {
+	doc, err := NormalizeBytes([]byte(
+		"{\"type\":\"session_meta\",\"payload\":{\"id\":\"t1\"}}\n" +
+			"{\"timestamp\":\"2026-01-01T00:00:00.000Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"message\",\"role\":\"user\",\"content\":\"go\"}}\n" +
+			"{\"timestamp\":\"2026-01-01T00:00:48.000Z\",\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"Reasoning\",\"id\":\"rs_1\"},\"started_at_ms\":1767225647800,\"completed_at_ms\":1767225648000}}\n" +
+			"{\"timestamp\":\"2026-01-01T00:00:48.000Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"reasoning\",\"id\":\"rs_1\",\"summary\":[]}}\n" +
+			"{\"timestamp\":\"2026-01-01T00:00:50.000Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"message\",\"role\":\"assistant\",\"id\":\"msg_1\",\"content\":\"done\"}}\n" +
+			"{\"timestamp\":\"2026-01-01T00:00:50.001Z\",\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"AgentMessage\",\"id\":\"msg_1\"},\"started_at_ms\":1767225649000,\"completed_at_ms\":1767225650000}}"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	strip := map[string]*obj{}
+	for _, e := range get(doc, "events").([]*obj) {
+		strip[str(get(e, "kind"))] = stripEvent(e)
+	}
+	for kind, want := range map[string][2]float64{"thinking": {48000, 200}, "assistant": {2000, 1000}} {
+		s := strip[kind]
+		if num(get(s, "workMs")) != want[0] || num(get(s, "activeMs")) != want[1] {
+			t.Fatalf("%s: workMs %v activeMs %v, want %v", kind, get(s, "workMs"), get(s, "activeMs"), want)
+		}
+	}
+}
+
+// Claude Code records no start, so its strip entries carry model time alone.
+func TestNoStepStartMeansNoSplit(t *testing.T) {
+	e := trajectory.NewObject("kind", "thinking", "ts", "2026-01-01T00:00:05.000Z", "workMs", 5000)
+	if _, ok := stripEvent(e).Get("activeMs"); ok {
+		t.Fatal("activeMs set with no recorded start")
+	}
+	e.Set("startTs", "2025-12-31T23:59:50.000Z")
+	if got := num(get(stripEvent(e), "activeMs")); got != 5000 {
+		t.Fatalf("activeMs = %v, want it capped at the model time 5000", got)
+	}
 }

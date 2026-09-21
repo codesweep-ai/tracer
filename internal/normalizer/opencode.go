@@ -23,6 +23,15 @@ func iso(v any) any {
 	return time.UnixMilli(int64(n)).UTC().Format("2006-01-02T15:04:05.000Z")
 }
 
+// markStepStart records when the model began a step (TRC-023), where the part
+// carries both ends: the event is stamped with the end, and the start is what
+// separates the model's generation from the wait before it.
+func markStepStart(e *obj, start, end any) {
+	if from, to := iso(start), iso(end); from != trajectory.Undefined && to != trajectory.Undefined {
+		e.Set("startTs", from)
+	}
+}
+
 func NormalizeOpenCode(doc *obj) *obj {
 	info := object(get(doc, "info"))
 	meta := trajectory.NewObject("source", "opencode", "sessionId", nullishOr(get(info, "id"), "unknown-session"))
@@ -106,9 +115,15 @@ func NormalizeOpenCode(doc *obj) *obj {
 				case "user":
 					kind = "user"
 				}
-				events = append(events, trajectory.NewObject("kind", kind, "ts", at, "text", nullishOr(get(p, "text"), "")))
+				e := trajectory.NewObject("kind", kind, "ts", at, "text", nullishOr(get(p, "text"), ""))
+				if kind == "assistant" {
+					markStepStart(e, get(tm, "start"), get(tm, "end"))
+				}
+				events = append(events, e)
 			case "reasoning":
-				events = append(events, trajectory.NewObject("kind", "thinking", "ts", finished, "text", nullishOr(get(p, "text"), "")))
+				e := trajectory.NewObject("kind", "thinking", "ts", finished, "text", nullishOr(get(p, "text"), ""))
+				markStepStart(e, get(tm, "start"), get(tm, "end"))
+				events = append(events, e)
 			case "tool":
 				state := object(get(p, "state"))
 				st := object(get(state, "time"))

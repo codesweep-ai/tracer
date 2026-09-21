@@ -44,6 +44,21 @@ func NormalizeCodex(records []*obj) *obj {
 	var order []string
 	skipped := skipTally{}
 	damage := &damageRun{}
+	// When the model began each reasoning item and message, from the
+	// item_completed notice that shares its id (TRC-023). The notice is written
+	// just before the item, so a start waits here for its event, and an event
+	// written first waits for its start.
+	startedAt := map[string]any{}
+	stepByID := map[string]*obj{}
+	markStart := func(id string, e *obj) {
+		if id == "" {
+			return
+		}
+		stepByID[id] = e
+		if at, ok := startedAt[id]; ok {
+			e.Set("startTs", at)
+		}
+	}
 	unknown := func(k string, ts any) {
 		if counts[k] == 0 {
 			order = append(order, k)
@@ -136,9 +151,14 @@ func NormalizeCodex(records []*obj) *obj {
 				if kind == "system" {
 					e.Set("label", keepOrUndef(payload, "role"))
 				}
+				if kind == "assistant" {
+					markStart(str(get(payload, "id")), e)
+				}
 				events = append(events, e)
 			case "reasoning":
-				events = append(events, trajectory.NewObject("kind", "thinking", "ts", ts, "text", blockText(firstNonNull(get(payload, "summary"), get(payload, "content")))))
+				e := trajectory.NewObject("kind", "thinking", "ts", ts, "text", blockText(firstNonNull(get(payload, "summary"), get(payload, "content"))))
+				markStart(str(get(payload, "id")), e)
+				events = append(events, e)
 			case "custom_tool_call", "function_call":
 				input := firstNonNull(get(payload, "input"), get(payload, "arguments"))
 				if pt == "function_call" {
@@ -231,7 +251,17 @@ func NormalizeCodex(records []*obj) *obj {
 				// The same duplication, one notice per item, so it is named by
 				// item type: an item type nobody has classified still surfaces
 				// (R37). ContextCompaction repeats the `compacted` record.
-				it := "event_msg:item_completed:" + fallback(str(get(object(get(payload, "item")), "type")), "missing")
+				item := object(get(payload, "item"))
+				it := "event_msg:item_completed:" + fallback(str(get(item, "type")), "missing")
+				if it == "event_msg:item_completed:Reasoning" || it == "event_msg:item_completed:AgentMessage" {
+					if at := iso(get(payload, "started_at_ms")); at != trajectory.Undefined {
+						id := str(get(item, "id"))
+						startedAt[id] = at
+						if e := stepByID[id]; e != nil {
+							e.Set("startTs", at)
+						}
+					}
+				}
 				switch it {
 				case "event_msg:item_completed:Reasoning", "event_msg:item_completed:AgentMessage",
 					"event_msg:item_completed:UserMessage", "event_msg:item_completed:CommandExecution",

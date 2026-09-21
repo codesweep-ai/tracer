@@ -563,6 +563,10 @@
           ],
           "description": "Milliseconds of work this event accounts for, from the end of the previous piece of work to the end of this one. A tool call ends when its result arrives, so the figure covers issuing the call and running it. The model's latency before a reply lands on that reply, and records carrying no work are stepped over. Present only on a thinking step, an assistant message or a tool call, and absent when no earlier work bounds it. Additive and optional: documents written before it omit it."
         },
+        "startTs": {
+          "type": "string",
+          "description": "ISO-8601. When the model began producing this step, where the CLI records it: codex for reasoning items and messages, OpenCode for reasoning and text parts. Claude Code records only when a block finished, so its events omit it. Additive and optional: documents written before it omit it."
+        },
         "tokens": {
           "$ref": "#/$defs/tokens"
         },
@@ -786,6 +790,11 @@
             "null"
           ],
           "description": "Milliseconds of work this event accounts for, from the end of the previous piece of work to the end of this one. A tool call ends when its result arrives, so the figure covers issuing the call and running it. The model's latency before a reply lands on that reply, and records carrying no work are stepped over. Present only on a thinking step, an assistant message or a tool call, and absent when no earlier work bounds it. Additive and optional: documents written before it omit it."
+        },
+        "activeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "How much of workMs the model spent generating this step, from startTs to ts, capped at workMs. The rest of workMs was the wait before the model began. Present only where the event carries startTs. Additive and optional: documents written before it omit it."
         },
         "redacted": {
           "type": "boolean",

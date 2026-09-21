@@ -332,6 +332,15 @@ wall time and its time on the model and on tools. They cover the session and its
 wall time runs on while the session sits open with nothing written. One session reported 18.3 hours
 against 8.9 hours of transcript.*
 
+**R79.** Where a CLI records when the model began a step, the event **MUST** carry it as `startTs`.
+Its strip entry **MUST** then carry the part of `workMs` spent generating, as `activeMs`. *The time R70
+charges a step is the round trip to the model: the wait for it to begin, then its generation. In a
+captured codex trajectory a thinking step carried 48.1 seconds, of which the reasoning ran 0.2.*
+
+Codex records a start for reasoning items and messages, and OpenCode for reasoning and text parts.
+Claude Code records only when a block finished, so its events carry neither field, and its model time
+stays whole. Both fields are additive and optional, so `schemaVersion` is unchanged (R7).
+
 `parse.unreadable` is additive and optional in `schema/trajectory.v1.json`: the current adapters
 always emit it, and documents written before R56 omit it. `schemaVersion` is unchanged, because a
 consumer that ignores the field still renders such a document correctly (R7).
