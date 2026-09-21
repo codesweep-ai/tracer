@@ -1,0 +1,22 @@
+{
+  "id": "TRC-013",
+  "title": "Idle time has no definition, and turn_end means two different things",
+  "type": "defect",
+  "severity": "med",
+  "status": "in-progress",
+  "opened": "2026-09-21",
+  "foundBy": "the user, who asked how the tool should account for time and set the rule that an agent stopping with no tool call is waiting; the checks that followed found the adapters disagreeing",
+  "resolved": null,
+  "stint": "idle-time",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Nothing in the schema or the spec says what idle time is, and no adapter reports it. A reader wanting to know how long an agent sat waiting has to subtract timestamps, and the viewer would have to guess which gaps count.\n\nThe guess is not available either, because `turn_end` does not mean one thing. Claude and codex emit it once to five times per trajectory, at a real boundary. OpenCode emits it for every `step-finish`, which fires after each batch of tool calls. In a captured corpus that is 892 events across twelve trajectories, 31% of every strip, against three real endings per trajectory. Only the step whose reason reads `stop` ends a turn.\n\nTelling them apart today means matching the word `tool-calls` inside the event text. R65 forbids exactly that, and the fixture scrubber rewrites text to prose, so the corpus could not exercise it.\n\nThe cost is not academic. The interval after a real turn ending holds most of the elapsed time. It measured 97.9% in one captured session, and 88% and 55% in aggregate for the two unattended adapters. A tool that cannot name that interval cannot say how long anything took.\n\nA `step-finish` that is not a turn ending is bookkeeping, and it belongs in `meta` with its reason preserved, where the details page still shows what it was.\n\nTo reproduce, normalize an opencode session and count the `turn_end` events against the turns the session actually contains.",
+  "notes": [],
+  "links": [
+    "TRC-012"
+  ]
+}
