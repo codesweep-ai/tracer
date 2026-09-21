@@ -77,6 +77,10 @@ func NormalizeClaude(records []*obj) *obj {
 				"file-history-snapshot", "file-history-delta":
 				// Internal bookkeeping and transient state: no user-facing value.
 				// Named rather than defaulted, so the omission is a decision.
+			case "atis-latch", "agent-color", "relocated":
+				// Session settings restated about once per turn, with no timestamp,
+				// so they mark no moment. The value almost never changes, and the
+				// agent's display colour is the only one that has been seen to.
 			case "":
 				// No `type` at all. This is not an unclassified record type — it
 				// is not a record: a non-object JSON line reads as all-undefined,

@@ -170,3 +170,23 @@ func TestClaudeLastUsageRecordForAMessageWins(t *testing.T) {
 		t.Fatal("the message's second event repeats the tokens")
 	}
 }
+
+// TRC-015. Session settings Claude Code restates with no timestamp are ignored
+// by name, not reported as unrecognized.
+func TestClaudeRestatedSettingsAreIgnored(t *testing.T) {
+	var records []*obj
+	for _, typ := range []string{"atis-latch", "agent-color", "relocated"} {
+		records = append(records, trajectory.NewObject("type", typ, "sessionId", "s"))
+	}
+	doc := NormalizeClaude(records)
+	parse := object(get(doc, "parse"))
+	if got := num(get(parse, "unrecognized")); got != 0 {
+		t.Fatalf("parse.unrecognized = %v, want 0", got)
+	}
+	if got := len(get(doc, "events").([]*obj)); got != 0 {
+		t.Fatalf("events = %d, want 0", got)
+	}
+	if got := len(get(parse, "skippedByType").([]any)); got != 3 {
+		t.Fatalf("skippedByType has %d types, want 3", got)
+	}
+}
