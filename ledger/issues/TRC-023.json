@@ -3,17 +3,20 @@
   "title": "Model time cannot be split into the wait before a step and its generation",
   "type": "improvement",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "user asked whether thinking times of 45 seconds and more were real; the check found most of each was waiting before the model began",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 time accounting",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "7b7d715",
+      "d686e1b"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`go test ./...` passes. Three new tests cover codex in both orders, OpenCode, and the cap that keeps the wait from going negative, and each fails without the change.\n\nThe goldens gained both fields on 55 OpenCode steps and changed nothing else. Across the captured corpora, all 1,824 codex and 747 OpenCode thinking and reply steps now split, and none of 736 Claude Code steps does. The step that prompted it carries 48,143 milliseconds of model time, 211 of them reasoning."
   },
-  "resolution": null,
+  "resolution": "An event now carries `startTs` where the CLI records when the model began it, and its strip entry `activeMs`, the part of its model time spent generating. The codex adapter reads the start from the `item_completed` notice that shares the item's id, in either order. The OpenCode adapter reads the part's start. Claude Code's events carry neither. R79 specifies it.",
   "details": "R70 gives each thinking step, reply and tool call the time from the end of the previous work to its own end. That is the round trip to the model: the wait for it to begin, then its generation. The figure is right, but a reader sees it labelled as thinking.\n\nIn one captured codex trajectory a thinking step carries 48.1 seconds. Codex records that the reasoning itself ran 0.2 seconds, and the 47.9 before it was spent waiting for the model to start. Nine codex steps carry over 40 seconds, and none of them reasoned for more than eight.\n\nTwo adapters can tell the parts apart. Codex's `item_completed` notice gives each reasoning item and message its start and end, and OpenCode gives every part a start time. Claude Code records only when a block finished, so its round trip cannot be split.\n\nAn event should carry when its step began wherever the CLI records it, and the strip should carry how much of the model time was generation.",
   "notes": [],
   "links": [
