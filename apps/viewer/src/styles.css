@@ -254,6 +254,10 @@ button.fork-connector-vertical::after {
 /* ---- event cards -------------------------------------------------------------- */
 .event-card { padding-bottom: var(--space-3); scroll-margin-top: var(--space-4); }
 .event-card-compact { padding-bottom: var(--space-1); scroll-margin-top: var(--space-4); }
+/* A compact card has no header, so its line sits in Card's body, which pads by
+   --space-3 where the header pads by --space-4. The difference keeps its mark in
+   the column every other card's mark forms (TF-35). */
+.event-card-compact .event-card-head { padding-inline-start: var(--space-1); }
 .event-card-head {
   display: flex;
   align-items: center;

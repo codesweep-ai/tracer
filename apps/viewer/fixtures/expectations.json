@@ -2453,6 +2453,17 @@
   }
  },
  {
+  "id": "TF-35",
+  "name": "invariant.cardMarksAligned",
+  "status": "keep",
+  "note": "every rendered card's strip mark, and the label after it, must sit at the same offset from its card, compact redacted cards included, so the marks read as one column while scrolling (TRC-020). Measured after a deep link to the first redacted event, which puts both card forms on screen",
+  "value": {
+   "large-session": [],
+   "codex-multi-agent-run": [],
+   "subagent-run": []
+  }
+ },
+ {
   "id": "TF-34",
   "name": "invariant.canvasPinned",
   "status": "keep",

@@ -64,6 +64,7 @@ export const CHECKS = [
   //    each individually correct, which is why value-at-one-state rows missed
   //    them all. These record the VIOLATIONS, so the expected value is [].
   { id: "TF-33", name: "invariant.stripMatchesData", status: "keep", note: "for each kind chip selected alone: the strip's rendered data-event-count must equal the count of that kind in the source strip data. Catches a strip that filters on anything other than the event's own kind" },
+  { id: "TF-35", name: "invariant.cardMarksAligned", status: "keep", note: "every rendered card's strip mark, and the label after it, must sit at the same offset from its card, compact redacted cards included, so the marks read as one column while scrolling (TRC-020). Measured after a deep link to the first redacted event, which puts both card forms on screen" },
   { id: "TF-34", name: "invariant.canvasPinned", status: "keep", note: "the strip canvas must stay pinned to its scrollport at 0%, 50% and 100% horizontal scroll. The paint already subtracts scrollLeft, so a canvas that scrolls away offsets everything twice and the drawn region collapses" },
 ];
 
@@ -395,6 +396,23 @@ export async function interaction(browser, fixture) {
       return bad;
     }, S);
     out.push(["TF-34", variant, drift]);
+    await close();
+  }
+
+  // TF-35 — card marks form one column.
+  {
+    const { page, close } = await openTrace();
+    const redacted = strip.find((event) => event.redacted);
+    if (redacted) {
+      await page.evaluate((i) => { location.hash = `#ev-${i}`; }, redacted.i);
+      await settle(page, { tracePage: true });
+    }
+    const offsets = await page.evaluate(() => [...document.querySelectorAll('[data-testid="cell-mark"]')].map((mark) => {
+      const card = mark.closest("[data-card-index]").getBoundingClientRect();
+      return { i: Number(mark.closest("[data-card-index]").dataset.cardIndex), mark: Math.round(mark.getBoundingClientRect().left - card.left), label: Math.round(mark.nextElementSibling.getBoundingClientRect().left - card.left) };
+    }));
+    const [first] = offsets;
+    out.push(["TF-35", variant, offsets.filter((o) => Math.abs(o.mark - first.mark) > 1 || Math.abs(o.label - first.label) > 1)]);
     await close();
   }
 

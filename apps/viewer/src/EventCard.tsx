@@ -11,7 +11,7 @@ export function EventCard({ event, query, inputView = "formatted" }: { event: Tr
   // reports it directly (R67). A turn a provider error ended is the case.
   const errored = event.isError === true || event.result?.isError === true;
   const redactedThinking = event.kind === "thinking" && !event.text;
-  if (redactedThinking) return <article id={`ev-${event.i}`} data-card-index={event.i} data-compact="true" className="event-card event-card-compact"><Card variant="tight"><div className="event-card-head"><CellMark kind="thinking" redacted /><span className="text-label-upper">#{event.i} · thinking</span><span className="muted">thinking (redacted at source)</span>{event.tokens && <span className="muted">Tokens · reasoning {event.tokens.reasoning ?? 0}</span>}</div></Card></article>;
+  if (redactedThinking) return <article id={`ev-${event.i}`} data-card-index={event.i} data-compact="true" className="event-card event-card-compact"><Card variant="tight"><div className="event-card-head"><span className="event-card-title"><CellMark kind="thinking" redacted /><span className="text-label-upper">#{event.i} · thinking</span></span><span className="muted">thinking (redacted at source)</span>{event.tokens && <span className="muted">Tokens · reasoning {event.tokens.reasoning ?? 0}</span>}</div></Card></article>;
   return <article id={`ev-${event.i}`} data-card-index={event.i} className="event-card">
     <Card variant={errored ? "danger" : "tight"} header={<span className="event-card-title"><CellMark kind={event.kind} error={errored} /><span className="text-label-upper">#{event.i} · {eventLabel(event.kind)}</span>{errored && <StatusBadge label="error" status="error" />}</span>}>
       <div className="event-card-body">
