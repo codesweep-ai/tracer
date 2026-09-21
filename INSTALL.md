@@ -55,8 +55,8 @@ make install       # -> ~/.local/bin/cs-tracer (override with PREFIX=)
 ```
 
 **`make build` rebuilds the viewer whenever `npm` is on your PATH and a viewer source is newer
-than the committed artifacts.** On that path you also need **Node 22.13 or newer**, and a network
-connection the first time, for `npm ci`. A clean checkout is already up to date, so the Vite
+than the committed artifacts.** On that path you also need **Node 22.13 or newer**, so `node`
+beside `npm`, and a network connection the first time, for `npm ci`. A clean checkout is already up to date, so the Vite
 builds do not run. The Go build then embeds the committed artifacts as they stand, which is what
 a clone with no Node toolchain gets too. Both routes produce the same binary. Editing anything
 under `apps/viewer` puts the viewer back in the build, which

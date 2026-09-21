@@ -172,6 +172,13 @@ jobs:
           cache-dependency-path: |
             apps/viewer/package-lock.json
             fixtures/test/package-lock.json
+      # The installs run through scripts/with-npmrevs.sh, which runs the
+      # cs-npmrevs go.mod pins, so this job needs a Go toolchain even though
+      # what it builds is the viewer.
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
       - run: make viewer-build
       - name: the committed artifacts match the sources
         run: git diff --exit-code -- internal/cli/viewer
