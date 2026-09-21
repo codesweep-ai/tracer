@@ -16,7 +16,7 @@ func TestSanitizeTokenValues(t *testing.T) {
 			e.Set("tokens", tokens)
 		}
 		if cost != nil {
-			e.Set("cost", cost)
+			e.Set("reportedCostUSD", cost)
 		}
 		return e
 	}
@@ -36,7 +36,7 @@ func TestSanitizeTokenValues(t *testing.T) {
 		if v, _ := tokens.Get("output"); str(anyString(v)) != "5" {
 			t.Fatalf("valid output = %v", v)
 		}
-		if _, ok := e.Get("cost"); ok {
+		if _, ok := e.Get("reportedCostUSD"); ok {
 			t.Fatal("negative cost kept")
 		}
 	})

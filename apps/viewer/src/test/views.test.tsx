@@ -27,7 +27,7 @@ function contrastRatio(a: string, b: string): number {
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
 
-const summary: TraceSummary = { schemaVersion: 2, meta: { source: "claude-code", sessionId: "demo", parentSessionId: null, title: "Demo", model: "test", durationMs: 1000 }, totals: { events: 2, toolCalls: 0, toolErrors: 0, input: 10, output: 5, cacheRead: 0, cacheWrite: 0 }, parse: { adapter: "demo", adapterVersion: "1", skippedByType: [], unrecognized: 0, warnings: [] }, links: [], chunkSize: 1000, chunkCount: 1, strip: [{ i: 0, kind: "user", error: false }, { i: 1, kind: "assistant", error: false }] };
+const summary: TraceSummary = { schemaVersion: 3, meta: { source: "claude-code", sessionId: "demo", parentSessionId: null, title: "Demo", model: "test", durationMs: 1000 }, totals: { events: 2, toolCalls: 0, toolErrors: 0, input: 10, output: 5, cacheRead: 0, cacheWrite: 0 }, parse: { adapter: "demo", adapterVersion: "1", skippedByType: [], unrecognized: 0, warnings: [] }, links: [], chunkSize: 1000, chunkCount: 1, strip: [{ i: 0, kind: "user", error: false }, { i: 1, kind: "assistant", error: false }] };
 const trace: LoadedTrace = { id: "demo", path: "demo", summary };
 /** Inject a DOM data block exactly as the export assembler writes it: JSON with
  * every "<" escaped as < so a "</script>" in trace text cannot terminate the
@@ -72,7 +72,7 @@ describe("P0 views", () => {
   it("nests children when a root omits parentSessionId", () => { const rootMeta: Partial<typeof summary.meta> = { ...summary.meta }; delete rootMeta.parentSessionId; const rootWithoutParent: LoadedTrace = { ...trace, summary: { ...summary, meta: rootMeta as typeof summary.meta } }; const children: LoadedTrace[] = ["child-a", "child-b"].map((id) => ({ id, path: id, summary: { ...summary, meta: { ...summary.meta, sessionId: id, parentSessionId: "demo", title: id } } })); render(<IndexPage traces={[...children, rootWithoutParent]} links={[]} />); const lanes = screen.getAllByTestId("lane"); expect(lanes[0]?.style.marginLeft).toMatch(/^calc\(0 \*/); expect(lanes[1]?.style.marginLeft).toMatch(/^calc\(1 \*/); expect(lanes[2]?.style.marginLeft).toMatch(/^calc\(1 \*/); expect(screen.getAllByLabelText("Proven parent-child connector")).toHaveLength(2); });
   it("renders proven and hinted connectors distinctly", () => { const child: LoadedTrace = { id: "child", path: "child", summary: { ...summary, meta: { ...summary.meta, sessionId: "child", parentSessionId: "demo", title: "Child" } } }; render(<IndexPage traces={[trace, child]} links={[{ fromSessionId: "demo", toSessionId: "child", kind: "campaign" }]} />); expect(screen.getByTestId("index-page")).toBeInTheDocument(); expect(screen.getAllByTestId("lane")).toHaveLength(2); expect(screen.getByLabelText("Proven parent-child connector")).toHaveClass("border-solid"); expect(screen.getByLabelText("Dashed link hint")).toHaveClass("border-dashed"); expect(screen.getAllByTestId("strip")).toHaveLength(2); });
   it("marks the rollup estimated exactly when a known component is estimated", () => {
-    const costTrace = (id: string, cost?: number, costEstimated?: boolean): LoadedTrace => ({ id, path: id, summary: { ...summary, meta: { ...summary.meta, sessionId: id, title: id }, totals: { ...summary.totals, cost, costEstimated } } });
+    const costTrace = (id: string, cost?: number, estimated?: boolean): LoadedTrace => ({ id, path: id, summary: { ...summary, meta: { ...summary.meta, sessionId: id, title: id }, totals: { ...summary.totals, cost: cost == null ? {} : estimated ? { estimated: { usd: cost } } : { reported: [{ usd: cost, covers: "trajectory" }] } } } });
     const real = costTrace("real", 10, false); const estimated = costTrace("estimated", 5, true); const unpriced = costTrace("unpriced");
     const { rerender } = render(<IndexPage traces={[real, estimated, unpriced]} links={[]} />);
     const rollup = () => screen.getByRole("heading", { name: "Trajectory overview" }).nextElementSibling;
@@ -87,13 +87,13 @@ describe("P0 views", () => {
     expect(rollup()).not.toHaveTextContent("$"); expect(rollup()).not.toHaveTextContent("unpriced");
   });
   it("drops the cost separator with the cost on the trajectory meta line", () => {
-    // the shared summary has no cost; the separator must leave with money()'s
-    // empty string instead of printing "… 1.0 s · · demo".
+    // the shared summary has no cost; the separator must leave with the empty
+    // label instead of printing "… 1.0 s · · demo".
     const { rerender } = render(<TrajectoryPage trace={trace} />);
     const metaLine = () => screen.getByRole("heading", { name: "Demo" }).parentElement?.querySelector("p")?.textContent ?? "";
     expect(metaLine()).not.toMatch(/·\s*·/);
     expect(metaLine()).not.toContain("$");
-    const priced: LoadedTrace = { ...trace, summary: { ...summary, totals: { ...summary.totals, cost: 2.3456, costEstimated: true } } };
+    const priced: LoadedTrace = { ...trace, summary: { ...summary, totals: { ...summary.totals, cost: { estimated: { usd: 2.3456 } } } } };
     rerender(<TrajectoryPage trace={priced} />);
     expect(metaLine()).toContain("· ~$2.3456 est.");
     expect(metaLine()).not.toMatch(/·\s*·/);

@@ -84,7 +84,7 @@ func ShardBytes(doc *obj) (map[string][]byte, error) {
 		strip = append(strip, stripEvent(e))
 	}
 	count := (len(events) + ChunkSize - 1) / ChunkSize
-	summary := trajectory.NewObject("schemaVersion", 2, "meta", get(doc, "meta"), "totals", get(doc, "totals"), "parse", get(doc, "parse"), "chunkSize", ChunkSize, "chunkCount", count, "strip", strip)
+	summary := trajectory.NewObject("schemaVersion", SchemaVersion, "meta", get(doc, "meta"), "totals", get(doc, "totals"), "parse", get(doc, "parse"), "chunkSize", ChunkSize, "chunkCount", count, "strip", strip)
 	out := map[string][]byte{}
 	b, e := compact(summary)
 	if e != nil {

@@ -183,4 +183,4 @@ func inject(shell string, blocks []byte) []byte {
 // implements. It must match schema/trajectory.v1.json's const and
 // apps/viewer/src/data.ts's SUPPORTED_SCHEMA_VERSION; a mismatch makes the
 // viewer refuse documents this tool just produced.
-const schemaVersion = 2
+const schemaVersion = 3

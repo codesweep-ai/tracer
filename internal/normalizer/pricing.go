@@ -134,18 +134,15 @@ func selectRates(entry *obj, date string, hasDate bool) *obj {
 	return nil
 }
 
-// estimateCost mutates doc in place: doc.totals.cost and doc.totals.costEstimated
-// are appended.
+// estimateCost sets doc.totals.cost.estimated: tracer's own figure from its
+// price table, made the same way for every adapter whatever the CLI reported,
+// so estimates compare like with like (§9). It never replaces a reported figure,
+// and a reported figure never replaces it (R73).
 func estimateCost(doc *obj, pricing *obj) {
 	meta := object(get(doc, "meta"))
 	totals := object(get(doc, "totals"))
-	if meta == nil || totals == nil {
-		return
-	}
-	if str(get(meta, "source")) == "opencode" {
-		return
-	}
-	if c, ok := totals.Get("cost"); ok && isJSNumber(c) {
+	cost := object(get(totals, "cost"))
+	if meta == nil || cost == nil {
 		return
 	}
 	entry := selectEntry(object(get(pricing, "models")), str(get(meta, "model")), get(meta, "provider"))
@@ -232,8 +229,7 @@ func estimateCost(doc *obj, pricing *obj) {
 		}
 		micros *= multiplier
 	}
-	totals.Set("cost", micros/1_000_000)
-	totals.Set("costEstimated", true)
+	cost.Set("estimated", trajectory.NewObject("usd", micros/1_000_000))
 }
 
 func estimateDefault(doc *obj) {

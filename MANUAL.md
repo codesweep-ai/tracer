@@ -160,8 +160,9 @@ paths `cs-tracer` owns, so a mistyped destination cannot destroy unrelated files
 
 ## Reading the exported page
 
-The index lists each trajectory with its title, its model, its token count, its duration and a cost
-estimate. Beside each one sits an activity strip, and clicking a cell jumps to that event.
+The index lists each trajectory with its title, its model, its token count, its duration and its
+cost. The cost is the figure the CLI reported where it reported one, and otherwise tracer's estimate,
+marked `est.`. A figure marked `incl. sub-agents` covers the session and every sub-agent it ran. Beside each one sits an activity strip, and clicking a cell jumps to that event.
 
 - **Deep links.** `#ev-1050` jumps to an event, and works in both export modes.
 - **Filter.** The search box matches event text and tool names, scanning across chunk boundaries.

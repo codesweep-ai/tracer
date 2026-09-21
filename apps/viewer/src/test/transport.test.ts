@@ -9,7 +9,7 @@ function block(id: string, value: unknown) {
   node.textContent = JSON.stringify(value).replaceAll("<", "\\u003c");
   document.body.append(node);
 }
-const summaryFor = (id: string, chunkCount = 1): TraceSummary => ({ schemaVersion: 2, meta: { source: "claude-code", sessionId: id, parentSessionId: null }, totals: { events: 1, toolCalls: 0, toolErrors: 0, input: 1, output: 1, cacheRead: 0, cacheWrite: 0 }, parse: { adapter: "demo", adapterVersion: "1", skippedByType: [], unrecognized: 0, warnings: [] }, chunkSize: 1000, chunkCount, strip: [{ i: 0, kind: "user", error: false }] });
+const summaryFor = (id: string, chunkCount = 1): TraceSummary => ({ schemaVersion: 3, meta: { source: "claude-code", sessionId: id, parentSessionId: null }, totals: { events: 1, toolCalls: 0, toolErrors: 0, input: 1, output: 1, cacheRead: 0, cacheWrite: 0 }, parse: { adapter: "demo", adapterVersion: "1", skippedByType: [], unrecognized: 0, warnings: [] }, chunkSize: 1000, chunkCount, strip: [{ i: 0, kind: "user", error: false }] });
 
 beforeEach(() => {
   document.querySelectorAll('script[type="application/json"]').forEach((node) => node.remove());
@@ -20,7 +20,7 @@ beforeEach(() => {
 describe("DOM data-block transport", () => {
   it("loads the index, summaries and chunks without fetch, at chunk granularity", async () => {
     const fetchSpy = vi.fn(); globalThis.fetch = fetchSpy;
-    block("index", { schemaVersion: 2, generatedAt: "", trajectories: [{ id: "a", path: "a" }, { id: "b", path: "b" }] });
+    block("index", { schemaVersion: 3, generatedAt: "", trajectories: [{ id: "a", path: "a" }, { id: "b", path: "b" }] });
     block("s-a", { ...summaryFor("a", 2), meta: { ...summaryFor("a").meta, title: "Alpha" } });
     block("s-b", summaryFor("b"));
     block("c-a-000", { chunk: 0, events: [{ i: 0, kind: "user", text: "first" }] });
@@ -39,7 +39,7 @@ describe("DOM data-block transport", () => {
     // mirrors fixtures/claude/v2.1/hazard-text — including a LITERAL \<
     // sequence in the source text, which naive un-escaping would corrupt.
     const hazard = "close </script> here; line-sep\u2028 para-sep\u2029; astral \uD83D\uDE00; rtl \u202E; literal-lt \\u003c and <b>";
-    block("index", { schemaVersion: 2, generatedAt: "", trajectories: [{ id: "haz", path: "haz" }] });
+    block("index", { schemaVersion: 3, generatedAt: "", trajectories: [{ id: "haz", path: "haz" }] });
     block("s-haz", summaryFor("haz"));
     block("c-haz-000", { chunk: 0, events: [{ i: 0, kind: "user", text: hazard }] });
     const { loadChunk } = await import("../data");
@@ -48,7 +48,7 @@ describe("DOM data-block transport", () => {
 
   it("resolves chunks by trace id even when the index path diverges (safeId)", async () => {
     // safeId maps every char outside [A-Za-z0-9._-] to "-"; blocks stay id-keyed.
-    block("index", { schemaVersion: 2, generatedAt: "", trajectories: [{ id: "a/b:c", path: "a-b-c" }] });
+    block("index", { schemaVersion: 3, generatedAt: "", trajectories: [{ id: "a/b:c", path: "a-b-c" }] });
     block("s-a/b:c", summaryFor("a/b:c"));
     block("c-a/b:c-000", { chunk: 0, events: [{ i: 0, kind: "user", text: "found" }] });
     const { loadIndex, loadChunk } = await import("../data");
@@ -58,7 +58,7 @@ describe("DOM data-block transport", () => {
   });
 
   it("scanChunkText matches text and tool names case-insensitively, like the fetch version", async () => {
-    block("index", { schemaVersion: 2, generatedAt: "", trajectories: [{ id: "s", path: "s" }] });
+    block("index", { schemaVersion: 3, generatedAt: "", trajectories: [{ id: "s", path: "s" }] });
     block("s-s", summaryFor("s"));
     block("c-s-000", { chunk: 0, events: [
       { i: 0, kind: "user", text: "Deploy the APP" },
@@ -73,13 +73,13 @@ describe("DOM data-block transport", () => {
   });
 
   it("throws a named error for a missing block, and a parse error for a corrupt one", async () => {
-    block("index", { schemaVersion: 2, generatedAt: "", trajectories: [{ id: "x", path: "x" }] });
+    block("index", { schemaVersion: 3, generatedAt: "", trajectories: [{ id: "x", path: "x" }] });
     const { loadIndex } = await import("../data");
     await expect(loadIndex()).rejects.toThrow("Could not load data block #s-x");
 
     document.querySelectorAll('script[type="application/json"]').forEach((node) => node.remove());
     vi.resetModules();
-    block("index", { schemaVersion: 2, generatedAt: "", trajectories: [] });
+    block("index", { schemaVersion: 3, generatedAt: "", trajectories: [] });
     const corrupt = document.createElement("script");
     corrupt.type = "application/json"; corrupt.id = "c-x-000"; corrupt.textContent = "{not json";
     document.body.append(corrupt);
@@ -91,7 +91,7 @@ describe("DOM data-block transport", () => {
     block("mode", { mode: "split" });
     history.replaceState(null, "", "/out/traces/a.html");
     // reduced index: {id, safeId, title} per trajectory, no path, no other summaries
-    block("index", { schemaVersion: 2, generatedAt: "", trajectories: [{ id: "a", safeId: "a", title: "Mine" }, { id: "b", safeId: "b", title: "Other" }] });
+    block("index", { schemaVersion: 3, generatedAt: "", trajectories: [{ id: "a", safeId: "a", title: "Mine" }, { id: "b", safeId: "b", title: "Other" }] });
     block("s-a", summaryFor("a"));
     const { loadIndex } = await import("../data");
     const { traces } = await loadIndex();
@@ -106,6 +106,6 @@ describe("DOM data-block transport", () => {
     block("index", { schemaVersion: 99, generatedAt: "", trajectories: [{ id: "a", path: "a" }] });
     block("s-a", summaryFor("a"));
     const { loadIndex } = await import("../data");
-    await expect(loadIndex()).rejects.toThrow(/schema version 99.*implements version 2/s);
+    await expect(loadIndex()).rejects.toThrow(/schema version 99.*implements version 3/s);
   });
 });

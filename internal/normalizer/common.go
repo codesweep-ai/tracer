@@ -2,6 +2,7 @@ package normalizer
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -39,9 +40,9 @@ func sanitizeTokenValues(events []*obj) int {
 				event.Delete("tokens")
 			}
 		}
-		if c, ok := event.Get("cost"); ok && c != nil {
+		if c, ok := event.Get("reportedCostUSD"); ok && c != nil {
 			if n, err := parseJSONNumber(c); err != nil || n < 0 {
-				event.Delete("cost")
+				event.Delete("reportedCostUSD")
 				malformed++
 			}
 		}
@@ -417,10 +418,67 @@ func markWork(events []*obj) {
 	}
 }
 
+// SchemaVersion is the version every document declares (R6). Version 3 made
+// totals.cost an object of figures kept apart by provenance (§9).
+const SchemaVersion = 3
+
+// reportedCost is one figure a CLI stated for a span of work (R71, R72):
+// "trajectory" for this trajectory alone, "tree" for it and its sub-agents.
+func reportedCost(usd any, covers string) *obj {
+	return trajectory.NewObject("usd", usd, "covers", covers)
+}
+
+// costTotals builds totals.cost from what the adapter found (§9). A figure the
+// CLI stated is kept as reported, the per-event costs are summed beside it, and
+// tracer's estimate is added later by estimateCost. None stands in for another
+// (R73), so every member is absent when its source is.
+//
+// The per-event sum carries how many events were priced out of how many
+// carried token usage. A sum over some of them is not a total, and a reader has
+// to be able to tell.
+//
+// Only when every such event was priced do the sum and a trajectory figure cover
+// the same work, and then a disagreement is warned about rather than settled
+// (R74). OpenCode states both, and its session figure used to replace the sum.
+func costTotals(events []*obj, reported []any, parse *obj) *obj {
+	cost := trajectory.NewObject()
+	if len(reported) > 0 {
+		cost.Set("reported", reported)
+	}
+	var sum any = 0
+	priced, of := 0, 0
+	for _, e := range events {
+		if get(e, "tokens") != nil {
+			of++
+		}
+		if c, ok := e.Get("reportedCostUSD"); ok && isJSNumber(c) {
+			sum = addNumbers(sum, c)
+			priced++
+		}
+	}
+	if priced == 0 {
+		return cost
+	}
+	cost.Set("reportedByEvents", trajectory.NewObject("usd", sum, "events", priced, "of", of))
+	if priced < of {
+		return cost
+	}
+	for _, r := range reported {
+		figure := object(r)
+		if str(get(figure, "covers")) == "trajectory" && math.Abs(num(get(figure, "usd"))-num(sum)) >= 0.005 {
+			warnings := get(parse, "warnings").([]any)
+			parse.Set("warnings", append(warnings, trajectory.NewObject("message", fmt.Sprintf(
+				"the reported cost of $%s disagrees with its events' costs, which sum to $%s; both are kept",
+				jsNumberString(get(figure, "usd")), jsNumberString(sum)))))
+		}
+	}
+	return cost
+}
+
 // finalize completes a document (codex and opencode): index events,
-// sanitize hostile scalars, roll totals, stamp meta. sessionCost is the
-// opencode info.cost override (nil = absent).
-func finalize(meta *obj, events []*obj, parse *obj, sessionCost any) *obj {
+// sanitize hostile scalars, roll totals, stamp meta. reported holds the cost
+// figures the CLI stated for the session (§9), empty when it stated none.
+func finalize(meta *obj, events []*obj, parse *obj, reported []any) *obj {
 	for i, e := range events {
 		e.Set("i", i)
 	}
@@ -443,13 +501,8 @@ func finalize(meta *obj, events []*obj, parse *obj, sessionCost any) *obj {
 				tot.Set(f, addNumbers(get(tot, f), get(tok, f)))
 			}
 		}
-		if c, ok := e.Get("cost"); ok && isJSNumber(c) {
-			tot.Set("cost", addNumbers(get(tot, "cost"), c))
-		}
 	}
-	if isJSNumber(sessionCost) {
-		tot.Set("cost", sessionCost)
-	}
+	tot.Set("cost", costTotals(events, reported, parse))
 	var firstTS, lastTS string
 	for _, e := range events {
 		if ts := str(get(e, "ts")); ts != "" {
@@ -462,7 +515,7 @@ func finalize(meta *obj, events []*obj, parse *obj, sessionCost any) *obj {
 	meta.Set("startedAt", undef(firstTS))
 	meta.Set("endedAt", undef(lastTS))
 	meta.Set("durationMs", millis(firstTS, lastTS))
-	return trajectory.NewObject("schemaVersion", 2, "meta", meta, "totals", tot, "events", events, "parse", parse)
+	return trajectory.NewObject("schemaVersion", SchemaVersion, "meta", meta, "totals", tot, "events", events, "parse", parse)
 }
 
 // addNumbers is JS `a ?? 0) + (b ?? 0` for values already sanitized to

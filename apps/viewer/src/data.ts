@@ -33,7 +33,7 @@ let loadedIndex: Promise<{ index: TraceIndex; traces: LoadedTrace[] }> | undefin
 // version is REFUSED, not rendered: silently ignoring the mismatch produces
 // blank panels and missing fields that look like data problems, and sends
 // whoever debugs it to the wrong place entirely.
-export const SUPPORTED_SCHEMA_VERSION = 2;
+export const SUPPORTED_SCHEMA_VERSION = 3;
 
 async function fetchIndex(): Promise<{ index: TraceIndex; traces: LoadedTrace[] }> {
   const index = readBlock<TraceIndex>("index");

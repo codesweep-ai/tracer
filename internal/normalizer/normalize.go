@@ -30,6 +30,7 @@ func NormalizeBytes(data []byte) (*obj, error) {
 			return nil, e
 		}
 		doc := NormalizeOpenCode(object(v))
+		estimateDefault(doc)
 		deriveAutoTitle(doc)
 		return doc, nil
 	}

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { Legend, SearchInput, Skeleton, StatusBadge } from "@codesweep-ai/ui";
 import { loadChunk, scanChunkText } from "./data";
 import { indexLink } from "./routes";
-import { compact, duration, money } from "./format";
+import { compact, duration } from "./format";
+import { traceCostLabel } from "./cost";
 import { EventCard } from "./EventCard";
 import { EventStrip, LEGEND_CHIPS, RedactedKey } from "./EventStrip";
 import { ErrorSwatch } from "./ErrorSwatch";
@@ -126,8 +127,8 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
     return () => { cancelled = true; };
   }, [activeQuery, trace.path, trace.summary.chunkCount, trace.summary.strip]);
 
-  // money() is empty for an unpriced lane; its separator must go with it.
-  const costLabel = money(trace.summary.totals.cost, trace.summary.totals.costEstimated);
+  // The label is empty for an unpriced lane; its separator must go with it.
+  const costLabel = traceCostLabel(trace.summary.totals);
   const filtering = kinds.size < EVENT_KINDS.length || errorsOnly;
   return <section data-testid="trajectory-page" className="trace-page">
     <div className="trace-header"><div><a href={indexLink()} className="back-link">← All trajectories</a><h1 className="trace-title">{trace.summary.meta.title ?? (trace.summary.meta.autoTitle ? <span className="auto-title" title="Derived from the session's first user message">{trace.summary.meta.autoTitle}</span> : trace.id)}</h1><p className="trace-meta">{trace.summary.meta.model ?? "Unknown model"} · {compact(trace.summary.totals.input + trace.summary.totals.output)} tokens · {duration(trace.summary.meta.durationMs)}{costLabel && <> · {costLabel}</>}{(trace.summary.meta.title ?? trace.summary.meta.autoTitle) && <> · <span className="trace-id">{trace.id}</span></>}</p></div>{(trace.summary.parse.unreadable ?? 0) > 0 && <StatusBadge label={`${trace.summary.parse.unreadable} unreadable`} status="error" />}{trace.summary.parse.unrecognized > 0 && <StatusBadge label={`${trace.summary.parse.unrecognized} unrecognized`} status="warning" />}</div>

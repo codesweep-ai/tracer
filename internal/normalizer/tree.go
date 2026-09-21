@@ -201,7 +201,7 @@ func writeIndex(out string, docs []*obj, links []any, result *TreeResult) ([]byt
 		e := entries[id]
 		list = append(list, trajectory.NewObject("id", e.id, "path", e.path))
 	}
-	o := trajectory.NewObject("schemaVersion", 2, "trajectories", list)
+	o := trajectory.NewObject("schemaVersion", SchemaVersion, "trajectories", list)
 	rootLinks := links
 	if len(rootLinks) == 0 {
 		rootLinks = previousLinks(out)

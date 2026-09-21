@@ -20,12 +20,18 @@ func pricingDoc(t *testing.T, model string, totals map[string]any, metaExtra map
 	for k, v := range totals {
 		tot.Set(k, v)
 	}
+	tot.Set("cost", trajectory.NewObject())
 	return trajectory.NewObject("schemaVersion", 1, "meta", meta, "totals", tot, "events", []*obj{}, "parse", trajectory.NewObject())
 }
 
+// costOf reads tracer's estimate, the only figure estimateCost writes (§9).
 func costOf(t *testing.T, doc *obj) (any, bool) {
 	t.Helper()
-	return object(get(doc, "totals")).Get("cost")
+	estimated := object(get(object(get(object(get(doc, "totals")), "cost")), "estimated"))
+	if estimated == nil {
+		return nil, false
+	}
+	return estimated.Get("usd")
 }
 
 func TestEstimateCostBareEntry(t *testing.T) {
@@ -39,10 +45,6 @@ func TestEstimateCostBareEntry(t *testing.T) {
 	// 1e6*2 + 1e5*10 = 3e6 micros = 3.0 dollars.
 	if cost != float64(3) && cost != 3 {
 		t.Fatalf("cost = %#v, want 3", cost)
-	}
-	ce, _ := object(get(doc, "totals")).Get("costEstimated")
-	if ce != true {
-		t.Fatalf("costEstimated = %#v", ce)
 	}
 }
 
@@ -178,25 +180,28 @@ func TestEstimateCostRefusals(t *testing.T) {
 			t.Fatalf("cost=%#v ok=%v, want 0.00032 (40*2 + 60*4 micros)", cost, ok)
 		}
 	})
-	t.Run("opencode never estimates", func(t *testing.T) {
+	// §9: the estimate is made the same way whatever the CLI, and sits beside
+	// a reported figure without touching it (R73).
+	t.Run("every adapter is estimated alike", func(t *testing.T) {
 		p := mustDecode(t, with(``, ``))
 		doc := pricingDoc(t, "m", map[string]any{"input": 1000000}, nil)
 		object(get(doc, "meta")).Set("source", "opencode")
 		estimateCost(doc, p)
-		if _, ok := costOf(t, doc); ok {
-			t.Fatal("opencode documents carry authored costs — never estimate")
+		if _, ok := costOf(t, doc); !ok {
+			t.Fatal("an opencode document was not estimated")
 		}
 	})
-	t.Run("existing cost is left alone", func(t *testing.T) {
+	t.Run("a reported figure is left alone", func(t *testing.T) {
 		p := mustDecode(t, with(``, ``))
-		doc := pricingDoc(t, "m", map[string]any{"input": 1000000, "cost": 42}, nil)
+		doc := pricingDoc(t, "m", map[string]any{"input": 1000000}, nil)
+		cost := object(get(object(get(doc, "totals")), "cost"))
+		cost.Set("reported", []any{reportedCost(42, "trajectory")})
 		estimateCost(doc, p)
-		cost, ok := costOf(t, doc)
-		if !ok || num(cost) != 42 {
-			t.Fatalf("cost=%#v ok=%v, want authored 42 untouched", cost, ok)
+		if got := num(get(object(array(get(cost, "reported"))[0]), "usd")); got != 42 {
+			t.Fatalf("reported usd = %v, want 42 untouched", got)
 		}
-		if ce, _ := object(get(doc, "totals")).Get("costEstimated"); ce != nil {
-			t.Fatal("costEstimated must not be set on an authored cost")
+		if _, ok := costOf(t, doc); !ok {
+			t.Fatal("no estimate beside the reported figure")
 		}
 	})
 }
@@ -208,7 +213,7 @@ func TestDefaultPricingEmbeddedTable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cost, ok := object(get(doc, "totals")).Get("cost")
+	cost, ok := costOf(t, doc)
 	if !ok {
 		t.Fatal("expected an estimate for the simple fixture's model")
 	}

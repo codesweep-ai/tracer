@@ -2,6 +2,7 @@ package normalizer
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/codesweep-ai/tracer/internal/trajectory"
 )
@@ -29,6 +30,9 @@ func NormalizeClaude(records []*obj) *obj {
 	// Records that ran a local command, such as /context, by uuid. What Claude
 	// Code writes back names one as its parent.
 	localCommands := map[string]bool{}
+	// Claude Code rewrites its running cost as the session goes, so the last copy
+	// is the whole figure.
+	var costState *obj
 	unknown := func(kind string, ts, lane any) {
 		if warnings[kind] == 0 {
 			warningOrder = append(warningOrder, kind)
@@ -80,6 +84,8 @@ func NormalizeClaude(records []*obj) *obj {
 				"file-history-snapshot", "file-history-delta":
 				// Internal bookkeeping and transient state: no user-facing value.
 				// Named rather than defaulted, so the omission is a decision.
+			case "cost-state":
+				costState = r
 			case "atis-latch", "agent-color", "relocated":
 				// Session settings restated about once per turn, with no timestamp,
 				// so they mark no moment. The value almost never changes, and the
@@ -321,7 +327,43 @@ func NormalizeClaude(records []*obj) *obj {
 		ws = append(ws, trajectory.NewObject("message", "cache-write TTL split is incomplete: some usage records carry cache_creation and others do not, so totals.cacheWrite5m/cacheWrite1h are omitted rather than published as a partial sum"))
 	}
 	parse := trajectory.NewObject("adapter", "claude-code", "adapterVersion", "1.0.0", "cliVersionRange", "2.1.x", "skippedByType", skipped.list(), "unrecognized", sumWarnings(warnings), "unreadable", damage.total, "warnings", ws)
-	return trajectory.NewObject("schemaVersion", 2, "meta", meta, "totals", tot, "events", events, "parse", parse)
+	tot.Set("cost", costTotals(events, claudeReportedCost(costState), parse))
+	return trajectory.NewObject("schemaVersion", SchemaVersion, "meta", meta, "totals", tot, "events", events, "parse", parse)
+}
+
+// claudeReportedCost reads Claude Code's own cost figure (§9). It covers the
+// session and every sub-agent it ran, plus calls never written to a transcript:
+// its per-model rows carry the models only the sub-agents used. Stored as the
+// session's own cost it would count the sub-agents twice (R72).
+//
+// Claude Code prices it from its own table, so it is a reported figure and not a
+// bill. `hasUnknownModelCost` says some usage could not be priced, and the figure
+// then leaves it out.
+func claudeReportedCost(r *obj) []any {
+	if r == nil || !isJSNumber(get(r, "totalCostUSD")) {
+		return nil
+	}
+	figure := reportedCost(get(r, "totalCostUSD"), "tree")
+	if usage := object(get(r, "modelUsage")); usage != nil {
+		var models []string
+		for _, m := range usage.Members() {
+			models = append(models, m.Key)
+		}
+		sort.Strings(models)
+		var byModel []any
+		for _, m := range models {
+			if c := get(object(get(usage, m)), "costUSD"); isJSNumber(c) {
+				byModel = append(byModel, trajectory.NewObject("model", m, "usd", c))
+			}
+		}
+		if byModel != nil {
+			figure.Set("byModel", byModel)
+		}
+	}
+	if truthy(get(r, "hasUnknownModelCost")) {
+		figure.Set("incomplete", true)
+	}
+	return []any{figure}
 }
 
 // claudeTotals is the claude adapter's own totals(): unlike the shared finalize

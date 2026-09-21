@@ -62,9 +62,9 @@ func NormalizeOpenCode(doc *obj) *obj {
 					"cacheRead", nullishOr(get(cache, "read"), 0),
 					"cacheWrite", nullishOr(get(cache, "write"), 0),
 				))
-				// JS: if (typeof cost === "number") event.cost = cost.
+				// The cost OpenCode stated for this step (§9).
 				if isJSNumber(cost) {
-					e.Set("cost", cost)
+					e.Set("reportedCostUSD", cost)
 				}
 				return
 			}
@@ -185,19 +185,13 @@ func NormalizeOpenCode(doc *obj) *obj {
 		w := get(parse, "warnings").([]any)
 		parse.Set("warnings", append(w, trajectory.NewObject("message", fmt.Sprintf("messages disagree on providerID (%s); meta.provider left absent", joinComma(p)))))
 	}
-	// The reference passes info.cost through only when it is a number, then
-	// marks costEstimated=false whenever totals.cost ended up a number — which
-	// includes sessions whose event costs summed without any info.cost.
-	var sessionCost any
+	// The session's own figure covers this session alone: a parent's equals its
+	// own steps, and each sub-agent session states its own (R72).
+	var reported []any
 	if c := get(info, "cost"); isJSNumber(c) {
-		sessionCost = c
+		reported = append(reported, reportedCost(c, "trajectory"))
 	}
-	out := finalize(meta, events, parse, sessionCost)
-	t := object(get(out, "totals"))
-	if isJSNumber(get(t, "cost")) {
-		t.Set("costEstimated", false)
-	}
-	return out
+	return finalize(meta, events, parse, reported)
 }
 
 // firstISO is `iso(a) ?? iso(b) ?? ...` over candidate time values: the first

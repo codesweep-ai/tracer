@@ -14,7 +14,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": 2,
+      "const": 3,
       "description": "Schema version. A consumer MUST refuse a document whose version it does not implement."
     },
     "meta": {
@@ -166,12 +166,6 @@
             "null"
           ]
         },
-        "cost": {
-          "type": [
-            "number",
-            "null"
-          ]
-        },
         "mode": {
           "type": [
             "string",
@@ -244,16 +238,108 @@
           "description": "Reasoning/thinking tokens AS METERED BY THE PROVIDER — semantics are per-source. codex/OpenAI: real count; the thinking EVENTS are content-empty (encrypted upstream). opencode/Fireworks: count when the host meters it, else 0 even when visible thinking text exists. claude/Anthropic: always 0 — thinking tokens are folded into output and no split exists. Therefore reasoning=0 does NOT mean no thinking, and empty thinking events do NOT mean no thinking."
         },
         "cost": {
-          "type": [
-            "number",
-            "null"
-          ]
+          "$ref": "#/$defs/cost"
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Every cost figure for a trajectory, kept apart by where it came from (SPEC section 9). Each member is absent when its source is, and none stands in for another. A consumer shows a reported figure where one covers the trajectory, and otherwise the estimate, marked as one.",
+      "properties": {
+        "reported": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reportedCost"
+          },
+          "description": "Each figure the CLI stated for a span of work, in the order found."
         },
-        "costEstimated": {
-          "type": [
-            "boolean",
-            "null"
-          ]
+        "reportedByEvents": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "usd",
+            "events",
+            "of"
+          ],
+          "description": "The sum of the events' reportedCostUSD. It covers the whole trajectory only when events equals of.",
+          "properties": {
+            "usd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "events": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Events carrying reportedCostUSD."
+            },
+            "of": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Events carrying token usage, which a complete sum would all have priced."
+            }
+          }
+        },
+        "estimated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "usd"
+          ],
+          "description": "tracer's own figure from its price table and the trajectory's token totals, made the same way for every CLI. Absent when the model or its rates are not in the table.",
+          "properties": {
+            "usd": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "reportedCost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "usd",
+        "covers"
+      ],
+      "description": "A cost the CLI itself stated for a span of work. It is the CLI's own figure from its own price table, not a bill.",
+      "properties": {
+        "usd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "covers": {
+          "enum": [
+            "trajectory",
+            "tree"
+          ],
+          "description": "trajectory: this trajectory alone. tree: this trajectory and every sub-agent under it, which a total counts once for the whole tree."
+        },
+        "byModel": {
+          "type": "array",
+          "description": "The same figure broken down by model, sorted by model name, when the CLI breaks it down.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "model",
+              "usd"
+            ],
+            "properties": {
+              "model": {
+                "type": "string"
+              },
+              "usd": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "incomplete": {
+          "const": true,
+          "description": "The CLI says some usage could not be priced and is left out of usd."
         }
       }
     },
@@ -405,11 +491,10 @@
         "tokens": {
           "$ref": "#/$defs/tokens"
         },
-        "cost": {
-          "type": [
-            "number",
-            "null"
-          ]
+        "reportedCostUSD": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The cost in US dollars the CLI itself stated for this step, when it states one. A figure the CLI computed from its own price table, not a bill."
         },
         "durationMs": {
           "type": [
@@ -658,7 +743,7 @@
       ],
       "properties": {
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "description": "Schema version. A consumer MUST refuse a document whose version it does not implement."
         },
         "meta": {
@@ -724,7 +809,7 @@
       ],
       "properties": {
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "description": "Schema version. A consumer MUST refuse a document whose version it does not implement."
         },
         "generatedAt": {

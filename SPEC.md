@@ -65,7 +65,8 @@ time. The artifacts are committed, so a clone with no Node toolchain still build
 
 ## 1. Schema version
 
-**R6.** Every index and every summary **MUST** declare `schemaVersion`. The current value is **2**.
+**R6.** Every index and every summary **MUST** declare `schemaVersion`. The current value is **3**.
+Version 3 made `totals.cost` an object of figures kept apart by where they came from (§9).
 
 **R7.** A consumer **MUST** refuse a document whose version it does not implement, rather than
 rendering what it can. *A partial render produces blank panels and missing fields that read as data
@@ -347,7 +348,7 @@ intersection.
 
 **R51.** A total omitting a trajectory **MUST** report how many it omitted, and an estimated cost
 **MUST** be marked as an estimate. *A total that silently drops an unpriced lane presents an unknown
-as a known.*
+as a known.* Which figure a trajectory shows, and how a total counts a tree, is set out in §9.
 
 **R52.** Content redacted at its source **MUST** be marked as redacted rather than rendered blank.
 
@@ -363,6 +364,43 @@ themes work with no change to the app.*
 
 The unit gates under `apps/viewer/src/test` check these, and they need npm. A clone with no Node
 toolchain skips them, so run `make check` with npm installed before you push a viewer change.
+
+## 9. Cost
+
+A trajectory's cost has up to three sources. The CLI may state a figure for a span of work, and it
+may state costs on single events. Tracer adds its own estimate from its price table. They live apart in
+`totals.cost`, as `reported`, `reportedByEvents` and `estimated`. An adapter fills what its CLI
+provides, and the estimate is made the same way for every adapter.
+
+A reported figure is the CLI's own calculation from its own price table, not a bill. It still beats
+the estimate, because the CLI knows what it called and at what rate.
+
+**R71.** A cost a CLI reports **MUST** be kept, named as reported, and never merged with tracer's
+estimate. *One field used to hold a reported figure for one adapter and an estimate for the others,
+and the index added the two into one total.*
+
+**R72.** A reported cost **MUST** say what it covers: the trajectory alone, or the trajectory and
+its sub-agents. *Claude Code states one figure for a session and every sub-agent it ran, plus calls
+it never writes to a transcript. OpenCode states one per session. Read as a session's own cost,
+Claude Code's figure counted its sub-agents twice in any total.*
+
+**R73.** A cost field **MUST NOT** stand in for another. An adapter leaves a field absent when its
+CLI provides no source for it. *A figure of one kind in a field of another kind is how the two got
+mixed.*
+
+**R74.** A trajectory's reported figure and the sum of its events' costs may cover the same work and
+differ by half a cent or more. Both **MUST** then be kept, and a `parse.warnings` entry raised. *The
+two cover the same work only when every event carrying token usage carries a cost. OpenCode states
+both, and its session figure used to replace the sum without a check.*
+
+**R75.** A trajectory **MUST** show a reported figure covering it alone where there is one. Failing
+that, it shows the sum of its events' costs where every event is priced, and failing that the
+estimate, marked as one. A figure covering its sub-agents too is shown beside it and labelled so.
+
+**R76.** A total **MUST** count each tree of trajectories once. A trajectory whose reported figure
+covers its sub-agents stands for all of them, and otherwise it adds its own figure and each child is
+taken the same way. *A figure covering a tree, added to the figures of its members, counts the
+members twice.*
 
 ## Implementation
 

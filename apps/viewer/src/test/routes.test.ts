@@ -9,7 +9,7 @@ function block(id: string, value: unknown) {
   node.textContent = JSON.stringify(value).replaceAll("<", "\\u003c");
   document.body.append(node);
 }
-const trace = (id: string): LoadedTrace => ({ id, path: id, summary: { schemaVersion: 2, meta: { source: "t", sessionId: id, parentSessionId: null }, totals: { events: 0, toolCalls: 0, toolErrors: 0, input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, parse: { adapter: "t", adapterVersion: "1", skippedByType: [], unrecognized: 0, warnings: [] }, chunkSize: 1000, chunkCount: 1, strip: [] } });
+const trace = (id: string): LoadedTrace => ({ id, path: id, summary: { schemaVersion: 3, meta: { source: "t", sessionId: id, parentSessionId: null }, totals: { events: 0, toolCalls: 0, toolErrors: 0, input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, parse: { adapter: "t", adapterVersion: "1", skippedByType: [], unrecognized: 0, warnings: [] }, chunkSize: 1000, chunkCount: 1, strip: [] } });
 
 beforeEach(() => {
   document.querySelectorAll('script[type="application/json"]').forEach((node) => node.remove());
@@ -45,11 +45,11 @@ describe("linkTo", () => {
   it("honours the exporter's id→filename mapping before falling back to the safeId transform", () => {
     block("mode", { mode: "split" });
     // reduced index on a trace page: {id, safeId, title} — the collision-disambiguated name wins
-    block("index", { schemaVersion: 2, generatedAt: "", trajectories: [{ id: "a/b", safeId: "a-b-2" }] });
+    block("index", { schemaVersion: 3, generatedAt: "", trajectories: [{ id: "a/b", safeId: "a-b-2" }] });
     expect(traceFilename("a/b")).toBe("a-b-2.html");
     expect(linkTo("a/b")).toBe("traces/a-b-2.html");
     // full index on the root page: path already IS the safeId
-    document.getElementById("index")!.textContent = JSON.stringify({ schemaVersion: 2, generatedAt: "", trajectories: [{ id: "a/b", path: "a-b" }] });
+    document.getElementById("index")!.textContent = JSON.stringify({ schemaVersion: 3, generatedAt: "", trajectories: [{ id: "a/b", path: "a-b" }] });
     expect(traceFilename("a/b")).toBe("a-b.html");
     // no index entry at all: fall back to the safeId transform
     document.getElementById("index")!.remove();
