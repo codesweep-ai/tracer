@@ -3,17 +3,21 @@
   "title": "A trajectory's duration counts the time nobody was working, overstating one session forty-fold",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, measuring elapsed time against work in captured sessions while planning the strip",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 time accounting",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "c28a788",
+      "332d521",
+      "7f3cb80"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled. Three new normalizer tests cover the three figures, the span reaching a late tool result, and Claude Code's durations kept as reported. Two viewer tests cover the time label.\n\nThe goldens were checked summary by summary. Each old `meta.durationMs` reappears as `totals.time.elapsedMs`, except where the span moved to a tool result or an earlier stamp. Idle plus work fits inside elapsed time in all 27.\n\nThe session that exposed it now reads 4.4 hours working and 211.4 hours open. Across all four captured corpora, no trajectory holds more idle and work than elapsed time."
   },
-  "resolution": null,
+  "resolution": "`meta.durationMs` gives way to `totals.time`, holding `elapsedMs`, `idleMs` and `workMs`. Idle is the sum of R68's intervals and work the union of R70's. Claude Code's own durations sit beside them as `reported`, covering the tree. R77 and R78 specify it.\n\nThe span now runs from the earliest timestamp a trajectory records to the latest, a tool result's included. Measured to the last event, one fixture held more idle and work than time. The viewer shows working time first, then the time open.",
   "details": "Every adapter sets `meta.durationMs` to the span from the first timestamp to the last, and the index prints it as the trajectory's duration. One captured Claude Code session reports 211 hours. It sat open over a weekend: 207 of those hours are idle, and its events account for 4.4 hours of work.\n\nAcross thirty attended trajectories, 332 hours of reported duration hold 309 hours of idle. A reader comparing two sessions by that figure compares how long each was left open.\n\nThe normalizer already measures both parts, since R68 stamps idle and R70 stamps work on single events. Nothing adds them up, so elapsed time is the only figure a trajectory reports.\n\nClaude Code's `cost-state` record also carries its own durations: the process's wall time, and the time spent waiting on the model and running tools. Those cover the session and its sub-agents, and follow the process rather than the transcript. One session reports 18.3 hours of wall time against 8.9 hours of transcript. They belong beside tracer's figures as reported ones, under the rule §9 sets for cost.\n\nTo reproduce, normalize a session left open between turns and compare `meta.durationMs` with the sum of its idle intervals.",
   "notes": [],
   "links": [

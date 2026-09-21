@@ -3,17 +3,20 @@
   "title": "OpenCode's step finish is stamped when the step started, so idle overlaps the step's work",
   "type": "defect",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, checking that idle and work fit inside elapsed time for every captured trajectory under R77",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 time accounting",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "5a972d4",
+      "d7aad65"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled. A new test asserts that a step finish carries its message's completion time, and that idle and work fit inside elapsed time. It fails without the fix. The scrubbed fixtures carry no literal `stop`, so the test is what covers the idle branch.\n\nThe goldens moved 51 step-finish timestamps, and the end of five trajectories, with no other difference. Across the 24 captured OpenCode trajectories, none now holds more idle and work than elapsed time, where nine did."
   },
-  "resolution": null,
+  "resolution": "A step finish now carries its message's `time.completed`, and falls back to the creation time only when a message has none. The fix is in the OpenCode adapter alone.",
   "details": "An OpenCode `step-finish` part carries no time of its own, so the adapter stamps it with its message's creation time. That is when the step started, not when it finished.\n\nThe step whose reason is `stop` ends a turn (R69), and R68 starts the idle interval at it. So idle begins before the step's own reply was written, and overlaps the work R70 charges to that reply. In nine of 24 captured OpenCode trajectories, idle and work together exceed the trajectory's elapsed time, by 35 seconds in all.\n\nThe message records `time.completed`, the moment the step finished. A step finish should carry that, and fall back to the creation time only when a message has no completion time.\n\nTo reproduce, normalize a captured OpenCode session and compare `totals.time` idle plus work against elapsed.",
   "notes": [],
   "links": [
