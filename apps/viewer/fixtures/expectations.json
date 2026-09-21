@@ -1970,11 +1970,11 @@
   "note": "cards in the DOM at load, 1280×900 (virtualized: a handful, not the event count)",
   "value": {
    "large-session/dark": {
-    "cards": 8,
+    "cards": 7,
     "loading": 0
    },
    "large-session/light": {
-    "cards": 8,
+    "cards": 7,
     "loading": 0
    },
    "codex-multi-agent-run/dark": {
@@ -1992,6 +1992,62 @@
    "subagent-run/light": {
     "cards": 9,
     "loading": 0
+   }
+  },
+  "approval": {
+   "id": "TRC-024",
+   "reason": "The strip is 80 pixels tall rather than 74, with a 40-pixel work row over a 16-pixel wait row, so one fewer card fits the first screen of the large session.",
+   "previous": {
+    "large-session/dark": {
+     "cards": 8,
+     "loading": 0
+    },
+    "large-session/light": {
+     "cards": 8,
+     "loading": 0
+    },
+    "codex-multi-agent-run/dark": {
+     "cards": 6,
+     "loading": 0
+    },
+    "codex-multi-agent-run/light": {
+     "cards": 6,
+     "loading": 0
+    },
+    "subagent-run/dark": {
+     "cards": 9,
+     "loading": 0
+    },
+    "subagent-run/light": {
+     "cards": 9,
+     "loading": 0
+    }
+   },
+   "measured": {
+    "large-session/dark": {
+     "cards": 7,
+     "loading": 0
+    },
+    "large-session/light": {
+     "cards": 7,
+     "loading": 0
+    },
+    "codex-multi-agent-run/dark": {
+     "cards": 6,
+     "loading": 0
+    },
+    "codex-multi-agent-run/light": {
+     "cards": 6,
+     "loading": 0
+    },
+    "subagent-run/dark": {
+     "cards": 9,
+     "loading": 0
+    },
+    "subagent-run/light": {
+     "cards": 9,
+     "loading": 0
+    }
    }
   }
  },
@@ -2258,7 +2314,7 @@
   "note": "click cell 10 of the strip (x = 10.5 × data-cell-width): trace page hash; index lane → navigates to ?trace=…#ev-10",
   "value": {
    "large-session": {
-    "cellWidth": 10,
+    "cellWidth": 13,
     "trace": {
      "selectedHash": "#ev-10",
      "cardPresent": true
@@ -2268,7 +2324,7 @@
     }
    },
    "codex-multi-agent-run": {
-    "cellWidth": 10,
+    "cellWidth": 13,
     "trace": {
      "selectedHash": "#ev-10",
      "cardPresent": true
@@ -2278,13 +2334,81 @@
     }
    },
    "subagent-run": {
-    "cellWidth": 10,
+    "cellWidth": 13,
     "trace": {
      "selectedHash": "#ev-10",
      "cardPresent": true
     },
     "index": {
      "urlSuffix": "?trace=4f00d255-46e9-4373-7232-09f72fda039e#ev-10"
+    }
+   }
+  },
+  "approval": {
+   "id": "TRC-024",
+   "reason": "The strip's cell pitch is 13 pixels, so a bar is 12 wide. A click at the tenth cell still selects event 10.",
+   "previous": {
+    "large-session": {
+     "cellWidth": 10,
+     "trace": {
+      "selectedHash": "#ev-10",
+      "cardPresent": true
+     },
+     "index": {
+      "urlSuffix": "?trace=e44bcdfa-eaf1-cf69-51de-20d7e925af16#ev-10"
+     }
+    },
+    "codex-multi-agent-run": {
+     "cellWidth": 10,
+     "trace": {
+      "selectedHash": "#ev-10",
+      "cardPresent": true
+     },
+     "index": {
+      "urlSuffix": "?trace=77f0e564-f5d7-a937-aa50-ed64762175c7#ev-10"
+     }
+    },
+    "subagent-run": {
+     "cellWidth": 10,
+     "trace": {
+      "selectedHash": "#ev-10",
+      "cardPresent": true
+     },
+     "index": {
+      "urlSuffix": "?trace=4f00d255-46e9-4373-7232-09f72fda039e#ev-10"
+     }
+    }
+   },
+   "measured": {
+    "large-session": {
+     "cellWidth": 13,
+     "trace": {
+      "selectedHash": "#ev-10",
+      "cardPresent": true
+     },
+     "index": {
+      "urlSuffix": "?trace=e44bcdfa-eaf1-cf69-51de-20d7e925af16#ev-10"
+     }
+    },
+    "codex-multi-agent-run": {
+     "cellWidth": 13,
+     "trace": {
+      "selectedHash": "#ev-10",
+      "cardPresent": true
+     },
+     "index": {
+      "urlSuffix": "?trace=77f0e564-f5d7-a937-aa50-ed64762175c7#ev-10"
+     }
+    },
+    "subagent-run": {
+     "cellWidth": 13,
+     "trace": {
+      "selectedHash": "#ev-10",
+      "cardPresent": true
+     },
+     "index": {
+      "urlSuffix": "?trace=4f00d255-46e9-4373-7232-09f72fda039e#ev-10"
+     }
     }
    }
   }
@@ -2325,7 +2449,7 @@
      "backHref": "?",
      "navHrefOnTrace": "?",
      "stripEvents": 1366,
-     "cards": 8
+     "cards": 7
     },
     "split": {
      "laneHref": "traces/e44bcdfa-eaf1-cf69-51de-20d7e925af16.html",
@@ -2333,7 +2457,7 @@
      "backHref": "../index.html",
      "navHrefOnTrace": "../index.html",
      "stripEvents": 1366,
-     "cards": 8
+     "cards": 7
     }
    },
    "codex-multi-agent-run": {
@@ -2370,6 +2494,122 @@
      "navHrefOnTrace": "../index.html",
      "stripEvents": 25,
      "cards": 9
+    }
+   }
+  },
+  "approval": {
+   "id": "TRC-024",
+   "reason": "The strip is 80 pixels tall rather than 74, with a 40-pixel work row over a 16-pixel wait row, so one fewer card fits the first screen of the large session.",
+   "previous": {
+    "large-session": {
+     "single": {
+      "laneHref": "?trace=e44bcdfa-eaf1-cf69-51de-20d7e925af16",
+      "navHrefOnIndex": "?",
+      "backHref": "?",
+      "navHrefOnTrace": "?",
+      "stripEvents": 1366,
+      "cards": 8
+     },
+     "split": {
+      "laneHref": "traces/e44bcdfa-eaf1-cf69-51de-20d7e925af16.html",
+      "navHrefOnIndex": "index.html",
+      "backHref": "../index.html",
+      "navHrefOnTrace": "../index.html",
+      "stripEvents": 1366,
+      "cards": 8
+     }
+    },
+    "codex-multi-agent-run": {
+     "single": {
+      "laneHref": "?trace=77f0e564-f5d7-a937-aa50-ed64762175c7",
+      "navHrefOnIndex": "?",
+      "backHref": "?",
+      "navHrefOnTrace": "?",
+      "stripEvents": 29,
+      "cards": 6
+     },
+     "split": {
+      "laneHref": "traces/77f0e564-f5d7-a937-aa50-ed64762175c7.html",
+      "navHrefOnIndex": "index.html",
+      "backHref": "../index.html",
+      "navHrefOnTrace": "../index.html",
+      "stripEvents": 29,
+      "cards": 6
+     }
+    },
+    "subagent-run": {
+     "single": {
+      "laneHref": "?trace=4f00d255-46e9-4373-7232-09f72fda039e",
+      "navHrefOnIndex": "?",
+      "backHref": "?",
+      "navHrefOnTrace": "?",
+      "stripEvents": 25,
+      "cards": 9
+     },
+     "split": {
+      "laneHref": "traces/4f00d255-46e9-4373-7232-09f72fda039e.html",
+      "navHrefOnIndex": "index.html",
+      "backHref": "../index.html",
+      "navHrefOnTrace": "../index.html",
+      "stripEvents": 25,
+      "cards": 9
+     }
+    }
+   },
+   "measured": {
+    "large-session": {
+     "single": {
+      "laneHref": "?trace=e44bcdfa-eaf1-cf69-51de-20d7e925af16",
+      "navHrefOnIndex": "?",
+      "backHref": "?",
+      "navHrefOnTrace": "?",
+      "stripEvents": 1366,
+      "cards": 7
+     },
+     "split": {
+      "laneHref": "traces/e44bcdfa-eaf1-cf69-51de-20d7e925af16.html",
+      "navHrefOnIndex": "index.html",
+      "backHref": "../index.html",
+      "navHrefOnTrace": "../index.html",
+      "stripEvents": 1366,
+      "cards": 7
+     }
+    },
+    "codex-multi-agent-run": {
+     "single": {
+      "laneHref": "?trace=77f0e564-f5d7-a937-aa50-ed64762175c7",
+      "navHrefOnIndex": "?",
+      "backHref": "?",
+      "navHrefOnTrace": "?",
+      "stripEvents": 29,
+      "cards": 6
+     },
+     "split": {
+      "laneHref": "traces/77f0e564-f5d7-a937-aa50-ed64762175c7.html",
+      "navHrefOnIndex": "index.html",
+      "backHref": "../index.html",
+      "navHrefOnTrace": "../index.html",
+      "stripEvents": 29,
+      "cards": 6
+     }
+    },
+    "subagent-run": {
+     "single": {
+      "laneHref": "?trace=4f00d255-46e9-4373-7232-09f72fda039e",
+      "navHrefOnIndex": "?",
+      "backHref": "?",
+      "navHrefOnTrace": "?",
+      "stripEvents": 25,
+      "cards": 9
+     },
+     "split": {
+      "laneHref": "traces/4f00d255-46e9-4373-7232-09f72fda039e.html",
+      "navHrefOnIndex": "index.html",
+      "backHref": "../index.html",
+      "navHrefOnTrace": "../index.html",
+      "stripEvents": 25,
+      "cards": 9
+     }
     }
    }
   }
