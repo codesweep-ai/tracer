@@ -1,0 +1,23 @@
+{
+  "id": "TRC-016",
+  "title": "A Claude Code local command ends the idle interval, though the agent never resumed",
+  "type": "defect",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "session agent, looking for the elapsed time that R70 still left on no event in an attended Claude Code session",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": "2026-09-21 time accounting",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "R68 ends the idle interval at a user instruction. The Claude Code adapter reads every `user` record as one, including the ones Claude Code writes itself to echo a local command. Running `/context` or `/cd` while the agent waits writes such a record, and the agent does not reply to it.\n\nSo the wait stops at the command, and the rest of it, up to the next real instruction, is neither idle nor work. In one attended session two such commands left 20.5 hours of 332 on no event. A reader sees a trajectory that was busy while nobody was there.\n\nThe echo carries `isMeta` and names the `local_command` record as its parent. Other records carrying `isMeta` do start work, such as a sub-agent's hand-back or a background-task notice, so the flag alone does not separate them.\n\nTo reproduce, normalize a Claude Code session in which `/context` ran between turns, and compare the turn end's `idleMs` with the gap to the next real instruction.",
+  "notes": [],
+  "links": [
+    "TRC-014",
+    "TRC-015"
+  ]
+}
