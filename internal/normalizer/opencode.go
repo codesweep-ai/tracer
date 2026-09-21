@@ -151,7 +151,12 @@ func NormalizeOpenCode(doc *obj) *obj {
 				if reason == "stop" {
 					kind = "turn_end"
 				}
-				events = append(events, trajectory.NewObject("kind", kind, "ts", ts, "text", "step finish — "+reason))
+				// The part carries no time, and the message's creation time is
+				// when the step STARTED. Stamped with it, the idle a stop begins
+				// overlapped the step's own reply (TRC-019). The message's
+				// completion is when the step finished.
+				finished := firstISO(get(mit, "completed"), ts)
+				events = append(events, trajectory.NewObject("kind", kind, "ts", finished, "text", "step finish — "+reason))
 			case "compaction":
 				events = append(events, trajectory.NewObject("kind", "meta", "ts", ts, "text", "compaction ("+jsStringOr(get(p, "reason"), "?")+")"))
 			case "step-start":

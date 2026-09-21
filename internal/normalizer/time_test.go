@@ -74,3 +74,30 @@ func TestSpanReachesALateToolResult(t *testing.T) {
 		t.Fatalf("span = %s .. %s, want the earliest event to the tool's result", first, last)
 	}
 }
+
+// TRC-019. An OpenCode step finish takes its message's completion time, not its
+// creation time, so the idle a stop begins cannot overlap the step's own reply.
+func TestOpenCodeStepFinishIsStampedWhenTheStepFinished(t *testing.T) {
+	doc, err := NormalizeBytes([]byte(`{"info":{"id":"s1"},"messages":[
+		{"info":{"role":"user","time":{"created":1767225600000}},"parts":[{"type":"text","text":"go"}]},
+		{"info":{"role":"assistant","time":{"created":1767225601000,"completed":1767225660000}},"parts":[
+			{"type":"text","text":"done","time":{"start":1767225650000}},
+			{"type":"step-finish","reason":"stop"}]},
+		{"info":{"role":"user","time":{"created":1767229200000}},"parts":[{"type":"text","text":"again"}]}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var turn *obj
+	for _, e := range get(doc, "events").([]*obj) {
+		if str(get(e, "kind")) == "turn_end" {
+			turn = e
+		}
+	}
+	if got := str(get(turn, "ts")); got != "2026-01-01T00:01:00.000Z" {
+		t.Fatalf("turn end ts = %s, want the message's completion", got)
+	}
+	tm := object(get(object(get(doc, "totals")), "time"))
+	if idle, work, elapsed := num(get(tm, "idleMs")), num(get(tm, "workMs")), num(get(tm, "elapsedMs")); idle+work > elapsed {
+		t.Fatalf("idle %v + work %v exceeds elapsed %v", idle, work, elapsed)
+	}
+}
