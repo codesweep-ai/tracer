@@ -7,7 +7,7 @@
   "opened": "2026-09-21",
   "foundBy": "the user, who asked whether calls rejected for rate limits would show in the strip; the check that followed found the dropped field",
   "resolved": "2026-09-21",
-  "stint": "codex-turn-errors",
+  "stint": "2026-09-21 time accounting",
   "evidence": {
     "commits": [
       "0e9883c"

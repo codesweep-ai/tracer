@@ -7,7 +7,7 @@
   "opened": "2026-09-21",
   "foundBy": "session agent, auditing R68 against real output after the user asked whether anything needed redoing",
   "resolved": "2026-09-21",
-  "stint": "idle-time",
+  "stint": "2026-09-21 time accounting",
   "evidence": {
     "commits": [
       "66bd3b5",

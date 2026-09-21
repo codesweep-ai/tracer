@@ -7,7 +7,7 @@
   "opened": "2026-09-21",
   "foundBy": "the user, who asked how the tool should account for time and set the rule that an agent stopping with no tool call is waiting; the checks that followed found the adapters disagreeing",
   "resolved": "2026-09-21",
-  "stint": "idle-time",
+  "stint": "2026-09-21 time accounting",
   "evidence": {
     "commits": [
       "7114fc0",
