@@ -80,7 +80,7 @@ pixels-per-event as `data-cell-width` (the click check computes x from it), and
 the strip's accessible name ends in `N events`. If a replacement component
 exposes these differently, map them in `selectors.mjs`.
 
-## What is measured (TF-01 … TF-32)
+## What is measured (TF-01 … TF-35)
 
 Structure is read on every fixture × both themes (values keyed
 `<fixture>/<theme>`); interactions and keyboard on the dark theme (keyed
@@ -120,6 +120,9 @@ Structure is read on every fixture × both themes (values keyed
 | TF-30 | `errors.page` | page errors + console errors over the run |
 | TF-31 | `search.highlight` | **must-change**: search hits wrapped in `<mark>` |
 | TF-32 | `nav.targetInView` | **must-change**: after a deep link or strip click the selected card is on screen and the hash still names it |
+| TF-33 | `invariant.stripMatchesData` | for each kind chip alone, the strip's rendered count equals that kind's count in the data; records violations |
+| TF-34 | `invariant.canvasPinned` | the strip canvas stays pinned to its scrollport at 0%, 50% and 100% scroll; records violations |
+| TF-35 | `invariant.cardMarksAligned` | every rendered card's strip mark, and its label, sit at one offset from the card, compact redacted cards included; records violations |
 
 Notes on the measurements:
 
