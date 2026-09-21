@@ -70,6 +70,11 @@ canvas { image-rendering: pixelated; }
   white-space: nowrap;
 }
 .lane-id { font-family: var(--font-family-mono); }
+/* Model names keep their end: the distinguishing part comes last, so the model
+   cuts from the left while the token count before it never shrinks. */
+.lane-meta-model { display: flex; }
+.lane-tokens { flex: none; }
+.lane-model { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; }
 .lane-badges { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
 
 /* The nesting/fork connectors and link hints stay tracer's (review §2.3). The

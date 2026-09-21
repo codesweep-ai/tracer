@@ -3,10 +3,6 @@
   "updated": "2026-09-21",
   "items": [
     {
-      "id": "TRC-025",
-      "why": "The one loose end a reader sees on every index."
-    },
-    {
       "id": "TRC-026",
       "why": "A consumer's --split export is unusable under a directory named traces."
     },

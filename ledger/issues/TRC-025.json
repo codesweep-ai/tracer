@@ -3,11 +3,11 @@
   "title": "The index lane's meta line cuts off the cost now that the time label is longer",
   "type": "defect",
   "severity": "low",
-  "status": "open",
+  "status": "in-progress",
   "foundBy": "session agent, reviewing the rendered index with the user after the time label changed",
   "opened": "2026-09-21",
   "resolved": null,
-  "stint": null,
+  "stint": "2026-09-21 strip changes",
   "evidence": {
     "commits": [],
     "integrated": [],
@@ -15,7 +15,12 @@
   },
   "resolution": null,
   "details": "Each lane on the index shows one meta line: model, tokens, time and cost. That label now names both working and open hours, such as `2.6 h working · 31.5 h open`. The line overflows its column and ends in an ellipsis, so the cost, which comes last, is the part a reader loses.\n\nTo reproduce, export any attended Claude Code session with `--split` and open the index at a normal window width.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-21",
+      "text": "Every lane overflows, not only attended ones: 94 of 94 across the four corpora, by up to 317 px in a 320 px column. No single line can hold the label, so the fix splits it into three rows: model and tokens, then time, then cost. The index also omitted the separator between time and cost."
+    }
+  ],
   "links": [
     "TRC-018",
     "TRC-017"
