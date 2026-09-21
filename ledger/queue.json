@@ -3,10 +3,6 @@
   "updated": "2026-09-21",
   "items": [
     {
-      "id": "TRC-027",
-      "why": "A turn that died on the provider still reads as a Claude Code reply."
-    },
-    {
       "id": "TRC-028",
       "why": "Attended tool bars may show a person deciding, not a tool running."
     },

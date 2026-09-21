@@ -225,3 +225,42 @@ func TestClaudeLocalCommandEchoDoesNotEndIdle(t *testing.T) {
 		t.Fatalf("idleMs = %v, want fifty minutes — a hand-back does end the wait", got)
 	}
 }
+
+// Claude Code writes a `<synthetic>` reply itself when the API call fails, and
+// flags it isApiErrorMessage. The shapes are those of real records: a login that
+// expired mid-session, after a session that opened on "No response requested."
+func TestClaudeAPIErrorReplyIsAnError(t *testing.T) {
+	reply := func(uuid, model, text string, kv ...any) *obj {
+		o := trajectory.NewObject("uuid", uuid, "sessionId", "s", "type", "assistant", "timestamp", "2026-01-01T10:00:00.000Z",
+			"message", trajectory.NewObject("id", uuid, "model", model, "content", []any{trajectory.NewObject("type", "text", "text", text)}))
+		for i := 0; i < len(kv); i += 2 {
+			o.Set(kv[i].(string), kv[i+1])
+		}
+		return o
+	}
+	doc := NormalizeClaude([]*obj{
+		reply("a", "<synthetic>", "No response requested."),
+		reply("b", "claude-opus-5", "Working on it."),
+		reply("c", "<synthetic>", "Login expired · Please run /login", "error", "authentication_failed", "isApiErrorMessage", true),
+	})
+	if got := str(get(object(get(doc, "meta")), "model")); got != "claude-opus-5" {
+		t.Fatalf("meta.model = %q, want the first real model", got)
+	}
+	events := get(doc, "events").([]*obj)
+	if truthy(get(events[0], "isError")) {
+		t.Fatal("a synthetic reply that is not an API error is marked as one")
+	}
+	failed := events[2]
+	if !truthy(get(failed, "isError")) || str(get(failed, "label")) != "authentication_failed" {
+		t.Fatalf("API error reply: isError %v, label %q", get(failed, "isError"), str(get(failed, "label")))
+	}
+	if str(get(failed, "text")) != "Login expired · Please run /login" || !truthy(get(failed, "synthetic")) {
+		t.Fatal("API error reply lost its text or its synthetic mark")
+	}
+
+	// A session of nothing but synthetic replies names no model at all.
+	alone := NormalizeClaude([]*obj{reply("a", "<synthetic>", "No response requested.")})
+	if model, ok := object(get(alone, "meta")).Get("model"); ok && !nullish(model) {
+		t.Fatalf("meta.model = %v, want absent", model)
+	}
+}

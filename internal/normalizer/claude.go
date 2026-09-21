@@ -171,7 +171,17 @@ func NormalizeClaude(records []*obj) *obj {
 			}
 		} else if typ == "assistant" {
 			m := object(get(r, "message"))
-			setDefaultKey(meta, "model", m, "model")
+			// `<synthetic>` names Claude Code itself, not a model. A session that
+			// opened on one reported it as the session's model (TRC-027).
+			synthetic := str(get(m, "model")) == "<synthetic>"
+			if !synthetic {
+				setDefaultKey(meta, "model", m, "model")
+			}
+			// A reply Claude Code wrote because the API call failed. Unmarked, a
+			// turn that died on the provider read as an answer (R67). `error` is
+			// the machine-readable reason, such as rate_limit, and labels the
+			// event; the text is Claude Code's own sentence for the reader.
+			apiError := truthy(get(r, "isApiErrorMessage"))
 			var token *obj
 			usage := object(get(m, "usage"))
 			id := str(get(m, "id"))
@@ -219,8 +229,14 @@ func NormalizeClaude(records []*obj) *obj {
 				// Claude Code writes some replies itself, without calling a model:
 				// "No response requested." after a local command, or an API error.
 				// The time before one is not the model's work (R70).
-				if str(get(m, "model")) == "<synthetic>" {
+				if synthetic {
 					base.Set("synthetic", true)
+				}
+				if apiError {
+					base.Set("isError", true)
+					if reason := str(get(r, "error")); reason != "" {
+						base.Set("label", reason)
+					}
 				}
 				if token != nil {
 					base.Set("tokens", token)
