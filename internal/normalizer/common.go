@@ -475,6 +475,32 @@ func costTotals(events []*obj, reported []any, parse *obj) *obj {
 	return cost
 }
 
+// span returns the earliest and the latest timestamp a trajectory records, a tool
+// result's included (R77). The last event in the stream is not the last moment:
+// a tool call's result can land after every later event's own timestamp, and
+// OpenCode stamps a step's finish with the time the step started. Measured to
+// the last event instead, a trajectory held more idle and work than time.
+func span(events []*obj) (first, last string) {
+	var lo, hi time.Time
+	see := func(v any) {
+		at, ok := parseTS(v)
+		if !ok {
+			return
+		}
+		if first == "" || at.Before(lo) {
+			first, lo = str(v), at
+		}
+		if last == "" || at.After(hi) {
+			last, hi = str(v), at
+		}
+	}
+	for _, e := range events {
+		see(get(e, "ts"))
+		see(get(object(get(e, "result")), "ts"))
+	}
+	return first, last
+}
+
 // timeTotals builds totals.time (R77): how long the trajectory was open, how
 // much of that the agent sat idle, and how much its events account for as work.
 // The three are kept apart because the first says how long a session was left
@@ -564,15 +590,7 @@ func finalize(meta *obj, events []*obj, parse *obj, reported []any) *obj {
 		}
 	}
 	tot.Set("cost", costTotals(events, reported, parse))
-	var firstTS, lastTS string
-	for _, e := range events {
-		if ts := str(get(e, "ts")); ts != "" {
-			if firstTS == "" {
-				firstTS = ts
-			}
-			lastTS = ts
-		}
-	}
+	firstTS, lastTS := span(events)
 	meta.Set("startedAt", undef(firstTS))
 	meta.Set("endedAt", undef(lastTS))
 	tot.Set("time", timeTotals(events, firstTS, lastTS, nil))

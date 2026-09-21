@@ -314,8 +314,9 @@ calling a model carries `synthetic` and no `workMs`, and the interval runs past 
 running at once overlap, so each is measured from its own timestamp, and the work after them from
 the latest result. Both fields are additive and optional, so `schemaVersion` is unchanged (R7).
 
-**R77.** A trajectory **MUST** report three separate figures: elapsed time from its first timestamp
-to its last, idle time, and the work its events account for. Idle is the sum of R68's intervals, and work
+**R77.** A trajectory **MUST** report three separate figures: elapsed time, idle time, and the work
+its events account for. Elapsed time runs from the earliest timestamp the trajectory records to the
+latest, a tool result's included, since a result can land after every later event. Idle is the sum of R68's intervals, and work
 is the union of R70's, so tool calls running at once count once. Any remainder belongs to neither,
 and stays visible as the difference.
 

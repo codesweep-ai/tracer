@@ -291,15 +291,7 @@ func NormalizeClaude(records []*obj) *obj {
 	}
 	markIdle(events)
 	markWork(events)
-	var firstTS, lastTS string
-	for _, e := range events {
-		if ts := str(get(e, "ts")); ts != "" {
-			if firstTS == "" {
-				firstTS = ts
-			}
-			lastTS = ts
-		}
-	}
+	firstTS, lastTS := span(events)
 	meta.Set("startedAt", undef(firstTS))
 	meta.Set("endedAt", undef(lastTS))
 

@@ -156,14 +156,14 @@
             "string",
             "null"
           ],
-          "description": "ISO-8601"
+          "description": "ISO-8601. The earliest timestamp the trajectory records."
         },
         "endedAt": {
           "type": [
             "string",
             "null"
           ],
-          "description": "ISO-8601"
+          "description": "ISO-8601. The latest timestamp the trajectory records, a tool result's included."
         },
         "mode": {
           "type": [
@@ -360,7 +360,7 @@
             "null"
           ],
           "minimum": 0,
-          "description": "From the first timestamped event to the last. How long the trajectory was open, not how long anything took. Absent when fewer than two events carry a timestamp."
+          "description": "From the earliest timestamp the trajectory records to the latest, a tool result's included: meta.startedAt to meta.endedAt. How long the trajectory was open, not how long anything took. Absent when no timestamp is recorded."
         },
         "idleMs": {
           "type": "integer",

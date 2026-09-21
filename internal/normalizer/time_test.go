@@ -57,3 +57,20 @@ func TestClaudeCostStateDurationsAreReported(t *testing.T) {
 		t.Fatalf("workMs = %v, want tracer's own 0, not the reported figure", v)
 	}
 }
+
+// R77. The span runs to the latest moment recorded, a tool result's included,
+// and from the earliest, whatever the order of the stream. Measured to the last
+// event, a captured session held more idle and work than elapsed time.
+func TestSpanReachesALateToolResult(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "user", "ts", "2026-01-01T00:00:05.000Z"),
+		trajectory.NewObject("kind", "meta", "ts", "2026-01-01T00:00:01.000Z"),
+		trajectory.NewObject("kind", "tool_call", "ts", "2026-01-01T00:00:06.000Z",
+			"result", trajectory.NewObject("ts", "2026-01-01T00:01:00.000Z")),
+		trajectory.NewObject("kind", "assistant", "ts", "2026-01-01T00:00:07.000Z"),
+	}
+	first, last := span(events)
+	if first != "2026-01-01T00:00:01.000Z" || last != "2026-01-01T00:01:00.000Z" {
+		t.Fatalf("span = %s .. %s, want the earliest event to the tool's result", first, last)
+	}
+}
