@@ -384,6 +384,13 @@
           "type": "boolean",
           "description": "The event itself failed, for events that have no result of their own. A tool call reports failure through result.isError; a turn that a provider error ended reports it here. Additive and optional: documents written before it omit it."
         },
+        "idleMs": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Milliseconds the agent spent waiting for its next instruction, from this event to the next one. Present only on an event that ends a turn, and absent when nothing follows it. A long gap after a tool call is a slow tool, which is work, not idle. Additive and optional: documents written before it omit it."
+        },
         "tokens": {
           "$ref": "#/$defs/tokens"
         },
@@ -594,6 +601,13 @@
         "turnEnd": {
           "type": "boolean",
           "description": "Render a turn-boundary tick before/at this event."
+        },
+        "idleMs": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Milliseconds the agent spent waiting for its next instruction, from this event to the next one. Present only on an event that ends a turn, and absent when nothing follows it. A long gap after a tool call is a slow tool, which is work, not idle. Additive and optional: documents written before it omit it."
         },
         "redacted": {
           "type": "boolean",

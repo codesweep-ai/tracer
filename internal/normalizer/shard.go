@@ -49,6 +49,15 @@ func stripEvent(e *obj) *obj {
 	}
 	if str(get(e, "kind")) == "turn_end" {
 		out.Set("turnEnd", true)
+		// The idle row is drawn from the strip alone, so the interval travels
+		// with it (R68). Computing it in the viewer would mean subtracting
+		// timestamps across filtered-out neighbours.
+		//
+		// Tested for existence, not with present(): that helper stringifies, so
+		// it reads every number as absent.
+		if idle, ok := e.Get("idleMs"); ok {
+			out.Set("idleMs", idle)
+		}
 	}
 	if str(get(e, "kind")) == "thinking" && str(get(e, "text")) == "" {
 		out.Set("redacted", true)

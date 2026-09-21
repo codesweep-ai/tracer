@@ -139,7 +139,19 @@ func NormalizeOpenCode(doc *obj) *obj {
 			case "step-finish":
 				attach(object(get(p, "tokens")), get(p, "cost"))
 				step = true
-				events = append(events, trajectory.NewObject("kind", "turn_end", "ts", ts, "text", "step finish — "+jsStringOr(get(p, "reason"), "")))
+				// A step finishes after every batch of tool calls, and the agent
+				// carries straight on. Only `stop` ends the turn and leaves it
+				// waiting (R68), so only `stop` is a turn end; the rest are
+				// bookkeeping and read as meta with their reason intact. Drawn as
+				// turn ends they were 31% of every strip against three real
+				// endings per trajectory, and no consumer could tell which was
+				// which without reading the text (R65).
+				reason := jsStringOr(get(p, "reason"), "")
+				kind := "meta"
+				if reason == "stop" {
+					kind = "turn_end"
+				}
+				events = append(events, trajectory.NewObject("kind", kind, "ts", ts, "text", "step finish — "+reason))
 			case "compaction":
 				events = append(events, trajectory.NewObject("kind", "meta", "ts", ts, "text", "compaction ("+jsStringOr(get(p, "reason"), "?")+")"))
 			case "step-start":

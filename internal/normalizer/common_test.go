@@ -1,6 +1,7 @@
 package normalizer
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/codesweep-ai/tracer/internal/trajectory"
@@ -190,4 +191,72 @@ func anyString(v any) string {
 		return n.String()
 	}
 	return ""
+}
+
+// R68/R69. Idle is stamped from one place for every adapter, and only a step
+// that actually stopped ends a turn.
+func TestIdleIsStampedOnTurnEndsOnly(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "tool_call", "ts", "2026-01-01T00:00:00.000Z"),
+		// a five minute gap after a tool call is a SLOW TOOL, never idle
+		trajectory.NewObject("kind", "turn_end", "ts", "2026-01-01T00:05:00.000Z"),
+		trajectory.NewObject("kind", "user", "ts", "2026-01-01T00:07:30.000Z"),
+		trajectory.NewObject("kind", "turn_end", "ts", "2026-01-01T00:08:00.000Z"),
+	}
+	markIdle(events)
+
+	if present(get(events[0], "idleMs")) {
+		t.Fatal("a tool call carries idleMs; a slow tool is work, not waiting")
+	}
+	if got := num(get(events[1], "idleMs")); got != 150000 {
+		t.Fatalf("idleMs = %v, want 150000 (two and a half minutes to the next event)", got)
+	}
+	if present(get(events[3], "idleMs")) {
+		t.Fatal("a turn end with nothing after it carries idleMs; absent is not zero")
+	}
+}
+
+func TestIdleSkipsEventsWithNoTimestamp(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "turn_end", "ts", "2026-01-01T00:00:00.000Z"),
+		trajectory.NewObject("kind", "meta"),
+		trajectory.NewObject("kind", "user", "ts", "2026-01-01T00:01:00.000Z"),
+	}
+	markIdle(events)
+	if got := num(get(events[0], "idleMs")); got != 60000 {
+		t.Fatalf("idleMs = %v, want 60000 — an untimestamped neighbour is stepped over", got)
+	}
+}
+
+// R69. Only a step that stopped ends a turn. The captured fixtures cannot reach
+// this: the scrubber rewrites the reason to prose, so no fixture carries the
+// literal "stop" and every fixture step-finish lands on the meta branch.
+func TestOpenCodeStepFinishEndsATurnOnlyWhenItStopped(t *testing.T) {
+	doc, err := NormalizeBytes([]byte(`{"info":{"id":"s1"},"messages":[{"info":{"role":"assistant","time":{"created":1767225600000}},"parts":[
+		{"type":"step-finish","reason":"tool-calls","time":{"start":1767225600000}},
+		{"type":"step-finish","reason":"stop","time":{"start":1767225660000}}
+	]}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	events := get(doc, "events").([]*obj)
+	var kinds []string
+	for _, e := range events {
+		kinds = append(kinds, str(get(e, "kind")))
+	}
+	if len(events) != 2 {
+		t.Fatalf("events = %v, want two step finishes", kinds)
+	}
+	if kinds[0] != "meta" {
+		t.Fatalf("a step finishing on tool-calls is %q, want meta — the agent carried straight on", kinds[0])
+	}
+	if kinds[1] != "turn_end" {
+		t.Fatalf("a step finishing on stop is %q, want turn_end", kinds[1])
+	}
+	// Both keep the reason, so the details page still says what they were.
+	for i, e := range events {
+		if got := str(get(e, "text")); !strings.Contains(got, "step finish") {
+			t.Fatalf("event %d text = %q, want the reason preserved", i, got)
+		}
+	}
 }

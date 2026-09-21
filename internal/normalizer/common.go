@@ -310,6 +310,41 @@ func warningReport(adapter, version, cli string, skipped skipTally, counts map[s
 	return trajectory.NewObject("adapter", adapter, "adapterVersion", version, "cliVersionRange", cli, "skippedByType", skipped.list(), "unrecognized", total, "unreadable", unreadable, "warnings", warnings)
 }
 
+// markIdle stamps `idleMs` on every event that ends a turn (R68): the interval
+// between that event and the next one, which is the agent sitting still waiting
+// for its next instruction. It runs for every adapter from one place, because
+// the whole point of the requirement is that the three cannot disagree about
+// what idle means.
+//
+// A turn end with nothing after it gets no field rather than a zero. The session
+// stopped there, and "waited for nothing" and "waited no time" are different
+// claims. An event with no timestamp, or a successor with none, is skipped for
+// the same reason: absent is not zero.
+//
+// Only a turn end carries it. A long gap after a tool call is a slow tool, which
+// is work, and calling that idle was the mistake the requirement exists to stop.
+func markIdle(events []*obj) {
+	for i, e := range events {
+		if str(get(e, "kind")) != "turn_end" {
+			continue
+		}
+		from := str(get(e, "ts"))
+		if from == "" {
+			continue
+		}
+		for _, next := range events[i+1:] {
+			to := str(get(next, "ts"))
+			if to == "" {
+				continue
+			}
+			if ms := millis(from, to); isJSNumber(ms) {
+				e.Set("idleMs", ms)
+			}
+			break
+		}
+	}
+}
+
 // finalize completes a document (codex and opencode): index events,
 // sanitize hostile scalars, roll totals, stamp meta. sessionCost is the
 // opencode info.cost override (nil = absent).
@@ -321,6 +356,7 @@ func finalize(meta *obj, events []*obj, parse *obj, sessionCost any) *obj {
 		warnings := get(parse, "warnings").([]any)
 		parse.Set("warnings", append(warnings, malformedTokenWarning(malformed)))
 	}
+	markIdle(events)
 	tot := trajectory.NewObject("events", len(events), "toolCalls", 0, "toolErrors", 0, "input", 0, "output", 0, "cacheRead", 0, "cacheWrite", 0, "reasoning", 0)
 	for _, e := range events {
 		if str(get(e, "kind")) == "tool_call" {

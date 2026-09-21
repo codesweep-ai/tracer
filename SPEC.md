@@ -269,6 +269,26 @@ An event carries `isError` when it has no result of its own to report failure th
 keeps reporting failure through `result.isError`, and `stripEvent` reads either. The field is
 additive and optional in `schema/trajectory.v1.json`, so `schemaVersion` is unchanged (R7).
 
+**R68.** An agent that has stopped and is waiting **MUST** be reported as idle, consistently across
+every adapter. A turn ends when the model returns a response with no tool call pending, and the
+interval from that event to the next one is idle. Every other interval is work, including a long one
+after a tool call, which is a slow tool.
+
+*Nothing said what idle was, and no adapter reported it. The interval holds most of a session's
+elapsed time: 97.9% of one captured session, and 88% and 55% in aggregate for the two unattended
+adapters. A tool that cannot name it cannot say how long anything took.*
+
+**R69.** An adapter **MUST NOT** report a turn ending that did not end a turn. *OpenCode emits
+`step-finish` after every batch of tool calls, and the agent carries straight on. Only the step whose
+reason reads `stop` leaves it waiting. Reported as turn ends they were 892 events across twelve
+captured trajectories, 31% of every strip, against three real endings each. The rest are bookkeeping
+and read as `meta`, keeping their reason, so a reader still sees what they were.*
+
+Idle travels as `idleMs` on the event that ends the turn and on its strip entry, so the viewer never
+subtracts timestamps across neighbours a filter removed. A turn end with nothing after it carries no
+field rather than a zero, because waiting for nothing and waiting no time are different claims. Both
+fields are additive and optional, so `schemaVersion` is unchanged (R7).
+
 `parse.unreadable` is additive and optional in `schema/trajectory.v1.json`: the current adapters
 always emit it, and documents written before R56 omit it. `schemaVersion` is unchanged, because a
 consumer that ignores the field still renders such a document correctly (R7).
