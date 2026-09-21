@@ -271,7 +271,8 @@ additive and optional in `schema/trajectory.v1.json`, so `schemaVersion` is unch
 
 **R68.** An agent that has stopped and is waiting **MUST** be reported as idle, consistently across
 every adapter. A turn ends when the model returns a response with no tool call pending, and the
-interval from that event to the next one is idle. Every other interval is work, including a long one
+interval from that event to the moment work resumes is idle. Work resumes at a user instruction, an
+assistant message, a thinking step or a tool call. Every other interval is work, including a long one
 after a tool call, which is a slow tool.
 
 *Nothing said what idle was, and no adapter reported it. The interval holds most of a session's
@@ -283,6 +284,9 @@ adapters. A tool that cannot name it cannot say how long anything took.*
 reason reads `stop` leaves it waiting. Reported as turn ends they were 892 events across twelve
 captured trajectories, 31% of every strip, against three real endings each. The rest are bookkeeping
 and read as `meta`, keeping their reason, so a reader still sees what they were.*
+
+A record carrying no work does not end the wait. Bookkeeping lands while the agent sits still, and
+stopping at one of those reported two seconds of idle for a wait of hours (TRC-014).
 
 Idle travels as `idleMs` on the event that ends the turn and on its strip entry, so the viewer never
 subtracts timestamps across neighbours a filter removed. A turn end with nothing after it carries no

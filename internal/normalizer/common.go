@@ -310,16 +310,31 @@ func warningReport(adapter, version, cli string, skipped skipTally, counts map[s
 	return trajectory.NewObject("adapter", adapter, "adapterVersion", version, "cliVersionRange", cli, "skippedByType", skipped.list(), "unrecognized", total, "unreadable", unreadable, "warnings", warnings)
 }
 
+// resumesWork is the set of kinds whose arrival means the waiting is over
+// (R68). A user instruction arrives, or the agent thinks, speaks or calls a
+// tool. Everything else is the agent standing still.
+var resumesWork = map[string]bool{
+	"user": true, "assistant": true, "thinking": true, "tool_call": true, "tool_result": true,
+}
+
 // markIdle stamps `idleMs` on every event that ends a turn (R68): the interval
-// between that event and the next one, which is the agent sitting still waiting
-// for its next instruction. It runs for every adapter from one place, because
-// the whole point of the requirement is that the three cannot disagree about
-// what idle means.
+// between that event and the moment work resumes, which is the agent sitting
+// still waiting for its next instruction. It runs for every adapter from one
+// place, because the whole point of the requirement is that the three cannot
+// disagree about what idle means.
 //
-// A turn end with nothing after it gets no field rather than a zero. The session
+// The interval ends at the next event that does work, NOT at the next record
+// (TRC-014). Claude Code writes context attachments and queue operations while
+// the agent waits, each carrying a timestamp, and stopping at one of those
+// reported two seconds of idle for a wait of three hours. It cost 18% of the
+// measured waiting across thirty captured trajectories. The other two adapters
+// write nothing in that gap, so two corpora out of three agreed with the wrong
+// reading.
+//
+// A turn end with no work after it gets no field rather than a zero. The session
 // stopped there, and "waited for nothing" and "waited no time" are different
-// claims. An event with no timestamp, or a successor with none, is skipped for
-// the same reason: absent is not zero.
+// claims. An event with no timestamp is stepped over for the same reason:
+// absent is not zero.
 //
 // Only a turn end carries it. A long gap after a tool call is a slow tool, which
 // is work, and calling that idle was the mistake the requirement exists to stop.
@@ -333,6 +348,9 @@ func markIdle(events []*obj) {
 			continue
 		}
 		for _, next := range events[i+1:] {
+			if !resumesWork[str(get(next, "kind"))] {
+				continue
+			}
 			to := str(get(next, "ts"))
 			if to == "" {
 				continue

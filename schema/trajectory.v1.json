@@ -389,7 +389,7 @@
             "number",
             "null"
           ],
-          "description": "Milliseconds the agent spent waiting for its next instruction, from this event to the next one. Present only on an event that ends a turn, and absent when nothing follows it. A long gap after a tool call is a slow tool, which is work, not idle. Additive and optional: documents written before it omit it."
+          "description": "Milliseconds the agent spent waiting for its next instruction, from this event until work resumes at a user instruction, an assistant message, a thinking step or a tool call. A record carrying no work does not end the wait. Present only on an event that ends a turn, and absent when no work follows it. A long gap after a tool call is a slow tool, which is work, not idle. Additive and optional: documents written before it omit it."
         },
         "tokens": {
           "$ref": "#/$defs/tokens"
@@ -607,7 +607,7 @@
             "number",
             "null"
           ],
-          "description": "Milliseconds the agent spent waiting for its next instruction, from this event to the next one. Present only on an event that ends a turn, and absent when nothing follows it. A long gap after a tool call is a slow tool, which is work, not idle. Additive and optional: documents written before it omit it."
+          "description": "Milliseconds the agent spent waiting for its next instruction, from this event until work resumes at a user instruction, an assistant message, a thinking step or a tool call. A record carrying no work does not end the wait. Present only on an event that ends a turn, and absent when no work follows it. A long gap after a tool call is a slow tool, which is work, not idle. Additive and optional: documents written before it omit it."
         },
         "redacted": {
           "type": "boolean",

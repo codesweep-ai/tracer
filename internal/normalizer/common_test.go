@@ -228,6 +228,35 @@ func TestIdleSkipsEventsWithNoTimestamp(t *testing.T) {
 	}
 }
 
+// TRC-014. A record carrying no work does not end the wait, even with a
+// timestamp on it. Claude Code writes these while the agent sits still, and
+// stopping at one reported seconds of idle for a wait of hours.
+func TestIdleRunsPastTimestampedBookkeeping(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "turn_end", "ts", "2026-01-01T12:00:00.000Z"),
+		trajectory.NewObject("kind", "meta", "ts", "2026-01-01T12:00:02.000Z", "text", "context attachment"),
+		trajectory.NewObject("kind", "system", "ts", "2026-01-01T12:00:03.000Z"),
+		trajectory.NewObject("kind", "user", "ts", "2026-01-01T15:00:00.000Z"),
+	}
+	markIdle(events)
+	if got := num(get(events[0], "idleMs")); got != 3*60*60*1000 {
+		t.Fatalf("idleMs = %v, want three hours — bookkeeping does not end the wait", got)
+	}
+}
+
+// A turn end followed only by bookkeeping carries no field. The agent never
+// resumed, and "waited for nothing" is not "waited no time".
+func TestIdleAbsentWhenWorkNeverResumes(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "turn_end", "ts", "2026-01-01T12:00:00.000Z"),
+		trajectory.NewObject("kind", "meta", "ts", "2026-01-01T12:00:02.000Z"),
+	}
+	markIdle(events)
+	if _, ok := events[0].Get("idleMs"); ok {
+		t.Fatal("idleMs is set although work never resumed")
+	}
+}
+
 // R69. Only a step that stopped ends a turn. The captured fixtures cannot reach
 // this: the scrubber rewrites the reason to prose, so no fixture carries the
 // literal "stop" and every fixture step-finish lands on the meta branch.
