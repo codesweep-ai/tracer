@@ -1,0 +1,23 @@
+{
+  "id": "TRC-025",
+  "title": "The index lane's meta line cuts off the cost now that the time label is longer",
+  "type": "defect",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, reviewing the rendered index with the user after the time label changed",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Each lane on the index shows one meta line: model, tokens, time and cost. That label now names both working and open hours, such as `2.6 h working · 31.5 h open`. The line overflows its column and ends in an ellipsis, so the cost, which comes last, is the part a reader loses.\n\nTo reproduce, export any attended Claude Code session with `--split` and open the index at a normal window width.",
+  "notes": [],
+  "links": [
+    "TRC-018",
+    "TRC-017"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "TRC-032",
+  "title": "A --split export ships every trajectory's data twice",
+  "type": "improvement",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, carried from the previous handoff; SPEC open question 3",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "In one measured export the split output was 24.6 MB against 12.4 MB for the same data. The split `index.html` embeds every trace's events, which the index never renders, and each trace page carries its own copy.",
+  "notes": [],
+  "links": []
+}

@@ -1,0 +1,22 @@
+{
+  "id": "TRC-028",
+  "title": "An attended Claude Code tool call may count the user's permission prompt as the tool's time",
+  "type": "improvement",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, reviewing how R70 charges time in attended sessions; unverified",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "A tool call's time runs from the end of the previous work to its result. In an attended session Claude Code can wait for the user to approve a tool before running it, and that wait would fall inside the tool's time. A slow bar would then show a person deciding, not a tool running.\n\nThis is a suspicion to verify first: find tool calls whose time far exceeds their run, and check whether a permission record sits between the call and its result.",
+  "notes": [],
+  "links": [
+    "TRC-015"
+  ]
+}

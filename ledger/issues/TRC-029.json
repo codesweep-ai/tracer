@@ -1,0 +1,23 @@
+{
+  "id": "TRC-029",
+  "title": "A small share of attended elapsed time is neither idle nor work",
+  "type": "improvement",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, measuring totals.time across the attended Claude Code corpus",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Across thirty attended trajectories, 5.7 of 332.1 hours of elapsed time sit in neither an idle interval nor any event's work interval, 1.7% in all. The unattended corpora leave 0.0% to 2.5%. The gaps were not characterised. They may be interruptions, a turn that ended with no turn-end record, or another record type that should end or start work.",
+  "notes": [],
+  "links": [
+    "TRC-016",
+    "TRC-018"
+  ]
+}

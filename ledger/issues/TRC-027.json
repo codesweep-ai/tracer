@@ -1,0 +1,23 @@
+{
+  "id": "TRC-027",
+  "title": "A reply Claude Code writes for an API error is not marked as an error",
+  "type": "defect",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, while adding the synthetic field for TRC-015",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Claude Code writes a `<synthetic>` assistant record for some replies it makes without the model, including an API error, which also carries `isApiErrorMessage`. The adapter now marks these `synthetic`, but not as errors. This is the Claude Code counterpart of the codex failure R67 fixed, and a turn that died on the provider still reads as a reply.\n\nA session whose first assistant record is synthetic also sets `meta.model` to `<synthetic>`, since the model is taken from the first one.\n\nNo captured corpus holds an API-error reply, so a fixture or unit test has to be built for it.",
+  "notes": [],
+  "links": [
+    "TRC-012",
+    "TRC-015"
+  ]
+}

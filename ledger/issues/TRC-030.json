@@ -1,0 +1,22 @@
+{
+  "id": "TRC-030",
+  "title": "Tool output renders as one escaped block with no bound on its length",
+  "type": "improvement",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, carried from TRC-011, which fixed tool inputs and deferred outputs",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "An event card shows a tool's output as `<pre>{event.result.text}</pre>`. Outputs run far longer than inputs, so the open question is bounding and truncation, with the full text still reachable. The shape detection `ToolInput.tsx` uses for inputs is the likely model.",
+  "notes": [],
+  "links": [
+    "TRC-011"
+  ]
+}

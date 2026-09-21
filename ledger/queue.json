@@ -1,5 +1,42 @@
 {
-  "recommendedBy": "session agent",
-  "updated": "2026-09-19",
-  "items": []
+  "recommendedBy": "session agent, in the order the maintainer set",
+  "updated": "2026-09-21",
+  "items": [
+    {
+      "id": "TRC-025",
+      "why": "The one loose end a reader sees on every index."
+    },
+    {
+      "id": "TRC-026",
+      "why": "A consumer's --split export is unusable under a directory named traces."
+    },
+    {
+      "id": "TRC-027",
+      "why": "A turn that died on the provider still reads as a Claude Code reply."
+    },
+    {
+      "id": "TRC-028",
+      "why": "Attended tool bars may show a person deciding, not a tool running."
+    },
+    {
+      "id": "TRC-029",
+      "why": "The last unexplained share of attended elapsed time."
+    },
+    {
+      "id": "TRC-030",
+      "why": "Long tool output is unbounded on the card."
+    },
+    {
+      "id": "TRC-005",
+      "why": "A multi-directory site cannot say where a session came from."
+    },
+    {
+      "id": "TRC-031",
+      "why": "Search cost grows with every trajectory added."
+    },
+    {
+      "id": "TRC-032",
+      "why": "Split exports are twice the size they need to be."
+    }
+  ]
 }

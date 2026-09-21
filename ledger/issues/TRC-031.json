@@ -1,0 +1,20 @@
+{
+  "id": "TRC-031",
+  "title": "Search rescans every chunk of every trace from scratch on each query",
+  "type": "improvement",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, carried from the previous handoff",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Each search walks every chunk again, with nothing kept between queries. On a large export that is the dominant cost of a search, and it grows with every trajectory added.",
+  "notes": [],
+  "links": []
+}
