@@ -1,0 +1,24 @@
+{
+  "id": "TRC-024",
+  "title": "The strip shows which events ran but not how long they took, or how long the agent waited",
+  "type": "improvement",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "user, designing the strip from measured traces: every event drawn at one size says nothing about time, and waiting holds most of it",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": "2026-09-21 time accounting",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The strip draws every event as the same square, coloured by kind. A two-second step and a two-minute one look the same, and a turn end after a three-hour wait looks like one after three seconds.\n\nThe normalizer now reports both quantities. R70 gives each thinking step, reply and tool call the time it accounts for, and R68 gives each turn end the wait after it. The strip draws neither.\n\nA step should rise by its time, and a turn end should hang by its wait in a row of its own. Each row should use a log scale with a named ceiling. The tooltip should give the true figure, and name model time as the round trip it is. Where a CLI records when the model began, the tooltip should split it into the wait and the generation.",
+  "notes": [],
+  "links": [
+    "TRC-015",
+    "TRC-018",
+    "TRC-023"
+  ]
+}
