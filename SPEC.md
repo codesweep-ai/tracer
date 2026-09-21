@@ -508,6 +508,10 @@ run it.
 | prose | the writing rules below, and that no sentence asserts a count the repo counts itself | never |
 | open-source readiness | the licence, the document set, that no tracked file carries a home path, a mail address or a user name, and what a stranger's clone can do | never |
 | docs against the binary | every documented command exists, the paths and spec sections the docs and the source cite resolve, and the manual the binary prints is the manual in the tree | never |
+| fixture suite | the exported pages behave as recorded in a browser: structure, filters, clicks, keyboard, scrolling, layout and size, per `apps/viewer/fixtures/expectations.json` | npm is not installed, or no browser |
+
+`make ci` runs the fixture suite and `make check` does not, because it takes about a minute and
+`make check` is the loop kept beside you while working.
 
 **The viewer gates skip rather than fail without npm.** `apps/viewer` resolves
 `@codesweep-ai/ui` from the registry, pinned to one exact version, so no second checkout is

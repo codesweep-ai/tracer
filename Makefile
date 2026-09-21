@@ -294,6 +294,8 @@ ci:
 	@$(MAKE) --no-print-directory release-check
 	$(call say,ledger)
 	@$(MAKE) --no-print-directory ledger
+	$(call say,fixture suite)
+	@$(MAKE) --no-print-directory fixtures
 	@printf '\nci: every gate ran. Not reproduced here: build-test on macOS.\n'
 
 ## vet: go vet
@@ -376,12 +378,21 @@ surface: build
 	$(CS_LINT) surface
 
 ## fixtures: the viewer's behavioural oracle (apps/viewer/fixtures/README.md).
-## Deliberately NOT part of check: it holds the viewer to recorded behaviour
-## across a component migration, and its browser needs are the parity gate's
-## (CS_TRACER_CHROMIUM, or TRACER_FIXTURES_BROWSER). `--strict` and other
+## It drives the exported pages in a browser and holds them to recorded
+## behaviour. It runs in ci but not in check: it takes about a minute, and check
+## is the loop kept beside you while working. Left out of every gate, five of its
+## expectations fell behind the changes they measure (TRC-021). It skips, saying
+## so, without npm or a browser: TRACER_FIXTURES_BROWSER, CS_TRACER_CHROMIUM or
+## CHROME_BIN names one, else /usr/bin/chromium-browser. `--strict` and other
 ## flags pass through FIXTURES_ARGS.
-fixtures: build
-	cd $(VIEWER_DIR) && $(NPM) run fixtures -- $(FIXTURES_ARGS)
+fixtures:
+	@if [ ! -d apps/viewer ] || ! command -v $(NPM) >/dev/null 2>&1; then \
+		echo "SKIP fixtures: npm is not installed"; \
+	elif [ -z "$${TRACER_FIXTURES_BROWSER:-}$${CS_TRACER_CHROMIUM:-}$${CHROME_BIN:-}" ] && [ ! -x /usr/bin/chromium-browser ]; then \
+		echo "SKIP fixtures: no browser, so set CS_TRACER_CHROMIUM=/path/to/chrome"; \
+	else \
+		$(MAKE) --no-print-directory build && cd $(VIEWER_DIR) && $(NPM) run fixtures -- $(FIXTURES_ARGS); \
+	fi
 
 # The four targets above are one shared tool: github.com/codesweep-ai/lint,
 # pinned in go.mod and run with `go tool`, so the gates use the version this

@@ -61,7 +61,7 @@ that touches `ledger/` needs `cs-ledger render && cs-ledger check` to pass first
 
 ## Design rules
 
-1. **`make ci` before every push.** Four of its gates skip on a machine that lacks what they
+1. **`make ci` before every push.** Five of its gates skip on a machine that lacks what they
    need, and each says so where it runs. A skipped gate is not a passed one.
 2. **Never regenerate a golden to make a gate pass.** A **golden** is committed expected output, and
    `oracle/` holds one per fixture. Since the goldens are produced by the tool they test, "make it
