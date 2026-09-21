@@ -11,8 +11,7 @@
     "cliVersion": "2.1.220",
     "cwd": "/home/user/project",
     "startedAt": "2026-08-01T00:00:00.000Z",
-    "endedAt": "2026-08-01T00:00:31.500Z",
-    "durationMs": 31500
+    "endedAt": "2026-08-01T00:00:31.500Z"
   },
   "totals": {
     "events": 6,
@@ -27,6 +26,11 @@
       "estimated": {
         "usd": 0.0142
       }
+    },
+    "time": {
+      "elapsedMs": 31500,
+      "idleMs": 0,
+      "workMs": 31500
     }
   },
   "parse": {

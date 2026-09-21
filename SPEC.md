@@ -66,7 +66,9 @@ time. The artifacts are committed, so a clone with no Node toolchain still build
 ## 1. Schema version
 
 **R6.** Every index and every summary **MUST** declare `schemaVersion`. The current value is **3**.
-Version 3 made `totals.cost` an object of figures kept apart by where they came from (§9).
+Version 3 made `totals.cost` an object of figures kept apart by where they came from (§9). It also
+replaced `meta.durationMs` with `totals.time`, which keeps elapsed, idle and working time apart
+(R77).
 
 **R7.** A consumer **MUST** refuse a document whose version it does not implement, rather than
 rendering what it can. *A partial render produces blank panels and missing fields that read as data
@@ -311,6 +313,23 @@ An event with no earlier work to measure from carries no field. A reply the CLI 
 calling a model carries `synthetic` and no `workMs`, and the interval runs past it. Tool calls
 running at once overlap, so each is measured from its own timestamp, and the work after them from
 the latest result. Both fields are additive and optional, so `schemaVersion` is unchanged (R7).
+
+**R77.** A trajectory **MUST** report three separate figures: elapsed time from its first timestamp
+to its last, idle time, and the work its events account for. Idle is the sum of R68's intervals, and work
+is the union of R70's, so tool calls running at once count once. Any remainder belongs to neither,
+and stays visible as the difference.
+
+*A single duration from the first timestamp to the last said how long a session was left open. One
+captured session reported 211 hours, of which 207 were idle and 4.4 were work.*
+
+The figures travel as `totals.time`. The viewer shows working time first, with the time open beside
+it.
+
+**R78.** A duration a CLI reports **MUST** be kept as reported, with what it covers, and never in
+place of tracer's own figures. This is the rule §9 sets for cost. *Claude Code reports its process's
+wall time and its time on the model and on tools. They cover the session and its sub-agents, and the
+wall time runs on while the session sits open with nothing written. One session reported 18.3 hours
+against 8.9 hours of transcript.*
 
 `parse.unreadable` is additive and optional in `schema/trajectory.v1.json`: the current adapters
 always emit it, and documents written before R56 omit it. `schemaVersion` is unchanged, because a

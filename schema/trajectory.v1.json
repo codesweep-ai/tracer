@@ -165,12 +165,6 @@
           ],
           "description": "ISO-8601"
         },
-        "durationMs": {
-          "type": [
-            "number",
-            "null"
-          ]
-        },
         "mode": {
           "type": [
             "string",
@@ -244,6 +238,9 @@
         },
         "cost": {
           "$ref": "#/$defs/cost"
+        },
+        "time": {
+          "$ref": "#/$defs/time"
         }
       }
     },
@@ -345,6 +342,79 @@
         "incomplete": {
           "const": true,
           "description": "The CLI says some usage could not be priced and is left out of usd."
+        }
+      }
+    },
+    "time": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "idleMs",
+        "workMs"
+      ],
+      "description": "How long a trajectory was open, how much of that the agent sat idle, and how much its events account for as work (SPEC R77). What elapsedMs holds beyond idleMs and workMs is neither, and is left visible rather than folded into either.",
+      "properties": {
+        "elapsedMs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "From the first timestamped event to the last. How long the trajectory was open, not how long anything took. Absent when fewer than two events carry a timestamp."
+        },
+        "idleMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The sum of the events' idleMs: time the agent waited for its next instruction."
+        },
+        "workMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The union of the events' workMs intervals. A union, not a sum, because tool calls running at once overlap."
+        },
+        "reported": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reportedTime"
+          },
+          "description": "Each set of durations the CLI stated itself, kept beside tracer's figures and never in place of them."
+        }
+      }
+    },
+    "reportedTime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "covers"
+      ],
+      "description": "Durations the CLI itself stated for a span of work. They follow the CLI's process, which may run on while nothing is written to the transcript.",
+      "properties": {
+        "covers": {
+          "enum": [
+            "trajectory",
+            "tree"
+          ],
+          "description": "trajectory: this trajectory alone. tree: this trajectory and every sub-agent under it."
+        },
+        "elapsedMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The CLI process's wall time."
+        },
+        "modelMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time spent waiting on the model, retries included."
+        },
+        "modelMsWithoutRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time spent waiting on the model, retries left out."
+        },
+        "toolMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time spent running tools."
         }
       }
     },

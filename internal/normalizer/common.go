@@ -475,6 +475,67 @@ func costTotals(events []*obj, reported []any, parse *obj) *obj {
 	return cost
 }
 
+// timeTotals builds totals.time (R77): how long the trajectory was open, how
+// much of that the agent sat idle, and how much its events account for as work.
+// The three are kept apart because the first says how long a session was left
+// open, not how long anything took: one captured session was open 211 hours and
+// worked 4.4 of them (TRC-018).
+//
+// Idle is the sum of R68's intervals, which never overlap. Work is the union of
+// R70's intervals rather than their sum, because tool calls running at once
+// overlap. What remains of elapsed time is neither, and is left for a reader to
+// see rather than folded into either. reported holds the CLI's own durations,
+// kept beside tracer's and never in place of them (§9).
+func timeTotals(events []*obj, firstTS, lastTS string, reported []any) *obj {
+	out := trajectory.NewObject("elapsedMs", millis(firstTS, lastTS))
+	var idle int64
+	type span struct{ from, to time.Time }
+	var work []span
+	for _, e := range events {
+		if v, ok := e.Get("idleMs"); ok && isJSNumber(v) {
+			idle += int64(num(v))
+		}
+		v, ok := e.Get("workMs")
+		if !ok || !isJSNumber(v) {
+			continue
+		}
+		at, ok := parseTS(get(e, "ts"))
+		if !ok {
+			continue
+		}
+		end := at
+		if done, ok := parseTS(get(object(get(e, "result")), "ts")); ok && done.After(end) {
+			end = done
+		}
+		work = append(work, span{end.Add(-time.Duration(num(v)) * time.Millisecond), end})
+	}
+	sort.Slice(work, func(i, j int) bool { return work[i].from.Before(work[j].from) })
+	var busy time.Duration
+	var cur *span
+	for i := range work {
+		s := work[i]
+		if cur != nil && !s.from.After(cur.to) {
+			if s.to.After(cur.to) {
+				cur.to = s.to
+			}
+			continue
+		}
+		if cur != nil {
+			busy += cur.to.Sub(cur.from)
+		}
+		cur = &s
+	}
+	if cur != nil {
+		busy += cur.to.Sub(cur.from)
+	}
+	out.Set("idleMs", idle)
+	out.Set("workMs", busy.Milliseconds())
+	if len(reported) > 0 {
+		out.Set("reported", reported)
+	}
+	return out
+}
+
 // finalize completes a document (codex and opencode): index events,
 // sanitize hostile scalars, roll totals, stamp meta. reported holds the cost
 // figures the CLI stated for the session (§9), empty when it stated none.
@@ -514,7 +575,7 @@ func finalize(meta *obj, events []*obj, parse *obj, reported []any) *obj {
 	}
 	meta.Set("startedAt", undef(firstTS))
 	meta.Set("endedAt", undef(lastTS))
-	meta.Set("durationMs", millis(firstTS, lastTS))
+	tot.Set("time", timeTotals(events, firstTS, lastTS, nil))
 	return trajectory.NewObject("schemaVersion", SchemaVersion, "meta", meta, "totals", tot, "events", events, "parse", parse)
 }
 

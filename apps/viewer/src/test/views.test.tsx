@@ -28,7 +28,7 @@ function contrastRatio(a: string, b: string): number {
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
 
-const summary: TraceSummary = { schemaVersion: 3, meta: { source: "claude-code", sessionId: "demo", parentSessionId: null, title: "Demo", model: "test", durationMs: 1000 }, totals: { events: 2, toolCalls: 0, toolErrors: 0, input: 10, output: 5, cacheRead: 0, cacheWrite: 0 }, parse: { adapter: "demo", adapterVersion: "1", skippedByType: [], unrecognized: 0, warnings: [] }, links: [], chunkSize: 1000, chunkCount: 1, strip: [{ i: 0, kind: "user", error: false }, { i: 1, kind: "assistant", error: false }] };
+const summary: TraceSummary = { schemaVersion: 3, meta: { source: "claude-code", sessionId: "demo", parentSessionId: null, title: "Demo", model: "test" }, totals: { events: 2, toolCalls: 0, toolErrors: 0, input: 10, output: 5, cacheRead: 0, cacheWrite: 0, time: { elapsedMs: 1000, idleMs: 0, workMs: 1000 } }, parse: { adapter: "demo", adapterVersion: "1", skippedByType: [], unrecognized: 0, warnings: [] }, links: [], chunkSize: 1000, chunkCount: 1, strip: [{ i: 0, kind: "user", error: false }, { i: 1, kind: "assistant", error: false }] };
 const trace: LoadedTrace = { id: "demo", path: "demo", summary };
 /** Inject a DOM data block exactly as the export assembler writes it: JSON with
  * every "<" escaped as < so a "</script>" in trace text cannot terminate the
@@ -89,7 +89,7 @@ describe("P0 views", () => {
   });
   it("drops the cost separator with the cost on the trajectory meta line", () => {
     // the shared summary has no cost; the separator must leave with the empty
-    // label instead of printing "… 1.0 s · · demo".
+    // label instead of printing "… 1.0 s open · · demo".
     const { rerender } = render(<TrajectoryPage trace={trace} />);
     const metaLine = () => screen.getByRole("heading", { name: "Demo" }).parentElement?.querySelector("p")?.textContent ?? "";
     expect(metaLine()).not.toMatch(/·\s*·/);

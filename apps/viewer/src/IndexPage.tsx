@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Card, Legend, StatusBadge } from "@codesweep-ai/ui";
-import { compact, duration } from "./format";
+import { compact, timeLabel } from "./format";
 import { costLabel, rollupCost, traceCostLabel } from "./cost";
 import { hasTrace, linkTo } from "./routes";
 import { centerCell, EventStrip, LEGEND_CHIPS, RedactedKey, STRIP_CELL_WIDTH, stripAxisPadding } from "./EventStrip";
@@ -60,7 +60,7 @@ function Lane({ trace, depth, hinted, parentId, spawnIndex }: { trace: LoadedTra
     {hinted && <span role="img" aria-label="Dashed link hint" className="link-hint border-dashed" />}
     <Card variant="tight">
       <div className="lane-grid">
-        <div className="lane-meta"><a href={linkTo(trace.id)} className="lane-title">{meta.title ?? meta.label ?? (meta.autoTitle ? <span className="auto-title" title="Derived from the session's first user message">{meta.autoTitle}</span> : trace.id)}</a><p className="lane-meta-line">{meta.model ?? "Unknown model"} · {compact(totals.input + totals.output)} tokens · {duration(meta.durationMs)} {traceCostLabel(totals)}</p>{(meta.title ?? meta.label ?? meta.autoTitle) && <p className="lane-meta-line lane-id" title={trace.id}>{trace.id}</p>}{parentId && spawnIndex != null && hasTrace(parentId) && <p className="lane-meta-line"><a data-testid="fork-origin" href={linkTo(parentId, spawnIndex)} className="fork-origin">forked from #{spawnIndex}</a></p>}<div className="lane-badges">{totals.toolErrors > 0 && <StatusBadge label={`${totals.toolErrors} error`} status="error" />}{(parse.unreadable ?? 0) > 0 && <StatusBadge label={`${parse.unreadable} unreadable`} status="error" />}{parse.unrecognized > 0 && <StatusBadge label={`${parse.unrecognized} unrecognized`} status="warning" />}</div></div>
+        <div className="lane-meta"><a href={linkTo(trace.id)} className="lane-title">{meta.title ?? meta.label ?? (meta.autoTitle ? <span className="auto-title" title="Derived from the session's first user message">{meta.autoTitle}</span> : trace.id)}</a><p className="lane-meta-line">{meta.model ?? "Unknown model"} · {compact(totals.input + totals.output)} tokens · {timeLabel(totals.time)} {traceCostLabel(totals)}</p>{(meta.title ?? meta.label ?? meta.autoTitle) && <p className="lane-meta-line lane-id" title={trace.id}>{trace.id}</p>}{parentId && spawnIndex != null && hasTrace(parentId) && <p className="lane-meta-line"><a data-testid="fork-origin" href={linkTo(parentId, spawnIndex)} className="fork-origin">forked from #{spawnIndex}</a></p>}<div className="lane-badges">{totals.toolErrors > 0 && <StatusBadge label={`${totals.toolErrors} error`} status="error" />}{(parse.unreadable ?? 0) > 0 && <StatusBadge label={`${parse.unreadable} unreadable`} status="error" />}{parse.unrecognized > 0 && <StatusBadge label={`${parse.unrecognized} unrecognized`} status="warning" />}</div></div>
         <EventStrip events={strip} label={trace.id} laneLabel="" onSelect={(i) => { location.href = linkTo(trace.id, i); }} />
       </div>
     </Card>

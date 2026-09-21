@@ -65,8 +65,8 @@ events. An event is one step, which is a message, a tool call, a tool result, or
 shows because nothing classified it. A sub-agent run is its own trajectory, linked from the event
 that spawned it.
 
-The page opens on an index of trajectories, each with its model, its token count, its duration and
-its cost. Beside each one sits an activity strip, and clicking a cell opens the timeline at
+The page opens on an index of trajectories, each with its model, its token count, its working time
+and its cost. Beside each one sits an activity strip, and clicking a cell opens the timeline at
 that event. The search box matches event text and tool names, and `#ev-1050` is a deep link.
 
 ## One file or a directory

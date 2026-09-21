@@ -3,13 +3,17 @@ export interface TokenUsage { input?: number; output?: number; cacheRead?: numbe
 /** `parentEventIndex` is the index, IN THE PARENT, of the event that spawned this
  * trajectory (R59). Absent for a root, for a child exported without its parent,
  * and for a child whose spawn could not be joined. */
-export interface TraceMeta { source: string; sessionId: string; parentSessionId: string | null; parentEventIndex?: number | null; agentId?: string | null; label?: string; title?: string; autoTitle?: string; model?: string | null; cliVersion?: string | null; cwd?: string; startedAt?: string; endedAt?: string; durationMs?: number | null }
+export interface TraceMeta { source: string; sessionId: string; parentSessionId: string | null; parentEventIndex?: number | null; agentId?: string | null; label?: string; title?: string; autoTitle?: string; model?: string | null; cliVersion?: string | null; cwd?: string; startedAt?: string; endedAt?: string }
 /** A cost the CLI itself stated for a span of work: this trajectory alone, or it
  * and its sub-agents (§9). */
 export interface ReportedCost { usd: number; covers: "trajectory" | "tree"; byModel?: Array<{ model: string; usd: number }>; incomplete?: true }
 /** Every cost figure for a trajectory, kept apart by where it came from. */
 export interface TraceCost { reported?: ReportedCost[]; reportedByEvents?: { usd: number; events: number; of: number }; estimated?: { usd: number } }
-export interface TraceTotals { events: number; toolCalls: number; toolErrors: number; input: number; output: number; cacheRead: number; cacheWrite: number; reasoning?: number; cost?: TraceCost }
+/** Durations the CLI itself stated, beside tracer's own and never in place of them (R78). */
+export interface ReportedTime { covers: "trajectory" | "tree"; elapsedMs?: number; modelMs?: number; modelMsWithoutRetries?: number; toolMs?: number }
+/** How long a trajectory was open, and how much of that was idle or work (R77). */
+export interface TraceTime { elapsedMs?: number | null; idleMs: number; workMs: number; reported?: ReportedTime[] }
+export interface TraceTotals { events: number; toolCalls: number; toolErrors: number; input: number; output: number; cacheRead: number; cacheWrite: number; reasoning?: number; cost?: TraceCost; time?: TraceTime }
 export interface StripEvent { i: number; kind: EventKind; error: boolean; ts?: string; label?: string; size?: number; turnEnd?: boolean; subtask?: boolean; childSessionId?: string; redacted?: boolean }
 export interface LinkHint { fromSessionId: string; toSessionId: string; kind: string; label?: string; evidence?: string }
 /** Records that produced no event, counted per source record type and sorted by

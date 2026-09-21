@@ -302,7 +302,6 @@ func NormalizeClaude(records []*obj) *obj {
 	}
 	meta.Set("startedAt", undef(firstTS))
 	meta.Set("endedAt", undef(lastTS))
-	meta.Set("durationMs", millis(firstTS, lastTS))
 
 	// Warnings are ordered: unrecognized-type warnings first (in first-seen
 	// order), then the unreadable-line count, then the malformed-scalar count,
@@ -328,7 +327,28 @@ func NormalizeClaude(records []*obj) *obj {
 	}
 	parse := trajectory.NewObject("adapter", "claude-code", "adapterVersion", "1.0.0", "cliVersionRange", "2.1.x", "skippedByType", skipped.list(), "unrecognized", sumWarnings(warnings), "unreadable", damage.total, "warnings", ws)
 	tot.Set("cost", costTotals(events, claudeReportedCost(costState), parse))
+	tot.Set("time", timeTotals(events, firstTS, lastTS, claudeReportedTime(costState)))
 	return trajectory.NewObject("schemaVersion", SchemaVersion, "meta", meta, "totals", tot, "events", events, "parse", parse)
+}
+
+// claudeReportedTime reads Claude Code's own durations from the same record as
+// its cost (R78). They cover what the cost covers, the session and its
+// sub-agents, and they follow the process rather than the transcript: its wall
+// time runs on while the session sits open with nothing written.
+func claudeReportedTime(r *obj) []any {
+	if r == nil {
+		return nil
+	}
+	figure := trajectory.NewObject("covers", "tree")
+	for _, f := range [][2]string{{"elapsedMs", "totalDuration"}, {"modelMs", "totalAPIDuration"}, {"modelMsWithoutRetries", "totalAPIDurationWithoutRetries"}, {"toolMs", "totalToolDuration"}} {
+		if v := get(r, f[1]); isJSNumber(v) {
+			figure.Set(f[0], v)
+		}
+	}
+	if len(figure.Members()) == 1 {
+		return nil
+	}
+	return []any{figure}
 }
 
 // claudeReportedCost reads Claude Code's own cost figure (§9). It covers the
