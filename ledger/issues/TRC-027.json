@@ -3,17 +3,19 @@
   "title": "A reply Claude Code writes for an API error is not marked as an error",
   "type": "defect",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, while adding the synthetic field for TRC-015",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "48a601a"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "Three attended projects were normalized and exported with the fix. All five API-error replies became error events labelled with their reason, four `authentication_failed` and one `rate_limit`. No session reports `<synthetic>` as its model, and the one that opens on a synthetic reply now reports `claude-opus-5`. The eleven \"No response requested.\" replies stay unmarked. The maintainer checked the error cards in the viewer, and `make ci` passes."
   },
-  "resolution": null,
+  "resolution": "The Claude adapter marks a reply flagged `isApiErrorMessage` with `isError`, and labels it with the record's `error` reason. The text stays Claude Code's own sentence, as R67 has codex do. A `<synthetic>` reply no longer sets `meta.model`, so a session of only synthetic replies names no model. A unit test builds both cases from the real records' shapes.",
   "details": "Claude Code writes a `<synthetic>` assistant record for some replies it makes without the model, including an API error, which also carries `isApiErrorMessage`. The adapter now marks these `synthetic`, but not as errors. This is the Claude Code counterpart of the codex failure R67 fixed, and a turn that died on the provider still reads as a reply.\n\nA session whose first assistant record is synthetic also sets `meta.model` to `<synthetic>`, since the model is taken from the first one.\n\nNo captured corpus holds an API-error reply, so a fixture or unit test has to be built for it.",
   "notes": [
     {
