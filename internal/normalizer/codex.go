@@ -227,9 +227,26 @@ func NormalizeCodex(records []*obj) *obj {
 				// Notifications duplicating content that arrives via response
 				// items. Rendering them would double every turn.
 				skipped.add("event_msg:" + pt)
+			case "item_completed":
+				// The same duplication, one notice per item, so it is named by
+				// item type: an item type nobody has classified still surfaces
+				// (R37). ContextCompaction repeats the `compacted` record.
+				it := "event_msg:item_completed:" + fallback(str(get(object(get(payload, "item")), "type")), "missing")
+				switch it {
+				case "event_msg:item_completed:Reasoning", "event_msg:item_completed:AgentMessage",
+					"event_msg:item_completed:UserMessage", "event_msg:item_completed:CommandExecution",
+					"event_msg:item_completed:FileChange", "event_msg:item_completed:ContextCompaction":
+					skipped.add(it)
+				default:
+					unknown(it, ts)
+				}
 			default:
 				unknown("event_msg:"+fallback(pt, "missing"), ts)
 			}
+		case "compacted":
+			// The context was summarized and replaced, which changes what the
+			// model sees from here on, so a reader needs to see where.
+			events = append(events, trajectory.NewObject("kind", "meta", "ts", ts, "rawType", typ, "text", "context compacted"))
 		case "world_state", "inter_agent_communication_metadata":
 			skipped.add(typ)
 		default:

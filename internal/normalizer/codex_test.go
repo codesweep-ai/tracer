@@ -90,3 +90,42 @@ func TestNormalizeCodexFailedTurnIsAnError(t *testing.T) {
 		t.Fatal("the completed turn reaches the strip as an error")
 	}
 }
+
+// TRC-015. `item_completed` repeats an item the adapter already reads, so it is
+// tallied rather than drawn, but only for item types named as duplicates: a new
+// one must still surface (R37). `compacted` is a real change and is drawn.
+func TestNormalizeCodexItemCompletedIsSkippedByItemType(t *testing.T) {
+	doc, err := NormalizeBytes([]byte(
+		"{\"type\":\"session_meta\",\"payload\":{\"id\":\"t1\"}}\n" +
+			"{\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"Reasoning\"}}}\n" +
+			"{\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"CommandExecution\"}}}\n" +
+			"{\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"Hologram\"}}}\n" +
+			"{\"timestamp\":\"2026-09-14T20:36:16.130Z\",\"type\":\"compacted\",\"payload\":{\"message\":\"\"}}"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	parse := object(get(doc, "parse"))
+	if got := num(get(parse, "unrecognized")); got != 1 {
+		t.Fatalf("parse.unrecognized = %v, want 1 (the unnamed item type)", got)
+	}
+	skipped := map[string]float64{}
+	for _, s := range get(parse, "skippedByType").([]any) {
+		skipped[str(get(object(s), "type"))] = num(get(object(s), "count"))
+	}
+	for _, k := range []string{"event_msg:item_completed:Reasoning", "event_msg:item_completed:CommandExecution"} {
+		if skipped[k] != 1 {
+			t.Fatalf("skippedByType[%s] = %v, want 1", k, skipped[k])
+		}
+	}
+	var kinds []string
+	for _, e := range get(doc, "events").([]*obj) {
+		kinds = append(kinds, str(get(e, "rawType"))+"="+str(get(e, "text")))
+	}
+	want := []string{
+		"event_msg:item_completed:Hologram=unrecognized Codex record/payload type: event_msg:item_completed:Hologram",
+		"compacted=context compacted",
+	}
+	if strings.Join(kinds, "|") != strings.Join(want, "|") {
+		t.Fatalf("events = %q, want %q", kinds, want)
+	}
+}
