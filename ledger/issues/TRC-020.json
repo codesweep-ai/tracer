@@ -3,17 +3,19 @@
   "title": "A card in the details list does not show which mark on the strip it belongs to",
   "type": "improvement",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "user request: \"In the title bar of the details panels (like #12 · tool call etc). can you prefix it with te square/rectangle that it corresponds to? it'll make it easier to scroll.\"",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 time accounting",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "617276f"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled. Two new viewer tests assert the mark's kind, colour token, error cross and hollow form, and that it sits before the title text. A rendered codex trajectory showed the mark matching its selected cell in light and dark themes, and a cross on a rate-limited turn end."
   },
-  "resolution": null,
+  "resolution": "Each card's title now opens with the event's mark, drawn from the table the strip paints with. It is hollow when redacted at source, and carries the strip's error cross when the event failed. The MANUAL says so beside the table of marks.",
   "details": "The trajectory page draws each event twice: as a mark on the strip and as a card in the details list below it. A card's title names the event's index and kind in text, and nothing in it looks like the mark.\n\nA reader scrolling the list has to read each title to know which colour on the strip it answers to. The title should open with the mark itself: the kind's colour, hollow when the content was redacted at source, and the error cross when the event failed.",
   "notes": [],
   "links": []
