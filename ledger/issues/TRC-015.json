@@ -3,19 +3,30 @@
   "title": "Time between records lands on bookkeeping, so model latency is drawn nowhere",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, measuring where elapsed time sits in thirty captured unattended trajectories",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 time accounting",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "881c7a7",
+      "eca5f0b",
+      "471dcf8",
+      "49d4e97",
+      "8b208cc"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled. Four new unit tests cover the rule, and two cover the reclassified records; each of the latter fails without its fix.\n\nThe goldens moved in 57 files, checked structurally against the previous ones. The field workMs was added to 3,439 events and their strip entries, and synthetic to one event, with no other difference beyond size.\n\nAgainst the thirty captured unattended trajectories, time drawn nowhere fell to 0.0% for Claude Code, 2.5% for codex and 0.0% for opencode. No trajectory in those three sets reports an unrecognized record, where codex alone reported 3,404 before."
   },
-  "resolution": null,
+  "resolution": "A thinking step, an assistant message or a tool call now carries `workMs`, the time from the end of the previous work to its own end, stepping over bookkeeping. R70 specifies it, and the schema describes it on the event and the strip entry.\n\nThe codex adapter skips `item_completed` by item type and draws `compacted` as an event. The Claude adapter ignores `atis-latch`, `agent-color` and `relocated` by name. A reply Claude Code wrote without calling a model carries `synthetic` and no work, because one captured session charged such a reply the 37 minutes the user took to return.",
   "details": "No event says how long it took, apart from a tool call's own run time. A reader who wants the time a model response took has to subtract timestamps across neighbours, and most neighbours are bookkeeping.\n\nClaude Code writes a context attachment after nearly every tool result, and codex writes an `item_completed` notice beside every item. The model's latency sits between those records and the reply. Measured over thirty captured trajectories, 8% to 26% of elapsed time belongs to no event even after idle is set aside.\n\nThe codex notices make it worse, because the adapter does not recognize them. They reach the strip as 3,404 unrecognized events, and every codex trajectory carries a warning badge for records that only repeat items the adapter already reads. Claude Code's `atis-latch`, `agent-color` and `relocated` records are flagged the same way, though each carries no timestamp and holds one constant value.\n\nThe time should land on the work that consumed it. A thinking step, an assistant message or a tool call owns the interval from the end of the previous piece of work to its own end, stepping over bookkeeping. A tool call ends when its result arrives.\n\nTo reproduce, normalize a codex session and count the `event_msg:item_completed` warnings.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-21",
+      "text": "The first reading of the rule measured forward from each response, and left 8% to 26% of elapsed time on no event. The user chose the backward interval over it on those figures."
+    }
+  ],
   "links": [
     "TRC-014"
   ]
