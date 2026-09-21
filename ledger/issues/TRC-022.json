@@ -3,17 +3,20 @@
   "title": "OpenCode stamps reasoning and text when they start, so their model time lands on the next event",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "user asked whether long thinking times were real; session agent checked them against the start and end times OpenCode records",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 time accounting",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "71d75e5",
+      "8a38931"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`go test ./...` passes. A new test normalizes a 59-second reasoning part followed by a 4-second reply, and asserts that each carries its own time. It fails without the fix, reporting 1 and 59 seconds.\n\nThe goldens moved the timestamps of 55 reasoning and reply events, and the model time and size that follow from them, in the OpenCode fixtures alone. Across 747 steps in 24 captured OpenCode trajectories, no step's bar is now shorter than its own generation, where the reply after it used to take that time."
   },
-  "resolution": null,
+  "resolution": "Reasoning and assistant text are now stamped with `time.end`, falling back to `time.start` when no end is recorded. User text keeps its start. The fix is in the OpenCode adapter alone.",
   "details": "R70 measures each step from the end of the previous work to the end of this one, reading an event's timestamp as the moment the step finished. Claude Code and Codex stamp a block when it finishes. The OpenCode adapter stamps a reasoning or text part with `time.start`, when it began.\n\nSo each OpenCode step is charged the wait before it, and its own generation is charged to the event after it. In one captured session a reasoning part ran 59.0 seconds and the reply after it 3.8. The strip showed 1.0 second on the reasoning and 59.0 on the reply.\n\nAcross 24 captured OpenCode trajectories, 28 reasoning parts ran over 40 seconds, and the strip showed one. It showed 22 replies over 40 seconds, where six ran that long.\n\nThe part records `time.end`. A reasoning or text part should be stamped with it, as the other adapters stamp a finished block.",
   "notes": [],
   "links": [
