@@ -1,0 +1,24 @@
+{
+  "id": "TRC-017",
+  "title": "A trajectory's cost field holds a reported figure for one CLI and an estimate for the others",
+  "type": "defect",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "user, while reviewing how Claude Code's cost-state record should be handled: \"the normalized model should be able to handle the superset of costs and not be cli dependent, but just dependent on it's schema\"",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": "2026-09-21 time accounting",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The field `totals.cost` holds OpenCode's own figure for an OpenCode trajectory and tracer's price-table estimate for the other two adapters. Only `costEstimated` tells them apart, and the index adds both kinds into one total. The shared pricing pass skips OpenCode by name, which is knowledge of one CLI outside its adapter.\n\nThe OpenCode adapter also lets the session's own figure replace the sum of its per-step costs without saying so. The two agree in every captured session, but nothing checks it.\n\nClaude Code writes a `cost-state` record with its own figure, and the adapter reports it as unrecognized. That figure covers the session and its sub-agents together, plus calls never written to any transcript. Stored on one trajectory as that trajectory's cost, it would count the sub-agents twice in any total.\n\nThe schema should hold every cost a CLI reports, named for its provenance and for what it covers, beside tracer's own estimate. An adapter fills what its CLI provides and leaves the rest absent. No field falls back to another. The viewer shows a reported figure where one exists, and otherwise the estimate marked as one.",
+  "notes": [],
+  "links": [
+    "TRC-006",
+    "TRC-007",
+    "TRC-008"
+  ]
+}
