@@ -1,0 +1,23 @@
+{
+  "id": "TRC-023",
+  "title": "Model time cannot be split into the wait before a step and its generation",
+  "type": "improvement",
+  "severity": "low",
+  "status": "in-progress",
+  "foundBy": "user asked whether thinking times of 45 seconds and more were real; the check found most of each was waiting before the model began",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": "2026-09-21 time accounting",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "R70 gives each thinking step, reply and tool call the time from the end of the previous work to its own end. That is the round trip to the model: the wait for it to begin, then its generation. The figure is right, but a reader sees it labelled as thinking.\n\nIn one captured codex trajectory a thinking step carries 48.1 seconds. Codex records that the reasoning itself ran 0.2 seconds, and the 47.9 before it was spent waiting for the model to start. Nine codex steps carry over 40 seconds, and none of them reasoned for more than eight.\n\nTwo adapters can tell the parts apart. Codex's `item_completed` notice gives each reasoning item and message its start and end, and OpenCode gives every part a start time. Claude Code records only when a block finished, so its round trip cannot be split.\n\nAn event should carry when its step began wherever the CLI records it, and the strip should carry how much of the model time was generation.",
+  "notes": [],
+  "links": [
+    "TRC-015",
+    "TRC-022"
+  ]
+}
