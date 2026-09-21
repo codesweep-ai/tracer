@@ -42,6 +42,12 @@ VIEWER_SRC := $(shell find apps/viewer/src apps/viewer/public apps/viewer/script
 # There are two Node sub-projects and no workspace, so each installs its own.
 VIEWER_DIR    := apps/viewer
 FIXTEST_DIR   := fixtures/test
+# The npm command, and the script every install runs through. That script puts
+# cs-npmrevs in front of npmjs.com: @codesweep-ai/ui publishes an image of every
+# build it makes, and a version that has not been released reaches npm only that
+# way. The script says how it picks the registry.
+NPM           ?= npm
+WITH_NPMREVS  := $(abspath scripts/with-npmrevs.sh)
 VIEWER_STAMP  := $(VIEWER_DIR)/node_modules/.package-lock.json
 FIXTEST_STAMP := $(FIXTEST_DIR)/node_modules/.package-lock.json
 
@@ -111,7 +117,7 @@ help:
 # npm is available; the design system it imports is @codesweep-ai/ui from the
 # registry, pinned in package.json, so no second checkout is involved.
 viewer: $(VIEWER_ARTIFACTS)
-ifeq ($(and $(wildcard apps/viewer/package.json),$(shell command -v npm 2>/dev/null)),)
+ifeq ($(and $(wildcard apps/viewer/package.json),$(shell command -v $(NPM) 2>/dev/null)),)
 	@echo "viewer: building from the committed artifacts under $(VIEWER_OUT)"
 
 # Nothing here can produce an artifact, so this rule fires only for one that is
@@ -134,19 +140,21 @@ endif
 
 ## viewer-build: run both Vite builds and assert the artifact constraints
 viewer-build: $(VIEWER_STAMP)
-	cd $(VIEWER_DIR) && npm run build:single
-	cd $(VIEWER_DIR) && npm run build:split
-	cd $(VIEWER_DIR) && npm run assert:builds
+	cd $(VIEWER_DIR) && $(NPM) run build:single
+	cd $(VIEWER_DIR) && $(NPM) run build:split
+	cd $(VIEWER_DIR) && $(NPM) run assert:builds
 
 # `npm ci` empties node_modules and repopulates it from the lockfile, which is
 # several seconds of nothing when the lockfile has not moved. Every target that
 # shells out to npm asks for this first, because none of them can now count on
 # a viewer build having just run one.
 $(VIEWER_STAMP): $(VIEWER_DIR)/package.json $(VIEWER_DIR)/package-lock.json
-	cd $(VIEWER_DIR) && npm ci
+	cd $(VIEWER_DIR) && $(WITH_NPMREVS) $(NPM) ci
 
+# fixtures/test depends on nothing of ours today. It installs through the script
+# all the same, so the day it does is not the day that is discovered.
 $(FIXTEST_STAMP): $(FIXTEST_DIR)/package.json $(FIXTEST_DIR)/package-lock.json
-	cd $(FIXTEST_DIR) && npm ci
+	cd $(FIXTEST_DIR) && $(WITH_NPMREVS) $(NPM) ci
 	@touch $@
 
 ## build: host binary at bin/cs-tracer via goreleaser (single target; use this,
@@ -218,18 +226,18 @@ conventions:
 ## rather than failing: a gate that fails for a reason unrelated to the change
 ## teaches contributors to ignore it.
 viewer-lint:
-	@if [ -d apps/viewer ] && command -v npm >/dev/null 2>&1; then \
+	@if [ -d apps/viewer ] && command -v $(NPM) >/dev/null 2>&1; then \
 		$(MAKE) --no-print-directory $(VIEWER_STAMP); \
-		cd $(VIEWER_DIR) && npm run lint; \
+		cd $(VIEWER_DIR) && $(NPM) run lint; \
 	else \
 		echo "SKIP viewer-lint: npm is not installed, so the viewer sources cannot be built here"; \
 	fi
 
 ## viewer-test: the viewer's own suite and its schema conformance
 viewer-test:
-	@if [ -d apps/viewer ] && command -v npm >/dev/null 2>&1; then \
+	@if [ -d apps/viewer ] && command -v $(NPM) >/dev/null 2>&1; then \
 		$(MAKE) --no-print-directory $(VIEWER_STAMP) $(FIXTEST_STAMP); \
-		( cd $(VIEWER_DIR) && npm test ) && node $(FIXTEST_DIR)/schema-conformance.mjs; \
+		( cd $(VIEWER_DIR) && $(NPM) test ) && node $(FIXTEST_DIR)/schema-conformance.mjs; \
 	else \
 		echo "SKIP viewer-test: npm is not installed, so the viewer sources cannot be built here"; \
 	fi
@@ -239,13 +247,13 @@ viewer-test:
 ## Needs the viewer sources and a browser. There is no Playwright cache in a
 ## fresh checkout, so a machine without one skips rather than failing.
 parity:
-	@if [ ! -d apps/viewer ] || ! command -v npm >/dev/null 2>&1; then \
+	@if [ ! -d apps/viewer ] || ! command -v $(NPM) >/dev/null 2>&1; then \
 		echo "SKIP parity: npm is not installed"; \
 	elif [ -z "$${CS_TRACER_CHROMIUM:-}" ] && [ ! -x /usr/bin/chromium-browser ]; then \
 		echo "SKIP parity: no browser, so set CS_TRACER_CHROMIUM=/path/to/chrome"; \
 	else \
 		$(MAKE) --no-print-directory $(VIEWER_STAMP); \
-		cd $(VIEWER_DIR) && npm run parity; \
+		cd $(VIEWER_DIR) && $(NPM) run parity; \
 	fi
 
 ## ledger: validate the issue records and prove ledger.html is current
@@ -373,7 +381,7 @@ surface: build
 ## (CS_TRACER_CHROMIUM, or TRACER_FIXTURES_BROWSER). `--strict` and other
 ## flags pass through FIXTURES_ARGS.
 fixtures: build
-	cd $(VIEWER_DIR) && npm run fixtures -- $(FIXTURES_ARGS)
+	cd $(VIEWER_DIR) && $(NPM) run fixtures -- $(FIXTURES_ARGS)
 
 # The four targets above are one shared tool: github.com/codesweep-ai/lint,
 # pinned in go.mod and run with `go tool`, so the gates use the version this
