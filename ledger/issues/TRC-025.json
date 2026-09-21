@@ -3,17 +3,19 @@
   "title": "The index lane's meta line cuts off the cost now that the time label is longer",
   "type": "defect",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, reviewing the rendered index with the user after the time label changed",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "c0b1fd8"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "Measured in a browser on the four corpora's split indexes, 94 lanes in all. Before the fix, every lane's line overflowed at 1280 px, by up to 317 px. After it, at 1280 and 600 px, no lane cuts its tokens, time or cost, and every row's tooltip matches its text. Only OpenCode's 24 long model names still cut at 1280 px, from the left. `make ci` passes, and its fixture suite reports no moved check."
   },
-  "resolution": null,
+  "resolution": "Each lane now shows three rows: tokens and model, then time, then cost. Every row carries its full text as a tooltip. The model comes last in its row and cuts from the left, so a long name keeps its distinguishing end and the token count stays whole. The cost row is omitted when a trajectory has no figure.",
   "details": "Each lane on the index shows one meta line: model, tokens, time and cost. That label now names both working and open hours, such as `2.6 h working · 31.5 h open`. The line overflows its column and ends in an ellipsis, so the cost, which comes last, is the part a reader loses.\n\nTo reproduce, export any attended Claude Code session with `--split` and open the index at a normal window width.",
   "notes": [
     {
