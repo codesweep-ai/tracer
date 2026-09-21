@@ -65,6 +65,7 @@ export const CHECKS = [
   //    them all. These record the VIOLATIONS, so the expected value is [].
   { id: "TF-33", name: "invariant.stripMatchesData", status: "keep", note: "for each kind chip selected alone: the strip's rendered data-event-count must equal the count of that kind in the source strip data. Catches a strip that filters on anything other than the event's own kind" },
   { id: "TF-35", name: "invariant.cardMarksAligned", status: "keep", note: "every rendered card's strip mark, and the label after it, must sit at the same offset from its card, compact redacted cards included, so the marks read as one column while scrolling (TRC-020). Measured after a deep link to the first redacted event, which puts both card forms on screen" },
+  { id: "TF-36", name: "invariant.deepLinkLands", status: "keep", note: "a cold load of #ev-N puts card N's top at the top of the event list, or the list at its end, for eight N spread over the trace (TRC-033). TF-32 asks only that the card intersect the list, which a card cut partway down still does" },
   { id: "TF-34", name: "invariant.canvasPinned", status: "keep", note: "the strip canvas must stay pinned to its scrollport at 0%, 50% and 100% horizontal scroll. The paint already subtracts scrollLeft, so a canvas that scrolls away offsets everything twice and the drawn region collapses" },
 ];
 
@@ -414,6 +415,24 @@ export async function interaction(browser, fixture) {
     const [first] = offsets;
     out.push(["TF-35", variant, offsets.filter((o) => Math.abs(o.mark - first.mark) > 1 || Math.abs(o.label - first.label) > 1)]);
     await close();
+  }
+
+  // TF-36 — a deep link lands on its card. One cold load per target, since the
+  // defect lived in the first landing, before any card had been measured.
+  {
+    const targets = [...new Set(Array.from({ length: 8 }, (_, k) => strip[Math.floor((k * (strip.length - 1)) / 7)].i))];
+    const misses = [];
+    for (const target of targets) {
+      const { page, close } = await openPage(browser, `${fixture.traceUrl}#ev-${target}`, { theme: "dark", tracePage: true });
+      const landing = await page.evaluate(([sel, i]) => {
+        const list = document.querySelector(sel.virtualList); const card = document.querySelector(`[${sel.eventIndexAttr}="${i}"]`);
+        const atEnd = list.scrollTop >= list.scrollHeight - list.clientHeight - 1;
+        return { offset: card ? Math.round(card.getBoundingClientRect().top - list.getBoundingClientRect().top) : null, atEnd };
+      }, [S, target]);
+      if (!landing.atEnd && (landing.offset == null || Math.abs(landing.offset) > 1)) misses.push({ i: target, offset: landing.offset });
+      await close();
+    }
+    out.push(["TF-36", variant, misses]);
   }
 
   return out;

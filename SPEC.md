@@ -388,6 +388,11 @@ as a known.* Which figure a trajectory shows, and how a total counts a tree, is 
 
 **R53.** `#ev-<n>` **MUST** select that event in both export modes, on a cold load.
 
+**R81.** A cold load of `#ev-<n>` **MUST** scroll the event list until that event's card begins at
+its top, unless the scroll reaches the end first. *Intersecting the list is not enough: a landing
+judged on estimated row heights left the card cut partway down, or one card below, once the real
+heights arrived.*
+
 **R54.** A proven parent-child connector **MUST** render distinctly from a link hint. *A hint comes
 from a `--links` file and is somebody's claim, and a connector comes from the session's own spawn
 event.*

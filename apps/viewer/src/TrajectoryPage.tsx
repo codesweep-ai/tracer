@@ -63,6 +63,7 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
   // life of the page: a user scroll landing on one to the pixel loses a single
   // spy update and the next event in the stream corrects it.
   const programmaticTops = useRef<number[]>([]);
+  const landed = useRef<{ index: number; top: number } | null>(null);
   // Centring is a NAVIGATION concern, so it is tracked apart from navRequest,
   // which a strip click and a filter correction also raise. Yanking the strip
   // under a reader who just clicked a cell, or who is scrolling the list, is
@@ -100,6 +101,10 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
   // is not re-armed on every render of this page (TR-22).
   const onSearch = useCallback((value: string) => setActiveQuery(value.trim()), []);
 
+  // A pending navigation keeps re-aiming the scroll until it lands, so a reader
+  // who scrolls first takes over: their input ends the intent, never the reverse.
+  const yieldToReader = useCallback(() => { pendingNavTarget.current = null; landed.current = null; }, []);
+
   const selectEvent = useCallback((index: number) => {
     pendingNavTarget.current = index;
     setNavRequest({ index, sequence: ++navSequence.current });
@@ -113,8 +118,18 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
   // check honest without making loadedChunks an effect dependency.
   const loadedChunksRef = useRef(loadedChunks); loadedChunksRef.current = loadedChunks;
   useEffect(() => { const chunks = new Set<number>(); for (let position = visible.start; position < visible.end; position++) { const eventIndex = displayed[position]; if (eventIndex != null) chunks.add(Math.floor(eventIndex / trace.summary.chunkSize)); } chunks.forEach((chunk) => { if (loadedChunksRef.current.has(chunk)) return; void loadChunk(trace.path, chunk).then((data) => setLoadedChunks((current) => current.get(chunk) === data ? current : new Map(current).set(chunk, data))); }); }, [displayed, trace.path, trace.summary.chunkSize, visible.end, visible.start]);
-  useEffect(() => { const target = navRequest.index; if (pendingNavTarget.current !== target) return; setSelected(target); const position = displayed.indexOf(target); const element = viewport.current; if (position >= 0 && element) { const atScrollEnd = element.scrollTop >= element.scrollHeight - element.clientHeight - 1; if (cardInView(element, target) && (atScrollEnd || displayed[positionAtOffset(offsets, element.scrollTop)] === target)) pendingNavTarget.current = null; else { const top = offsets[position] ?? 0; programmaticTops.current.push(top); element.scrollTo({ top, behavior: "auto" }); } } history.replaceState(null, "", `#ev-${target}`); }, [displayed, navRequest, offsets]);
+  // A navigation lands only when the target's offset is real: every card from
+  // the window's top down to it measured, and the list at that offset (or at
+  // its end). Until then each new measurement re-aims the scroll. Landing on
+  // estimates alone let a cold deep link discharge at once, and the real
+  // heights then moved the card with nothing left to correct it (TRC-033).
+  useEffect(() => { const target = navRequest.index; if (pendingNavTarget.current !== target) return; setSelected(target); const position = displayed.indexOf(target); const element = viewport.current; if (position >= 0 && element) { const top = offsets[position] ?? 0; const atScrollEnd = element.scrollTop >= element.scrollHeight - element.clientHeight - 1; let measured = cardInView(element, target); for (let above = visible.start; measured && above < position; above++) measured = measuredHeights.has(displayed[above]!); if (measured && (atScrollEnd || Math.abs(element.scrollTop - top) < 1)) { pendingNavTarget.current = null; landed.current = { index: target, top: element.scrollTop }; } else if (Math.abs(element.scrollTop - top) >= 1) { programmaticTops.current.push(top); element.scrollTo({ top, behavior: "auto" }); } } history.replaceState(null, "", `#ev-${target}`); }, [displayed, measuredHeights, navRequest, offsets, scrollTop, visible.start]);
   useEffect(() => { if (pendingNavTarget.current == null) history.replaceState(null, "", `#ev-${selected}`); }, [selected]);
+  // A card can re-measure after its first report, once layout settles, and
+  // one above the landed target then moves it. So the landing stays anchored
+  // while the list is still where the navigation left it. A list anywhere else
+  // was moved by the reader, and the anchor lets go.
+  useEffect(() => { const anchor = landed.current; const element = viewport.current; if (!anchor || !element || pendingNavTarget.current != null) return; if (Math.abs(element.scrollTop - anchor.top) >= 1) { landed.current = null; return; } const position = displayed.indexOf(anchor.index); const top = offsets[position] ?? 0; if (position < 0 || Math.abs(top - anchor.top) < 1) return; programmaticTops.current.push(top); element.scrollTo({ top, behavior: "auto" }); landed.current = { index: anchor.index, top: element.scrollTop }; }, [displayed, offsets]);
   // A filter change is a navigation intent, resolved ONCE, when the displayed set is
   // final. A text scan lands progressively (matches grow per chunk — instantly when
   // the chunks are cached), and a shrinking list makes the browser clamp scrollTop,
@@ -193,7 +208,7 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
       />
     </div>
     <EventStrip events={trace.summary.strip} selected={selected} onSelect={selectEvent} label={`${trace.id} event strip`} laneLabel="" hiddenKinds={hiddenKinds} matches={stripMatches} textFiltering={Boolean(activeQuery) || errorsOnly} focus={centerRequest} />
-    <div ref={viewport} data-testid="virtual-event-list" tabIndex={0} role="region" aria-label="Events" className="virtual-list" onScroll={(event) => { const top = event.currentTarget.scrollTop; setScrollTop(top); const index = displayed[positionAtOffset(offsets, top)]; const pending = pendingNavTarget.current; if (pending != null) { if (index === pending && cardInView(event.currentTarget, pending)) pendingNavTarget.current = null; return; } if (programmaticTops.current.some((requested) => Math.abs(requested - top) < 1)) return; if (correctOnLand.current) return; if (index != null && index !== selected) setSelected(index); }}>
+    <div ref={viewport} data-testid="virtual-event-list" tabIndex={0} role="region" aria-label="Events" className="virtual-list" onWheel={yieldToReader} onTouchMove={yieldToReader} onKeyDown={yieldToReader} onPointerDown={yieldToReader} onScroll={(event) => { const top = event.currentTarget.scrollTop; setScrollTop(top); const index = displayed[positionAtOffset(offsets, top)]; const pending = pendingNavTarget.current; if (pending != null) return; if (programmaticTops.current.some((requested) => Math.abs(requested - top) < 1)) return; if (correctOnLand.current) return; if (index != null && index !== selected) setSelected(index); }}>
       {!displayed.length && <p role="status" data-testid="empty-filter" className="empty-filter">{kinds.size === 0 ? "No event kinds selected — pick one above, or choose all." : errorsOnly ? "No errored events in this trajectory." : "No events match this filter."}</p>}
       <div className="virtual-list-inner" style={{ height: offsets[offsets.length - 1] ?? 0 }}>
         <div className="virtual-list-window" style={{ top: offsets[visible.start] ?? 0 }}>{displayed.slice(visible.start, visible.end).map((i) => { const event = loadedChunks.get(Math.floor(i / trace.summary.chunkSize))?.events[i % trace.summary.chunkSize]; return event ? <MeasuredEventCard key={i} event={event} query={activeQuery} inputView={inputView} onHeight={recordHeight} /> : /* App-local layout token defined in styles.css. */ <div key={i} aria-label={`Loading event ${i}`}><Skeleton variant="rect" height="var(--event-row-height)" /></div>; })}</div>

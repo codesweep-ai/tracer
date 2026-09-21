@@ -3281,6 +3281,21 @@
   }
  },
  {
+  "id": "TF-36",
+  "name": "invariant.deepLinkLands",
+  "status": "keep",
+  "note": "a cold load of #ev-N puts card N's top at the top of the event list, or the list at its end, for eight N spread over the trace (TRC-033). TF-32 asks only that the card intersect the list, which a card cut partway down still does",
+  "value": {
+   "large-session": [],
+   "codex-multi-agent-run": [],
+   "subagent-run": []
+  },
+  "origin": {
+   "id": "TRC-033",
+   "reason": "New invariant: a cold deep link lands with its card at the top of the list. The pre-fix build misses on every fixture; this build misses none."
+  }
+ },
+ {
   "id": "TF-34",
   "name": "invariant.canvasPinned",
   "status": "keep",

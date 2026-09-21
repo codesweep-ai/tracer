@@ -1,0 +1,25 @@
+{
+  "id": "TRC-033",
+  "title": "A deep link to an event sometimes scrolls the event list to the wrong position",
+  "type": "defect",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "another agent session, checking deep links for tools that will link into the tracer; the session agent saw it too while verifying TRC-027",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": "2026-09-21 strip changes",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Opening a trajectory page with `#ev-N` in the URL selects event N on the strip correctly. The event list below it does not always scroll so that card N sits at the top. Sometimes the next card is at the top, with card N just above the visible area. Sometimes card N is at the top but cut off partway down.\n\nCard N's header should be the first thing visible in the list, every time, for any N. Other tools will link into the tracer by event, so a link has to land on the event it names.\n\nTo reproduce, open a trajectory with a few hundred events at `#ev-N` in a fresh tab and try several values of N. On one 372-event trace, N=123 opened with #124 at the top on every attempt, while N=5, 120 and 300 landed. On a 702-event trace, N=252 opened partway down its card at two window sizes. Whether a given N fails is repeatable, but it depends on N.",
+  "notes": [
+    {
+      "date": "2026-09-21",
+      "text": "A sweep of one 1027-event attended trace missed on 63 of 147 links, by 70 to 1127 px, while a 232-event trace missed none. On every miss the list stays at N times the estimated row height and never scrolls again. The first check finds card N at the top by the estimates alone and discharges the navigation. Real heights then land and move the card, and nothing corrects the scroll. The links that work are those where card N was off screen at that first check."
+    }
+  ],
+  "links": []
+}
