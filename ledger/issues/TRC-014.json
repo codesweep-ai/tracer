@@ -3,17 +3,20 @@
   "title": "Idle ends at the next record of any kind, so bookkeeping cuts it short",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "opened": "2026-09-21",
   "foundBy": "session agent, auditing R68 against real output after the user asked whether anything needed redoing",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "idle-time",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "66bd3b5",
+      "6f665b1"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled. Two new tests cover the defect. One asserts that timestamped bookkeeping does not end the wait, over a gap of three hours. The other asserts that a turn end followed only by bookkeeping carries no field.\n\nThe goldens moved in four files, checked structurally against the previous ones. The field idleMs was corrected in four places and removed from four, and size shifted in two, with no other difference. The removals are turn ends after which work never resumed.\n\nAgainst the thirty captured trajectories that exposed it, reported idle rose from 239.2 hours to 292.9, over 401 intervals. That matches the figure measured by hand before the fix, to the tenth of an hour. The codex and opencode corpora report the same totals as before, which is what the defect predicted."
   },
-  "resolution": null,
+  "resolution": "The idle interval now runs from the turn end until work resumes. Work resumes at a user instruction, an assistant message, a thinking step or a tool call. A meta or system record is stepped over, timestamp or not, because it is the agent standing still.\n\nR68 was reworded to say so, and the schema description for `idleMs` with it. A turn end after which work never resumes carries no field, which is the same rule R68 already applied to a turn end with nothing after it.",
   "details": "R68 says the idle interval runs from the event that ends a turn to the next event, and the implementation matches it. Both are wrong about what the next event means.\n\nA record that carries no work does not end the wait. Claude Code writes context attachments and queue operations while the agent sits doing nothing, and each one carries a timestamp. The interval stops at the first of them. A turn that ended at noon and resumed at three reports two seconds of idle, when a bookkeeping record landed two seconds after noon.\n\nMeasured over thirty captured trajectories, 46 of 401 intervals end early. Reported idle totals 239.2 hours against 292.9 hours measured to the next event that does work. Eighteen percent of the waiting is lost.\n\nThe other two adapters show no difference at all, because neither writes anything between a turn ending and the agent resuming. That is what made the defect easy to miss: two of the three corpora agree with the wrong implementation.\n\nThe interval should end at the next event that represents work, meaning a user instruction, an assistant message, a thinking step or a tool call. A meta or system record is the agent standing still, which is the definition of the interval being measured.\n\nTo reproduce, normalize a session where a context attachment follows a turn ending, and compare the stamped idleMs against the gap to the next real event.",
   "notes": [],
   "links": [
