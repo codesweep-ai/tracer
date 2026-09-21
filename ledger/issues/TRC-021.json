@@ -1,0 +1,26 @@
+{
+  "id": "TRC-021",
+  "title": "The fixture suite runs in no gate, so five of its expectations fell behind the changes they measure",
+  "type": "defect",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "session agent, running the whole fixture suite after adding a check for card marks",
+  "opened": "2026-09-21",
+  "resolved": null,
+  "stint": "2026-09-21 time accounting",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The fixture suite in `apps/viewer/fixtures` drives the exported pages in a browser and compares 35 measurements against `expectations.json`. Neither `make check` nor `make ci` runs it, so a change can pass every gate while the suite fails.\n\nFive checks fail on the current tree, and each failure is an intended change the expectations never recorded. The index rollup still expects the token and cost totals from before the cost fixes. The kind chips predate a local command's echo becoming a system event. Two keyboard checks predate the raw JSON toggle on tool inputs, and the data size predates the time and cost fields.\n\nA suite nobody runs cannot catch anything. The first real defect it could have caught was a card mark four pixels out of line, and it only caught that once somebody ran it by hand.\n\nTo reproduce, run `make fixtures` with a browser configured.",
+  "notes": [],
+  "links": [
+    "TRC-016",
+    "TRC-011",
+    "TRC-017",
+    "TRC-018",
+    "TRC-020"
+  ]
+}
