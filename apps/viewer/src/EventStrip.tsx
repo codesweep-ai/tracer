@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { EventLanes } from "@codesweep-ai/ui";
 import type { EventLaneEvent } from "@codesweep-ai/ui";
 import { eventLabel } from "./format";
@@ -23,6 +23,30 @@ export function stripAxisPadding(cellWidth: number): number {
 const LANE_ID = "events";
 
 /**
+ * Scroll `scroller` so cell `index` sits in the middle of it.
+ *
+ * Geometry comes off the strip wrapper's own data attributes, the same contract
+ * the fork connectors and the fixture suite read, so the three cannot disagree
+ * about where a cell is. Clamped at both ends: a cell with too few events after
+ * it stops at the end of the strip rather than centring into blank space, which
+ * is the "where there is room" half of R62.
+ *
+ * Instant, never smooth: the parity gate compares an interaction end state
+ * between two transports, and an animation makes that a race.
+ */
+export function centerCell(strip: HTMLElement, scroller: HTMLElement, index: number): void {
+  const cellWidth = Number(strip.dataset.cellWidth) || STRIP_CELL_WIDTH;
+  const cellOffset = Number(strip.dataset.cellOffset) || stripAxisPadding(cellWidth);
+  const middle = cellOffset + index * cellWidth + cellWidth / 2 - scroller.clientWidth / 2;
+  const furthest = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+  scroller.scrollLeft = Math.max(0, Math.min(furthest, middle));
+}
+
+/** A request to bring one cell into view, CENTRED. The sequence makes a repeat
+ *  request for the same index a fresh one. */
+export interface StripFocus { index: number; sequence: number }
+
+/**
  * tracer's strip on ui's EventLanes (TR-20/24): i is already the global index;
  * redacted → hollow, turnEnd → tick, error → the error cross overlay, a spawn →
  * a marker. Search/chip dimming maps to `emphasis`; kind filters to
@@ -34,10 +58,13 @@ const LANE_ID = "events";
  * DOM, and the index page's fork connectors (which stay tracer's) plus the
  * fixture suite count them. They carry no paint of their own.
  */
-export function EventStrip({ events, selected, onSelect, label, laneLabel, hiddenKinds, matches, textFiltering = false }: {
+export function EventStrip({ events, selected, onSelect, label, laneLabel, hiddenKinds, matches, textFiltering = false, focus }: {
   events: readonly StripEvent[];
   selected?: number;
   onSelect?: (i: number) => void;
+  /** Centre this cell when it changes. Only navigation sets it — a click or a
+   *  scrollspy update must not yank the strip out from under the reader. */
+  focus?: StripFocus;
   /** Base of the accessible name: announced as "<label>: <N> events". */
   label: string;
   /** The gutter lane label. tracer's strips are single-lane and the page already
@@ -68,7 +95,30 @@ export function EventStrip({ events, selected, onSelect, label, laneLabel, hidde
   // through the many-to-one colour map here is what erased system/meta/turn_end.
   const hidden = hiddenKinds;
   const spawns = useMemo(() => events.filter((event) => event.subtask && event.childSessionId), [events]);
-  return <div data-testid="strip" data-cell-width={STRIP_CELL_WIDTH} data-cell-offset={stripAxisPadding(STRIP_CELL_WIDTH)} className="event-strip">
+  const root = useRef<HTMLDivElement>(null);
+  // Centre the focused cell (R62). EventLanes scrolls the selection into view
+  // MINIMALLY: a cell to the right lands flush against the right edge, so a
+  // reader arriving at a fork point sees everything before it and nothing
+  // after — the least useful place to land. This runs after that, because a
+  // child's effects flush before its parent's, and overrides it.
+  useEffect(() => {
+    if (!focus) return;
+    const element = root.current;
+    const scroller = element?.querySelector<HTMLElement>("[data-event-lanes-scroller]");
+    if (!element || !scroller) return;
+    const apply = () => {
+      // Zero while the strip is still laying out; centring against it would
+      // land at 0. Retried below rather than guessed at.
+      if (!scroller.clientWidth) return false;
+      centerCell(element, scroller, focus.index);
+      return true;
+    };
+    if (apply() || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => { if (apply()) observer.disconnect(); });
+    observer.observe(scroller);
+    return () => observer.disconnect();
+  }, [focus]);
+  return <div ref={root} data-testid="strip" data-cell-width={STRIP_CELL_WIDTH} data-cell-offset={stripAxisPadding(STRIP_CELL_WIDTH)} className="event-strip">
     <EventLanes
       lanes={lanes}
       events={laneEvents}

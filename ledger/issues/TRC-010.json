@@ -1,0 +1,24 @@
+{
+  "id": "TRC-010",
+  "title": "The fork connector left the page, and a cell reached by navigation landed against the edge",
+  "type": "defect",
+  "severity": "med",
+  "status": "closed",
+  "opened": "2026-09-20",
+  "foundBy": "user report (host), reading the behaviour shipped for TRC-009: \"the selected square is at the end of the visible window, we should try and center it in the window if there are enough squares after it\", and \"I wanted the link to just navigate the square scrolls, not click off that page\"",
+  "resolved": "2026-09-20",
+  "stint": "fork-navigation",
+  "evidence": {
+    "commits": [
+      "ab6303a"
+    ],
+    "integrated": [],
+    "verified": "`make check` passes with parity enabled, 60 viewer tests. centerCell has unit cover for the middle case and for both clamps.\n\nThe rest was measured in a real browser, on a captured export. Landing on a parent of 1,803 events at its fork point puts the cell 619 px into an 1,238 px window. That is half way across, where it used to sit against the trailing edge.\n\nClicking the connector on the index leaves the URL unchanged. It scrolls that parent's strip from 0 to 6,994, which puts the cell half way across an 876 px window. The connector's `data-spawn-visible` flips to true, so the stub becomes an L aimed at the cell it just revealed."
+  },
+  "resolution": "The connector is a button rather than a link, and scrolls the parent's strip to the spawn cell without leaving the index (R61). The lane's `forked from #n` link is unchanged and still opens the parent's page, so both intentions are served by separate affordances.\n\nEventLanes scrolls a selection into view minimally, parking a cell against the trailing edge of the viewport. `centerCell` puts it in the middle instead (R62), clamped at both ends so a cell near one stops there rather than centring into blank space.\n\nCentring is raised by navigation only, never by a strip click or a scrollspy update. Moving the strip under a reader who just clicked a cell is the same defect in a different place.",
+  "details": "Two faults in the fork navigation shipped for TRC-009, both about where a reader ends up.\n\nThe connector was a link to the parent's trace page. Acting on it therefore left the index, which is the one view that shows every lane side by side. A reader who wants to see where a sub-agent was forked is almost always comparing lanes. The useful answer is to reveal the cell in place, not to open another page.\n\nSeparately, a cell reached by navigation landed in the worst position available. EventLanes scrolls a selection into view minimally, moving just far enough to bring the cell inside the viewport's trailing edge. Everything before the cell is then visible and nothing after it is, which is the opposite of what a reader arriving at a fork point needs. On a parent of 1,803 events the cell sat hard against the border of an 1,238 pixel window.\n\nTo reproduce, export a directory holding a session with sub-agents. Open a child's page, follow the link back to the parent, and look at where the highlighted cell sits.",
+  "notes": [],
+  "links": [
+    "TRC-009"
+  ]
+}

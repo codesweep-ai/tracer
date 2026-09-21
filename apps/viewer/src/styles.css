@@ -88,12 +88,32 @@ canvas { image-rendering: pixelated; }
   border-bottom-left-radius: var(--radius-sm);
   pointer-events: none;
 }
+/* The depth connector stays inert: it is drawn when no spawn index is known,
+   so it has nothing to reveal. The two that DO know are buttons (R60/R61),
+   and a button needs its own reset — these are drawn entirely from borders. */
+button.fork-connector-offscreen,
+button.fork-connector-vertical {
+  pointer-events: auto;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
 .fork-connector-vertical {
   position: absolute;
   z-index: var(--z-sticky);
   border-left: 2px solid var(--color-link);
   pointer-events: none;
 }
+/* A 2px rule is not a click target. This widens the hit area on both sides
+   without moving the rule: the pseudo-element is absolutely positioned, so it
+   adds nothing to the element's own box and the strip's pixels are unchanged. */
+button.fork-connector-vertical::after {
+  content: "";
+  position: absolute;
+  inset: 0 calc(-1 * var(--space-2)) 0 calc(-1 * var(--space-2));
+}
+.fork-origin { color: var(--color-link); font-size: var(--font-size-caption); }
+.trace-breadcrumbs { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .fork-connector-horizontal {
   position: absolute;
   right: 0;
@@ -144,6 +164,19 @@ canvas { image-rendering: pixelated; }
 .filters-row { display: flex; align-items: flex-start; gap: var(--space-3); flex-wrap: wrap; }
 .trace-search { min-width: var(--input-min-width); }
 .kind-legend { font-size: var(--font-size-caption); padding: var(--space-2) 0; }
+/* Legend's own container does not wrap (ui's .cs-component-legend-1 is a plain
+   flex row), so at a narrow width its extras were squeezed until their LABELS
+   broke across lines: "redacted at source" went from one line to three, and the
+   swatch was left stranded beside a fragment. A key is one thing — its mark and
+   the words naming it — so each extra is atomic and the ROW wraps between them.
+   Both legends, because both carry extras. */
+.kind-legend,
+.index-legend { flex-wrap: wrap; }
+.legend-extra,
+.redacted-key,
+.errors-only,
+.input-view,
+.filter-reset { white-space: nowrap; }
 .legend-sep { color: var(--border); }
 /* The strip's hollow mark, at legend scale: a token-coloured outline around the
    page background, matching EventLanes' `shape="hollow"` geometry. */
@@ -167,6 +200,34 @@ canvas { image-rendering: pixelated; }
 }
 .errors-only:hover { text-decoration: underline; }
 .errors-only-on { background: var(--color-error-bg); color: var(--color-error); }
+
+/* The input-view control sits with the filters because that is where a reader
+   looks for view controls, but it restricts nothing — same chrome as
+   errors-only, no error colouring, since nothing here is wrong. */
+.input-view {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--font-size-caption);
+  border-radius: var(--radius-sm);
+  padding: var(--space-0-5) var(--space-1);
+}
+.input-view:hover { text-decoration: underline; }
+.input-view-on { background: var(--color-surface-raised); color: var(--fg); }
+
+/* A tool input's fields: name in the gutter, value beside it, and a value too
+   long or too tall for one line drops to its own block below. */
+.tool-fields { display: grid; gap: var(--space-1); margin: var(--space-1) 0 0; }
+.tool-field { display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr); gap: var(--space-2); align-items: baseline; }
+.tool-field-name { color: var(--muted); }
+.tool-field-value { margin: 0; min-width: 0; }
+.tool-field-inline { overflow-wrap: anywhere; }
+@media (max-width: 40rem) {
+  .tool-field { grid-template-columns: minmax(0, 1fr); gap: var(--space-0-5); }
+}
 
 .filter-reset { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--muted); }
 .filter-reset-button {

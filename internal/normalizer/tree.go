@@ -138,16 +138,29 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 			if candidate == doc {
 				continue
 			}
-			found := false
+			// The index of the spawning event, or -1 for no match. This loop is
+			// the ONLY place both documents are in hand, so it is the only place
+			// the position can be learned: an adapter sees one transcript, and a
+			// split-mode trace page carries its own summary plus a reduced index
+			// of {id, safeId, title}. Stamping it on the child is what lets that
+			// page offer the way back (R59).
+			found := -1
 			for _, event := range get(candidate, "events").([]*obj) {
 				tool := object(get(event, "tool"))
 				if (spawn[sid] != "" && str(get(tool, "callId")) == spawn[sid]) || str(get(event, "childSessionId")) == sid {
-					found = true
+					found = int(num(get(event, "i")))
 					break
 				}
 			}
 			parentID := str(get(object(get(candidate, "meta")), "sessionId"))
-			if found && parentID != str(get(meta, "parentSessionId")) {
+			if found < 0 {
+				continue
+			}
+			// Set whenever the spawn is found, not only when the declared
+			// parent disagreed: a child whose parentSessionId was already
+			// correct still needs the position.
+			meta.Set("parentEventIndex", found)
+			if parentID != str(get(meta, "parentSessionId")) {
 				meta.Set("parentSessionId", parentID)
 			}
 		}

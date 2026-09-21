@@ -1,6 +1,9 @@
 export type EventKind = "user" | "assistant" | "thinking" | "tool_call" | "tool_result" | "system" | "meta" | "turn_end";
 export interface TokenUsage { input?: number; output?: number; cacheRead?: number; cacheWrite?: number; reasoning?: number }
-export interface TraceMeta { source: string; sessionId: string; parentSessionId: string | null; agentId?: string | null; label?: string; title?: string; autoTitle?: string; model?: string | null; cliVersion?: string | null; cwd?: string; startedAt?: string; endedAt?: string; durationMs?: number | null }
+/** `parentEventIndex` is the index, IN THE PARENT, of the event that spawned this
+ * trajectory (R59). Absent for a root, for a child exported without its parent,
+ * and for a child whose spawn could not be joined. */
+export interface TraceMeta { source: string; sessionId: string; parentSessionId: string | null; parentEventIndex?: number | null; agentId?: string | null; label?: string; title?: string; autoTitle?: string; model?: string | null; cliVersion?: string | null; cwd?: string; startedAt?: string; endedAt?: string; durationMs?: number | null }
 /** A cost the CLI itself stated for a span of work: this trajectory alone, or it
  * and its sub-agents (§9). */
 export interface ReportedCost { usd: number; covers: "trajectory" | "tree"; byModel?: Array<{ model: string; usd: number }>; incomplete?: true }

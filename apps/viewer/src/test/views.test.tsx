@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IndexPage } from "../IndexPage";
 import { TrajectoryPage } from "../TrajectoryPage";
 import { EventCard } from "../EventCard";
+import { centerCell } from "../EventStrip";
 import type { EventKind, LoadedTrace, TraceChunk, TraceEvent, TraceSummary } from "../types";
 import { TRACE_PALETTE, traceColorKey } from "../palette";
 import { createRequire } from "node:module";
@@ -238,5 +239,198 @@ describe("damaged input badges", () => {
     // `unreadable` absent entirely: a summary from a pre-R56 cs-tracer.
     render(<IndexPage traces={[damaged({})]} links={[]} />);
     expect(screen.queryByText(/unreadable/)).toBeNull();
+  });
+});
+
+/* R59/R60. The connector used to be inert and, whenever the parent's spawn cell
+   was scrolled out of view, positionless — the common case, since the strip is
+   ten pixels an event. Every route to a fork point is asserted here: the lane's
+   text link, and the child page's way back, which is the one that could not
+   exist before the index was stamped at normalize time. */
+describe("fork navigation", () => {
+  const parent: LoadedTrace = {
+    id: "parent", path: "demo",
+    summary: { ...summary, meta: { ...summary.meta, sessionId: "parent", title: "Parent" }, strip: [{ i: 0, kind: "user", error: false }, { i: 1, kind: "tool_call", error: false, subtask: true, childSessionId: "child" }] },
+  };
+  const child = (meta: Partial<TraceSummary["meta"]>): LoadedTrace => ({
+    id: "child", path: "demo",
+    summary: { ...summary, meta: { ...summary.meta, sessionId: "child", parentSessionId: "parent", title: "Child", ...meta } },
+  });
+
+  it("names the fork point on the lane and links to the parent at that event", () => {
+    render(<IndexPage traces={[parent, child({ parentEventIndex: 1 })]} links={[]} />);
+    const origin = screen.getByTestId("fork-origin");
+    expect(origin).toHaveTextContent("forked from #1");
+    expect(origin.getAttribute("href")).toBe("?trace=parent#ev-1");
+  });
+
+  it("falls back to scanning the parent's strip when an export predates the stamp", () => {
+    // The index page holds every summary, so it can still find the spawn.
+    render(<IndexPage traces={[parent, child({})]} links={[]} />);
+    expect(screen.getByTestId("fork-origin").getAttribute("href")).toBe("?trace=parent#ev-1");
+  });
+
+  it("gives a child page the route back, at the spawning event", () => {
+    render(<TrajectoryPage trace={child({ parentEventIndex: 1 })} />);
+    const back = screen.getByTestId("parent-link");
+    expect(back.getAttribute("href")).toBe("?trace=parent#ev-1");
+    expect(back).toHaveTextContent("#1");
+  });
+
+  it("still reaches the parent when no spawn index was recorded", () => {
+    render(<TrajectoryPage trace={child({})} />);
+    expect(screen.getByTestId("parent-link").getAttribute("href")).toBe("?trace=parent");
+  });
+
+  it("offers no parent link on a root", () => {
+    render(<TrajectoryPage trace={trace} />);
+    expect(screen.queryByTestId("parent-link")).toBeNull();
+  });
+});
+
+/* R62. EventLanes scrolls a selection into view minimally, so a cell to the
+   right lands flush against the viewport's right edge with nothing after it
+   visible — the least useful place to arrive at a fork point. centerCell is
+   what puts it in the middle instead, and the clamps are what "where there is
+   room" means: near either end it stops at the end rather than centring into
+   blank space. */
+describe("centring a strip cell", () => {
+  const strip = (cellWidth = 10, cellOffset = 3) => {
+    const element = document.createElement("div");
+    element.dataset.cellWidth = String(cellWidth);
+    element.dataset.cellOffset = String(cellOffset);
+    return element;
+  };
+  const scroller = (clientWidth: number, scrollWidth: number) => {
+    const element = document.createElement("div");
+    Object.defineProperty(element, "clientWidth", { value: clientWidth });
+    Object.defineProperty(element, "scrollWidth", { value: scrollWidth });
+    Object.defineProperty(element, "scrollLeft", { value: 0, writable: true });
+    return element;
+  };
+
+  it("puts a cell with room on both sides in the middle", () => {
+    const view = scroller(200, 2000);
+    centerCell(strip(), view, 100);
+    // 3 offset + 100*10 + half a cell = 1008, less half the viewport.
+    expect(view.scrollLeft).toBe(908);
+  });
+
+  it("stops at the start rather than scrolling past it", () => {
+    const view = scroller(200, 2000);
+    centerCell(strip(), view, 2);
+    expect(view.scrollLeft).toBe(0);
+  });
+
+  it("stops at the end when too few events follow the cell", () => {
+    const view = scroller(200, 2000);
+    centerCell(strip(), view, 195);
+    expect(view.scrollLeft).toBe(1800); // scrollWidth - clientWidth
+  });
+
+  it("reads the geometry off the strip rather than assuming the default pitch", () => {
+    const view = scroller(100, 4000);
+    centerCell(strip(20, 6), view, 50);
+    expect(view.scrollLeft).toBe(6 + 50 * 20 + 10 - 50);
+  });
+});
+
+/* The connector reveals the fork point in place. Sending the reader to the
+   parent's own page would throw away the index, which is the view they are on
+   to compare lanes. */
+describe("fork connector semantics", () => {
+  const parent: LoadedTrace = {
+    id: "parent", path: "demo",
+    summary: { ...summary, meta: { ...summary.meta, sessionId: "parent", title: "Parent" }, strip: [{ i: 0, kind: "user", error: false }, { i: 1, kind: "tool_call", error: false, subtask: true, childSessionId: "child" }] },
+  };
+  const child: LoadedTrace = {
+    id: "child", path: "demo",
+    summary: { ...summary, meta: { ...summary.meta, sessionId: "child", parentSessionId: "parent", parentEventIndex: 1, title: "Child" } },
+  };
+
+  it("acts in place instead of navigating away", () => {
+    render(<IndexPage traces={[parent, child]} links={[]} />);
+    const connector = screen.queryByTestId("fork-connector") ?? screen.queryByTestId("offscreen-fork-connector");
+    expect(connector).not.toBeNull();
+    expect(connector?.tagName).toBe("BUTTON");
+    expect(connector?.getAttribute("href")).toBeNull();
+    expect(connector?.getAttribute("aria-label")).toMatch(/#1/);
+  });
+
+  it("still offers the parent's page as a separate, explicit link", () => {
+    render(<IndexPage traces={[parent, child]} links={[]} />);
+    const origin = screen.getByTestId("fork-origin");
+    expect(origin.tagName).toBe("A");
+    expect(origin.getAttribute("href")).toBe("?trace=parent#ev-1");
+  });
+});
+
+/* R63's page-level half: one control, defaulting to formatted, applying to
+   every card. It is a VIEW preference and not a filter — it changes how an
+   event reads, never which events are shown. */
+describe("tool input view toggle", () => {
+  // Its own path: loadChunk caches per path for the life of the module, so
+  // reusing "demo" would serve the block an earlier test already cached.
+  const withTool: LoadedTrace = {
+    id: "demo", path: "tooldemo",
+    summary: { ...summary, strip: [{ i: 0, kind: "tool_call", error: false, label: "Bash" }] },
+  };
+  beforeEach(() => {
+    block("c-tooldemo-000", { chunk: 0, events: [{ i: 0, kind: "tool_call", tool: { name: "Bash", input: { command: "ls -la", description: "list" } } }] } satisfies TraceChunk);
+  });
+
+  it("formats by default and hands over the raw record on request", async () => {
+    render(<TrajectoryPage trace={withTool} />);
+    const toggle = await screen.findByTestId("input-view");
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    await waitFor(() => expect(screen.getByTestId("virtual-event-list").textContent).toContain("ls -la"));
+    // formatted: the command stands alone, with no JSON punctuation around it
+    expect(screen.getByTestId("virtual-event-list").textContent).not.toContain('"command"');
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+    await waitFor(() => expect(screen.getByTestId("virtual-event-list").textContent).toContain('"command"'));
+    // the command itself is still there, now inside the record
+    expect(screen.getByTestId("virtual-event-list").textContent).toContain("ls -la");
+  });
+
+  it("shows the same events either way", async () => {
+    render(<TrajectoryPage trace={withTool} />);
+    const toggle = await screen.findByTestId("input-view");
+    const before = document.querySelectorAll("[data-card-index]").length;
+    fireEvent.click(toggle);
+    expect(document.querySelectorAll("[data-card-index]").length).toBe(before);
+    expect(screen.queryByTestId("empty-filter")).toBeNull();
+  });
+});
+
+/* A layout contract, asserted against the stylesheet because jsdom does not lay
+   out. ui's Legend container is a plain flex row that does not wrap, so at a
+   narrow width its extras were squeezed until their LABELS broke: "redacted at
+   source" went from one line to three, leaving its swatch beside a fragment. A
+   key is one thing, so each extra stays atomic and the row wraps between them. */
+describe("legend extras stay atomic when narrow", () => {
+  // Comments stripped first: a comment sitting directly above a rule would
+  // otherwise be read as part of its first selector.
+  const css = readFileSync(path.join(import.meta.dirname, "..", "styles.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  /** Every declaration that applies to `selector`. A selector appears in more
+   *  than one rule here — its own, and the grouped rule carrying this contract —
+   *  so all of them are gathered rather than the first. */
+  const ruleFor = (selector: string) =>
+    css.split("}")
+      .filter((block) => block.split("{")[0]?.split(",").some((s) => s.trim() === selector))
+      .map((block) => block.split("{")[1] ?? "")
+      .join(";");
+
+  it("never lets an extra's label break across lines", () => {
+    for (const selector of [".legend-extra", ".redacted-key", ".errors-only", ".input-view", ".filter-reset"]) {
+      expect(ruleFor(selector), selector).toContain("white-space: nowrap");
+    }
+  });
+
+  it("lets the legend row wrap instead, on both pages", () => {
+    for (const selector of [".kind-legend", ".index-legend"]) {
+      expect(ruleFor(selector), selector).toContain("flex-wrap: wrap");
+    }
   });
 });

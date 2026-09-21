@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Card, Legend, StatusBadge } from "@codesweep-ai/ui";
 import { compact, duration } from "./format";
 import { costLabel, rollupCost, traceCostLabel } from "./cost";
-import { linkTo } from "./routes";
-import { EventStrip, LEGEND_CHIPS, RedactedKey, STRIP_CELL_WIDTH, stripAxisPadding } from "./EventStrip";
+import { hasTrace, linkTo } from "./routes";
+import { centerCell, EventStrip, LEGEND_CHIPS, RedactedKey, STRIP_CELL_WIDTH, stripAxisPadding } from "./EventStrip";
 import type { LinkHint, LoadedTrace } from "./types";
 import { ErrorSwatch } from "./ErrorSwatch";
 import { TRACE_PALETTE, traceColorKey } from "./palette";
@@ -29,9 +29,27 @@ function ForkConnector({ parentId, spawnIndex, childLane }: { parentId: string; 
     // parent's settle and lands on either of two heights (the parity coin flip).
     const observer = new ResizeObserver(update); observer.observe(scroller); observer.observe(child); observer.observe(parent); return () => { observer.disconnect(); scroller.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
   }, [childLane, parentId, spawnIndex]);
+  // R60/R61: the connector NAMES the event it points at, and acting on it
+  // reveals that cell in the parent's strip WITHOUT leaving the page. It is not
+  // a link: the reader is looking at the index precisely to compare lanes, and
+  // sending them to the parent's own page to see where a fork happened throws
+  // that away. The lane's "forked from #n" link is there for readers who do
+  // want the parent's page.
+  //
+  // Revealing matters most in the off-screen state, which is the common one: at
+  // ten pixels an event a long parent scrolls for thousands of pixels, so the
+  // spawn cell is usually out of view and the drawn L has nothing to point at.
+  // One click scrolls the cell to the middle and the L reappears aimed at it.
+  const label = `Show event #${spawnIndex}, where the parent forked this trajectory`;
+  const reveal = () => {
+    const parent = [...document.querySelectorAll<HTMLElement>("[data-trace-id]")].find((element) => element.dataset.traceId === parentId);
+    const strip = parent?.querySelector<HTMLElement>('[data-testid="strip"]');
+    const scroller = parent?.querySelector<HTMLElement>("[data-event-lanes-scroller]");
+    if (strip && scroller) centerCell(strip, scroller, spawnIndex);
+  };
   if (!anchor) return null;
-  if (!anchor.visible) return <span data-testid="offscreen-fork-connector" data-spawn-index={spawnIndex} data-spawn-visible="false" role="img" aria-label="Proven parent-child connector (spawn outside visible strip)" className="fork-connector fork-connector-offscreen border-solid" />;
-  return <span data-testid="fork-connector" data-spawn-index={spawnIndex} data-spawn-x={anchor.x} data-spawn-visible={anchor.visible} role="img" aria-label="Proven parent-child connector" className="fork-connector fork-connector-vertical border-solid" style={{ left: anchor.left, top: anchor.top, height: anchor.height }}><span className="fork-connector-horizontal border-solid" style={{ width: Math.max(0, anchor.left) }} /></span>;
+  if (!anchor.visible) return <button type="button" data-testid="offscreen-fork-connector" data-spawn-index={spawnIndex} data-spawn-visible="false" onClick={reveal} aria-label={`${label} (currently outside the visible strip)`} title={`${label} (currently outside the visible strip)`} className="fork-connector fork-connector-offscreen border-solid" />;
+  return <button type="button" data-testid="fork-connector" data-spawn-index={spawnIndex} data-spawn-x={anchor.x} data-spawn-visible={anchor.visible} onClick={reveal} aria-label={label} title={label} className="fork-connector fork-connector-vertical border-solid" style={{ left: anchor.left, top: anchor.top, height: anchor.height }}><span aria-hidden="true" className="fork-connector-horizontal border-solid" style={{ width: Math.max(0, anchor.left) }} /></button>;
 }
 
 function Lane({ trace, depth, hinted, parentId, spawnIndex }: { trace: LoadedTrace; depth: number; hinted: boolean; parentId?: string; spawnIndex?: number }) {
@@ -42,7 +60,7 @@ function Lane({ trace, depth, hinted, parentId, spawnIndex }: { trace: LoadedTra
     {hinted && <span role="img" aria-label="Dashed link hint" className="link-hint border-dashed" />}
     <Card variant="tight">
       <div className="lane-grid">
-        <div className="lane-meta"><a href={linkTo(trace.id)} className="lane-title">{meta.title ?? meta.label ?? (meta.autoTitle ? <span className="auto-title" title="Derived from the session's first user message">{meta.autoTitle}</span> : trace.id)}</a><p className="lane-meta-line">{meta.model ?? "Unknown model"} · {compact(totals.input + totals.output)} tokens · {duration(meta.durationMs)} {traceCostLabel(totals)}</p>{(meta.title ?? meta.label ?? meta.autoTitle) && <p className="lane-meta-line lane-id" title={trace.id}>{trace.id}</p>}<div className="lane-badges">{totals.toolErrors > 0 && <StatusBadge label={`${totals.toolErrors} error`} status="error" />}{(parse.unreadable ?? 0) > 0 && <StatusBadge label={`${parse.unreadable} unreadable`} status="error" />}{parse.unrecognized > 0 && <StatusBadge label={`${parse.unrecognized} unrecognized`} status="warning" />}</div></div>
+        <div className="lane-meta"><a href={linkTo(trace.id)} className="lane-title">{meta.title ?? meta.label ?? (meta.autoTitle ? <span className="auto-title" title="Derived from the session's first user message">{meta.autoTitle}</span> : trace.id)}</a><p className="lane-meta-line">{meta.model ?? "Unknown model"} · {compact(totals.input + totals.output)} tokens · {duration(meta.durationMs)} {traceCostLabel(totals)}</p>{(meta.title ?? meta.label ?? meta.autoTitle) && <p className="lane-meta-line lane-id" title={trace.id}>{trace.id}</p>}{parentId && spawnIndex != null && hasTrace(parentId) && <p className="lane-meta-line"><a data-testid="fork-origin" href={linkTo(parentId, spawnIndex)} className="fork-origin">forked from #{spawnIndex}</a></p>}<div className="lane-badges">{totals.toolErrors > 0 && <StatusBadge label={`${totals.toolErrors} error`} status="error" />}{(parse.unreadable ?? 0) > 0 && <StatusBadge label={`${parse.unreadable} unreadable`} status="error" />}{parse.unrecognized > 0 && <StatusBadge label={`${parse.unrecognized} unrecognized`} status="warning" />}</div></div>
         <EventStrip events={strip} label={trace.id} laneLabel="" onSelect={(i) => { location.href = linkTo(trace.id, i); }} />
       </div>
     </Card>
@@ -62,6 +80,9 @@ export function IndexPage({ traces, links }: { traces: LoadedTrace[]; links: Lin
   return <section data-testid="index-page" className="index-page">
     <div><h1 className="page-title">Trajectory overview</h1><p className="rollup">{traces.length} lane{traces.length === 1 ? "" : "s"} · {compact(totals.events)} events · {compact(totals.tokens)} tokens{cost.priced > 0 ? ` · ${costLabel(cost)}${cost.unpriced > 0 ? ` · ${cost.unpriced} lane${cost.unpriced === 1 ? "" : "s"} unpriced` : ""}` : ""}</p></div>
     <Legend aria-label="Event legend" className="index-legend" items={LEGEND_CHIPS.map((chip) => ({ id: chip.label, label: chip.label, color: TRACE_PALETTE[traceColorKey(chip.kinds[0]!)], shape: "square" as const }))} extras={<><span data-testid="index-legend-extra" className="legend-extra"><ErrorSwatch />error</span><span data-testid="index-legend-extra" className="legend-extra"><RedactedKey /></span><span data-testid="index-legend-extra">┄ link hint</span></>} />
-    <div className="lane-list">{ordered.map(({ trace, depth }) => { const parentId = trace.summary.meta.parentSessionId ?? undefined; const spawnIndex = parentId ? byId.get(parentId)?.summary.strip.find((event) => event.subtask && event.childSessionId === trace.id)?.i : undefined; return <Lane key={trace.id} trace={trace} depth={depth} hinted={links.some((link) => link.toSessionId === trace.id)} parentId={parentId} spawnIndex={spawnIndex} />; })}</div>
+    <div className="lane-list">{ordered.map(({ trace, depth }) => { const parentId = trace.summary.meta.parentSessionId ?? undefined; // R59's stamp when the export carries it, else the scan this page has
+      // always done — which still works here, because the index holds every
+      // summary. Only a trace page needs the stamp.
+      const spawnIndex = trace.summary.meta.parentEventIndex ?? (parentId ? byId.get(parentId)?.summary.strip.find((event) => event.subtask && event.childSessionId === trace.id)?.i : undefined); return <Lane key={trace.id} trace={trace} depth={depth} hinted={links.some((link) => link.toSessionId === trace.id)} parentId={parentId} spawnIndex={spawnIndex} />; })}</div>
   </section>;
 }

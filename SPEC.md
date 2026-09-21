@@ -358,6 +358,38 @@ as a known.* Which figure a trajectory shows, and how a total counts a tree, is 
 from a `--links` file and is somebody's claim, and a connector comes from the session's own spawn
 event.*
 
+**R59.** A child whose spawning event is present **MUST** carry that event's index as
+`meta.parentEventIndex`. *The index page can derive it by scanning the parent's strip, because it
+holds every summary. A split-mode trace page holds only its own, so without the stamp a child has no
+route back to its fork point on a cold load.*
+
+**R60.** A proven connector **MUST** name the event it points at, and the lane **MUST** offer a
+route to it. *Ten pixels per event makes a long parent a scroller thousands of pixels wide, so the
+spawn cell is usually off screen and the connector degrades to a stub. A stub that cannot point can
+still say where.*
+
+**R61.** Acting on a connector **MUST** reveal the spawn cell in the parent's strip without leaving
+the index. *A reader is on the index to compare lanes, and sending them to the parent's own page to
+learn where a fork happened throws that away.*
+
+**R62.** A cell reached by navigation **MUST** be centred in the strip where there is room, and
+**MUST** stop at an end rather than centre into blank space. *EventLanes scrolls a selection into
+view minimally, parking it against the viewport edge with nothing after it visible, which is the
+least useful place to arrive.*
+
+**R63.** A tool input **MUST** render for reading by default, and the verbatim record **MUST** stay
+one control away. *Almost every tool's payload is a multi-line string, and JSON escaping is what
+turns one into a single line of `\n` and `\"`. In one captured corpus 3,159 of 3,432 calls were
+shell commands, so the commonest case was the worst served.*
+
+**R64.** The formatted view **MUST** render every key of the input. *It is a rendering, not a
+summary. Switching to the record must reveal nothing that was withheld, because that is what lets
+the formatted view be the default.*
+
+**R65.** Input shape, never tool name, **MUST** select the rendering. *Names differ per CLI, and the
+fixture scrubber rewrites them to prose, so a table keyed by name could not be exercised by the
+corpus at all.*
+
 **R55.** Viewer styling **MUST** go through the `@codesweep-ai/ui` design tokens rather than literal
 values. *An eslint rule fails the build on a token it does not recognise, which is what lets both
 themes work with no change to the app.*
