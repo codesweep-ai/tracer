@@ -15,7 +15,12 @@
   },
   "resolution": null,
   "details": "The fixture suite in `apps/viewer/fixtures` drives the exported pages in a browser and compares 35 measurements against `expectations.json`. Neither `make check` nor `make ci` runs it, so a change can pass every gate while the suite fails.\n\nFive checks fail on the current tree, and each failure is an intended change the expectations never recorded. The index rollup still expects the token and cost totals from before the cost fixes. The kind chips predate a local command's echo becoming a system event. Two keyboard checks predate the raw JSON toggle on tool inputs, and the data size predates the time and cost fields.\n\nA suite nobody runs cannot catch anything. The first real defect it could have caught was a card mark four pixels out of line, and it only caught that once somebody ran it by hand.\n\nTo reproduce, run `make fixtures` with a browser configured.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-21",
+      "text": "The five expectations were recorded in f7c33bf, each row carrying its approval, and the whole suite passes. The Makefile keeps the suite out of `make check` on purpose, as the oracle for a component migration. Whether it becomes a gate is the maintainer's decision, so the record stays open."
+    }
+  ],
   "links": [
     "TRC-016",
     "TRC-011",
