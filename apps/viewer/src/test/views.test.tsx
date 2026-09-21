@@ -434,3 +434,25 @@ describe("legend extras stay atomic when narrow", () => {
     }
   });
 });
+
+// TRC-020. A card's title opens with its event's strip mark, drawn from the same
+// token table, so a reader can match a card to a cell by sight.
+describe("card marks", () => {
+  it("opens each card title with the event's mark, error cross included", () => {
+    render(<EventCard event={{ i: 12, kind: "tool_call", tool: { name: "Bash" }, result: { text: "Error: no", isError: true } }} />);
+    const mark = screen.getByTestId("cell-mark");
+    expect(mark).toHaveAttribute("data-kind", "tool_call");
+    expect(mark).toHaveAttribute("data-error", "true");
+    expect(mark.style.getPropertyValue("--cell-mark-color")).toBe(`var(${TRACE_PALETTE.tool})`);
+    expect(mark.querySelector("canvas")).not.toBeNull();
+    expect(mark.nextElementSibling).toHaveTextContent("#12 · tool call");
+  });
+  it("draws a redacted thinking step hollow and a clean one without a cross", () => {
+    const { rerender } = render(<EventCard event={{ i: 3, kind: "thinking", text: "" }} />);
+    expect(screen.getByTestId("cell-mark")).toHaveClass("cell-mark-hollow");
+    rerender(<EventCard event={{ i: 4, kind: "assistant", text: "hi" }} />);
+    const mark = screen.getByTestId("cell-mark");
+    expect(mark).not.toHaveClass("cell-mark-hollow");
+    expect(mark.querySelector("canvas")).toBeNull();
+  });
+});

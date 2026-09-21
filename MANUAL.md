@@ -192,6 +192,9 @@ a kind of its own, so it is not in the kind list:
 Hovering any mark names the event and repeats these in words, so the strip is readable without
 memorising the vocabulary.
 
+Each card in the details list opens its title with the same mark, so a card can be matched to its
+cell while scrolling.
+
 Above **25 MiB** the tool prints the size and continues. That is a warning rather than a refusal. If
 one file is impractical at that size, `--split` puts each trajectory on its own page, so opening one
 loads that page rather than the whole export.

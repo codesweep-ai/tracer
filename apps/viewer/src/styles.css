@@ -263,6 +263,14 @@ button.fork-connector-vertical::after {
   font-size: var(--font-size-caption);
 }
 .event-card-title { display: flex; align-items: center; gap: var(--space-2); }
+/* An event's strip mark, at the size of the legend's swatches. */
+.cell-mark {
+  position: relative; display: inline-block; flex: none;
+  width: var(--space-3); height: var(--space-3); box-sizing: border-box;
+  background: var(--cell-mark-color); border-radius: var(--radius-xs);
+}
+.cell-mark-hollow { background: transparent; border: 1px solid var(--cell-mark-color); }
+.cell-mark .error-swatch { position: absolute; inset: 0; }
 .event-card-body {
   display: flex;
   flex-direction: column;

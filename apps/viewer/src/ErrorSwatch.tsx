@@ -17,8 +17,9 @@ export function drawErrorMark(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
 /** the error entry must depict the TREATMENT the strip draws (a ✕ over a cell),
  *  not a colour — errors are no longer a fill. The cell under the glyph is the strip's own
- *  track colour, standing in for "any kind". */
-export function ErrorSwatch({ size = 12 }: { size?: number }) {
+ *  track colour, standing in for "any kind". Without `track` only the ✕ is drawn, for
+ *  laying over a cell that already carries its kind's colour. */
+export function ErrorSwatch({ size = 12, track = true }: { size?: number; track?: boolean }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const theme = useChartTheme();
   useEffect(() => {
@@ -27,8 +28,8 @@ export function ErrorSwatch({ size = 12 }: { size?: number }) {
     node.width = size * ratio; node.height = size * ratio;
     const ctx = node.getContext("2d"); if (!ctx) return;
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0); ctx.clearRect(0, 0, size, size);
-    ctx.fillStyle = theme.gridLine || theme.muted; ctx.globalAlpha = 0.35; ctx.fillRect(0, 0, size, size); ctx.globalAlpha = 1;
+    if (track) { ctx.fillStyle = theme.gridLine || theme.muted; ctx.globalAlpha = 0.35; ctx.fillRect(0, 0, size, size); ctx.globalAlpha = 1; }
     drawErrorMark(ctx, 0, 0, size, theme.bg, theme.error);
-  }, [size, theme]);
+  }, [size, theme, track]);
   return <canvas ref={canvas} aria-hidden="true" className="error-swatch" style={{ width: size, height: size }} />;
 }
