@@ -3,19 +3,27 @@
   "title": "Idle time has no definition, and turn_end means two different things",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "opened": "2026-09-21",
   "foundBy": "the user, who asked how the tool should account for time and set the rule that an agent stopping with no tool call is waiting; the checks that followed found the adapters disagreeing",
-  "resolved": null,
+  "resolved": "2026-09-21",
   "stint": "idle-time",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "7114fc0",
+      "3e14f07"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`make check` passes with parity enabled. Fifty viewer tests pass. Three new tests cover the Go side. One asserts that idle lands on turn ends and never on a slow tool call. One asserts that an untimestamped neighbour is stepped over. One covers both step-finish branches.\n\nThat last test exists because no fixture can reach the branch. The scrubber rewrites the reason to prose, so none carries the literal stop.\n\nThe goldens moved and were checked structurally against the previous ones. Four kinds of change appear across twenty seven files and no others. The field idleMs was added in 496 places, and size shifted in 299. The kind changed in 102 places, and turnEnd was removed from 51. The last two are the same 51 step finishes, counted once in a chunk and once in a strip entry.\n\nAgainst 94 captured trajectories holding 26,080 events, opencode fell from 967 turn ends to 40, from 31.6% of its strip to 1.3%. The other three adapters report 0.3%, 0.9% and 3.2%, unchanged, because their turn ends were already real. Idle is now reported on 453 intervals holding 262 hours, where before it was reported nowhere."
   },
-  "resolution": null,
+  "resolution": "R68 now says what idle is. A turn ends when the model returns a response with no tool call pending, and the interval from that event to the next one is idle. Every other interval is work, including a long one after a tool call, which is a slow tool.\n\nOne pass stamps `idleMs`, called from both assembly points, so the three adapters cannot disagree about what idle means. It travels on the event and on its strip entry, so a viewer never subtracts timestamps across neighbours a filter removed. A turn end with nothing after it carries no field rather than a zero.\n\nR69 stops an adapter reporting a turn ending that did not end a turn. An opencode step finish is a turn end only when its reason reads `stop`. The rest read as meta and keep their reason, so the details page still shows what they were.\n\nBoth fields are additive and optional in the schema, so `schemaVersion` is unchanged (R7).",
   "details": "Nothing in the schema or the spec says what idle time is, and no adapter reports it. A reader wanting to know how long an agent sat waiting has to subtract timestamps, and the viewer would have to guess which gaps count.\n\nThe guess is not available either, because `turn_end` does not mean one thing. Claude and codex emit it once to five times per trajectory, at a real boundary. OpenCode emits it for every `step-finish`, which fires after each batch of tool calls. In a captured corpus that is 892 events across twelve trajectories, 31% of every strip, against three real endings per trajectory. Only the step whose reason reads `stop` ends a turn.\n\nTelling them apart today means matching the word `tool-calls` inside the event text. R65 forbids exactly that, and the fixture scrubber rewrites text to prose, so the corpus could not exercise it.\n\nThe cost is not academic. The interval after a real turn ending holds most of the elapsed time. It measured 97.9% in one captured session, and 88% and 55% in aggregate for the two unattended adapters. A tool that cannot name that interval cannot say how long anything took.\n\nA `step-finish` that is not a turn ending is bookkeeping, and it belongs in `meta` with its reason preserved, where the details page still shows what it was.\n\nTo reproduce, normalize an opencode session and count the `turn_end` events against the turns the session actually contains.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-21",
+      "text": "The strip's presence test for a number was wrong at first. `present` stringifies its argument, so it reads every number as absent, and the field reached the event while the strip dropped it. Real output caught what the unit test could not, because the test asserted on the event rather than the strip."
+    }
+  ],
   "links": [
     "TRC-012"
   ]
