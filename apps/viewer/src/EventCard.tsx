@@ -4,6 +4,7 @@ import { hasTrace, linkTo } from "./routes";
 import { CellMark } from "./CellMark";
 import { ToolInput } from "./ToolInput";
 import type { ToolInputView } from "./ToolInput";
+import { ToolOutput } from "./ToolOutput";
 import type { TraceEvent } from "./types";
 
 export function EventCard({ event, query, inputView = "formatted" }: { event: TraceEvent; query?: string; inputView?: ToolInputView }) {
@@ -17,7 +18,7 @@ export function EventCard({ event, query, inputView = "formatted" }: { event: Tr
       <div className="event-card-body">
         {event.text && <p className="event-text"><HighlightText text={event.text} query={query} /></p>}
         {event.tool && <details open><summary className="tool-summary"><HighlightText text={event.tool.name} query={query} /> input</summary><ToolInput input={event.tool.input ?? event.tool.command ?? ""} view={inputView} /></details>}
-        {event.result && <details open={errored}><summary className="tool-summary">Tool output · {duration(event.result.durationMs)}</summary><pre className="tool-output">{event.result.text}</pre></details>}
+        {event.result && <details open={errored}><summary className="tool-summary">Tool output · {duration(event.result.durationMs)}</summary><ToolOutput text={event.result.text ?? ""} /></details>}
         {event.tokens && <p className="muted caption">Tokens · in {event.tokens.input ?? 0} · out {event.tokens.output ?? 0} · cache {event.tokens.cacheRead ?? 0} · reasoning {event.tokens.reasoning ?? 0}</p>}
         {event.durationMs != null && <p className="muted">Duration · {duration(event.durationMs)}</p>}
         {/* A child link is only offered when the child is actually here. The

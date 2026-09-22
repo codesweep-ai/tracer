@@ -295,12 +295,18 @@ button.fork-connector-vertical::after {
 }
 .event-text { white-space: pre-wrap; overflow-wrap: break-word; }
 .tool-summary { cursor: pointer; font-weight: var(--font-weight-semibold); }
-.tool-output {
-  margin-top: var(--space-2);
-  max-width: 100%;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-code);
+/* A tool's output: the same bounded block as an input, and past the fold a
+   control that lets the whole text flow in the page (R85). */
+.tool-output { margin-top: var(--space-2); max-width: 100%; }
+.tool-output-more {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: var(--space-1) 0;
+  font-size: var(--font-size-sm);
 }
+.tool-output-more:hover { text-decoration: underline; }
 .child-link { color: var(--color-link); text-decoration: underline; }

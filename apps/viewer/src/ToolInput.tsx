@@ -95,14 +95,15 @@ function isInline(value: unknown): boolean {
 
 /**
  * CodeBlock at its default height: bounded, with its own scroll past 20rem.
+ * `inline` lifts the bound; ToolOutput uses it once a reader asks for all.
  *
  * NOT `inline`. A payload here is routinely hundreds of lines — one captured
  * command carried a 515-line heredoc — and unbounded blocks would make single
  * cards taller than the list they sit in. JSON hid that behind one very long
  * line; formatting it must not trade an unreadable card for an unnavigable one.
  */
-function Block({ code, language }: { code: string; language?: string }) {
-  return <CodeBlock code={code} language={language} languages={GRAMMARS} />;
+export function Block({ code, language, inline }: { code: string; language?: string; inline?: boolean }) {
+  return <CodeBlock code={code} language={language} languages={GRAMMARS} inline={inline} />;
 }
 
 /**

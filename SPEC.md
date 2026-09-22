@@ -454,6 +454,12 @@ the formatted view be the default.*
 fixture scrubber rewrites them to prose, so a table keyed by name could not be exercised by the
 corpus at all.*
 
+**R85.** A tool output **MUST** render in the same bounded block as an input, whole and unaltered,
+with one control that lifts the bound. Its shape, never the tool's name, **MUST** pick the grammar:
+a document that parses as JSON, a patch, and otherwise plain text. *Outputs run far longer than
+inputs. In four captured corpora between 13 and 42 per cent ran past 40 lines and the longest past
+1,400. Drawn unbounded, one card grew taller than the list it sat in.*
+
 **R55.** Viewer styling **MUST** go through the `@codesweep-ai/ui` design tokens rather than literal
 values. *An eslint rule fails the build on a token it does not recognise, which is what lets both
 themes work with no change to the app.*

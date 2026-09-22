@@ -205,7 +205,8 @@ Hovering any mark names the event and repeats these in words, so the strip is re
 memorising the vocabulary.
 
 Each card in the details list opens its title with the same mark, so a card can be matched to its
-cell while scrolling.
+cell while scrolling. A tool's output sits in a block that scrolls on its own past twenty lines or
+so, with a control that shows all of it in the page.
 
 Above **25 MiB** the tool prints the size and continues. That is a warning rather than a refusal. If
 one file is impractical at that size, `--split` puts each trajectory on its own page, so opening one
