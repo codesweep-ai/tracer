@@ -209,7 +209,8 @@ cell while scrolling.
 
 Above **25 MiB** the tool prints the size and continues. That is a warning rather than a refusal. If
 one file is impractical at that size, `--split` puts each trajectory on its own page, so opening one
-loads that page rather than the whole export.
+loads that page rather than the whole export. The index page carries only each trajectory's summary,
+so it stays small as trajectories are added.
 
 ## Files
 

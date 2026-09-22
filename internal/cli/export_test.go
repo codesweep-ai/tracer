@@ -170,13 +170,28 @@ func TestExportSplitLayoutAndManifest(t *testing.T) {
 	if !strings.Contains(blocks["index"], `"schemaVersion"`) {
 		t.Fatal("reduced index must still declare its schema version")
 	}
+	// The trace page carries its own events.
+	if _, ok := blocks["c-trace-one-000"]; !ok {
+		t.Fatalf("trace page carries no chunk: %v", reflect.ValueOf(blocks).MapKeys())
+	}
 	// Root index keeps the complete index.
 	root, err := os.ReadFile(filepath.Join(dest, "index.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(extractBlocks(t, root)["index"], `"schemaVersion": 1`) {
+	rootBlocks := extractBlocks(t, root)
+	if !strings.Contains(rootBlocks["index"], `"schemaVersion": 1`) {
 		t.Fatal("root index lost the full index")
+	}
+	// The root carries every summary and no chunk (R84): it renders only the
+	// strips, and shipping the events there doubled the export.
+	if _, ok := rootBlocks["s-trace-one"]; !ok {
+		t.Fatalf("root index carries no summary: %v", reflect.ValueOf(rootBlocks).MapKeys())
+	}
+	for id := range rootBlocks {
+		if strings.HasPrefix(id, "c-") {
+			t.Fatalf("root index carries chunk block %s", id)
+		}
 	}
 	// The root names itself the index, so a viewer never infers the page's kind
 	// from a URL path the user chose (R80).

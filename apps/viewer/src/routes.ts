@@ -112,7 +112,23 @@ export function indexLink(): string {
  */
 export function currentTraceId(traces: LoadedTrace[]): string | null {
   const requested = new URLSearchParams(location.search).get("trace");
-  if (requested) return requested;
+  if (requested) return splitIndexPage() ? null : requested;
   if (mode() === "split" && inTracePage() && traces.length === 1) return traces[0]!.id;
   return null;
+}
+
+/** True on the split index page, which carries every summary and no events (R84). */
+function splitIndexPage(): boolean {
+  return mode() === "split" && !inTracePage();
+}
+
+/**
+ * Where a split index page opened with `?trace=<id>` should go instead: the
+ * trace's own page, with any `#ev-<n>` kept. The index carries no events, so
+ * the trajectory cannot render there. Null everywhere else.
+ */
+export function redirectForQuery(): string | null {
+  if (!splitIndexPage()) return null;
+  const requested = new URLSearchParams(location.search).get("trace");
+  return requested ? `${linkTo(requested)}${location.hash}` : null;
 }

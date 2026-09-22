@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { currentTraceId, hasTrace, inTracePage, indexLink, linkTo, mode, traceFilename } from "../routes";
+import { currentTraceId, redirectForQuery, hasTrace, inTracePage, indexLink, linkTo, mode, traceFilename } from "../routes";
 import type { LoadedTrace } from "../types";
 
 function block(id: string, value: unknown) {
@@ -107,12 +107,21 @@ describe("inTracePage", () => {
 });
 
 describe("currentTraceId", () => {
-  it("reads ?trace= exactly as before in both modes", () => {
+  it("reads ?trace= exactly as before in single mode and on split trace pages", () => {
     history.replaceState(null, "", "/index.html?trace=abc123");
     expect(currentTraceId([])).toBe("abc123");
     expect(currentTraceId([trace("abc123")])).toBe("abc123");
-    block("mode", { mode: "split" });
-    expect(currentTraceId([trace("abc123")])).toBe("abc123"); // explicit param wins even in split
+    expect(redirectForQuery()).toBeNull();
+    block("mode", { mode: "split", page: "trace" });
+    expect(currentTraceId([trace("abc123")])).toBe("abc123"); // explicit param wins on a trace page
+    expect(redirectForQuery()).toBeNull();
+  });
+
+  it("sends ?trace= on a split index page to the trace's own page (R84)", () => {
+    history.replaceState(null, "", "/index.html?trace=abc123#ev-7");
+    block("mode", { mode: "split", page: "index" });
+    expect(currentTraceId([trace("abc123")])).toBeNull(); // the index carries no events
+    expect(redirectForQuery()).toBe("traces/abc123.html#ev-7");
   });
 
   it("lets the filename do the job of ?trace= on split trace pages only", () => {

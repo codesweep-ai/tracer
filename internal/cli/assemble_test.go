@@ -133,7 +133,8 @@ func TestBlockIDsUseSafeIDAndChunkNumbers(t *testing.T) {
 	set := sampleSet()
 	set.Traces[0].Chunks = append(set.Traces[0].Chunks, []byte("{\"chunk\":1,\"events\":[]}\n"))
 	var sb strings.Builder
-	dataBlocks(&sb, set, "split", nil)
+	// Chunks ride on the trace page; the split index carries none (R84).
+	dataBlocks(&sb, set, "split", &set.Traces[0])
 	blocks := extractBlocks(t, inject(splitShell, []byte(sb.String())))
 	for _, id := range []string{"c-trace-one-000", "c-trace-one-001"} {
 		if _, ok := blocks[id]; !ok {

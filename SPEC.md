@@ -214,6 +214,10 @@ destination then cannot destroy unrelated files.*
 binary, `25 * 1024 * 1024`; browsers parse HTML fast enough that the warning sits well before the
 point where first paint stalls.*
 
+**R84.** The split `index.html` **MUST** carry every trajectory's summary and no chunk. Each trace
+page carries its own. *The index renders only the strips, and shipping every trajectory's events
+there as well doubled the size of the export.*
+
 ## 6. Determinism
 
 **R36.** Two runs over the same input **MUST** produce byte-identical trees, excluding the manifest.
@@ -710,20 +714,18 @@ decisions:
    surviving structure found only generated tokens. Every path sits under `/home/user`, every
    command string is redacted, and no URL or repository reference appears anywhere in the corpus.
    A new capture needs the same read, and nothing enforces that.
-3. **The split root page carries data it never renders.** Every trace's events are embedded in
-   `index.html` as well as in the trace page, and no requirement says they have to be.
-4. **Section citations in source drift silently in meaning.** A comment citing `§6` still passes the
+3. **Section citations in source drift silently in meaning.** A comment citing `§6` still passes the
    gate after §6 comes to mean something else, because the check only asks whether the section
    exists.
-5. **No requirement fixes the shard identifier.** A trajectory's directory name is its session id
+4. **No requirement fixes the shard identifier.** A trajectory's directory name is its session id
    with every character outside `[A-Za-z0-9._-]` replaced, falling back to a literal when that
    leaves nothing. No requirement says so, and a collision between two ids is a hard error.
-6. **Two of the four schema-version declarations are unchecked.** A test ties
+5. **Two of the four schema-version declarations are unchecked.** A test ties
    `schema/trajectory.v1.json` to what the normalizer emits. Nothing checks
    `internal/cli.schemaVersion` or the viewer's `SUPPORTED_SCHEMA_VERSION` against either of them.
-7. **Determinism is gated for one fixture, not for the corpus.** R36 claims every input, and two
+6. **Determinism is gated for one fixture, not for the corpus.** R36 claims every input, and two
    gates cover one captured session and one synthetic set.
-8. **Nothing gates what the strip draws.** The strip is painted onto a canvas, so the unit gates
+7. **Nothing gates what the strip draws.** The strip is painted onto a canvas, so the unit gates
    read its colours through `traceColors` and never through the pixels. R47 and R48 hold by
    construction in `StripCanvas.tsx`. Parity compares the two transports pixel for pixel, which
    catches a disagreement between them rather than a regression in both.
