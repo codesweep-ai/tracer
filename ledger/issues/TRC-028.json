@@ -3,17 +3,21 @@
   "title": "An attended Claude Code tool call may count the user's permission prompt as the tool's time",
   "type": "improvement",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, reviewing how R70 charges time in attended sessions; unverified",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-22",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "39bba1d",
+      "e76e538",
+      "c11ba6d"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "Normalized local sessions with the change. A Claude Code project run mostly in `default` mode marks 203 tool calls `person` and its read-only calls `automatic`. The attended corpus, in `auto` mode, marks all 2,627 of its calls `classifier`. Local codex sessions mark 1,580 escalated calls `person` and 2,804 others `automatic`. A prompted Edit of 141 seconds reads as taking 2.4 minutes, which may include waiting for approval.\n\nThe regenerated goldens differ from the last ones only by the new field and the sizes it adds. The codex fixtures record no approval policy, so a unit test covers that mapping. `make ci` passes, after two approved fixture moves: the payload grew 2.5 per cent, and one page budget rose to match."
   },
-  "resolution": null,
+  "resolution": "Where a CLI records its permission mode or approval policy, each tool call now carries `approval`: `person`, `classifier` or `automatic` (R82). The Claude adapter follows `permissionMode` through the session and knows which tools run unasked in each mode. The codex adapter reads each turn's policy, under which only an escalated call can reach a person. The strip's timing readout says a call's time may include waiting for approval, or an approval check.\n\nNo CLI records the approval itself, so the wait cannot be split from the run. OpenCode's adapter leaves the field absent, since no session at hand holds a prompt.",
   "details": "A tool call's time runs from the end of the previous work to its result. In an attended session Claude Code can wait for the user to approve a tool before running it, and that wait would fall inside the tool's time. A slow bar would then show a person deciding, not a tool running.\n\nThis is a suspicion to verify first: find tool calls whose time far exceeds their run, and check whether a permission record sits between the call and its result.",
   "notes": [
     {
