@@ -203,6 +203,15 @@ const normalizeInteractionDom = (html, opts) =>
     .replace(/(<div class="relative" style=")height: [\d.]+px(;")/g, "$1height:H$2")
     .replace(/(<div class="absolute inset-x-0" style=")top: [\d.]+px(;")/g, "$1top:T$2");
 
+/** Where two strings first part, with a little of each side, so a mismatch
+ *  that does not repeat still says what it was. */
+function firstDifference(a, b) {
+  let at = 0;
+  while (at < a.length && at < b.length && a[at] === b[at]) at++;
+  const from = Math.max(0, at - 60);
+  return `at ${at} of ${a.length} vs ${b.length}: single …${JSON.stringify(a.slice(from, at + 100))}… split …${JSON.stringify(b.slice(from, at + 100))}…`;
+}
+
 async function interact(browser, url, { traceId, jumpEvent, query }) {
   const { context, page, errors } = await newPage(browser, url);
   await settle(page, { tracePage: false });
@@ -343,7 +352,8 @@ try {
         if (s.hash !== p.hash) failures.push(`${fixture}/interaction: end hash "${p.hash}" != single "${s.hash}"`);
         if (s.matchText !== p.matchText) failures.push(`${fixture}/interaction: match text "${p.matchText}" != single "${s.matchText}"`);
         if (s.cards.join(",") !== p.cards.join(",")) failures.push(`${fixture}/interaction: rendered cards [${p.cards}] != single [${s.cards}]`);
-        if (normalizeInteractionDom(s.dom, { split: false }) !== normalizeInteractionDom(p.dom, { split: true })) failures.push(`${fixture}/interaction: end-state DOM differs between transports`);
+        const sd = normalizeInteractionDom(s.dom, { split: false }), pd = normalizeInteractionDom(p.dom, { split: true });
+        if (sd !== pd) failures.push(`${fixture}/interaction: end-state DOM differs between transports ${firstDifference(sd, pd)}`);
       }
     }
   }
