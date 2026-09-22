@@ -33,11 +33,13 @@ type dataSet struct {
 
 // loadSet reads a normalized tree (index.json + <path>/summary.json +
 // <path>/chunks/NNN.json). A tree with no index.json — produced when every
-// input file was skipped — loads as an empty set.
+// input file was skipped — loads as an empty set, whose index declares the
+// version this build emits like every other (R9). Written as a literal 1, it
+// made the viewer refuse an empty export as a version mismatch (TRC-037).
 func loadSet(root string) (dataSet, error) {
 	indexBytes, err := os.ReadFile(filepath.Join(root, "index.json"))
 	if errors := os.IsNotExist(err); errors {
-		return dataSet{Index: []byte("{\"schemaVersion\":1,\"trajectories\":[]}\n")}, nil
+		return dataSet{Index: fmt.Appendf(nil, "{\"schemaVersion\":%d,\"trajectories\":[]}\n", schemaVersion)}, nil
 	}
 	if err != nil {
 		return dataSet{}, err

@@ -285,3 +285,26 @@ func TestWriteJSONLShape(t *testing.T) {
 		t.Fatalf("key order: %s", lines[0])
 	}
 }
+
+// TRC-037. A tree with no index — every input skipped — loads as an empty set
+// whose index declares the version this build emits, so the viewer shows an
+// overview with no sessions rather than refusing a version mismatch.
+func TestEmptySetDeclaresTheSchemaVersion(t *testing.T) {
+	set, err := loadSet(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	var index struct {
+		SchemaVersion int   `json:"schemaVersion"`
+		Trajectories  []any `json:"trajectories"`
+	}
+	if err := json.Unmarshal(set.Index, &index); err != nil {
+		t.Fatal(err)
+	}
+	if index.SchemaVersion != schemaVersion {
+		t.Fatalf("empty index declares schema version %d, this build emits %d", index.SchemaVersion, schemaVersion)
+	}
+	if len(index.Trajectories) != 0 {
+		t.Fatalf("empty index carries %d trajectories", len(index.Trajectories))
+	}
+}
