@@ -3,18 +3,29 @@
   "title": "A site built over several directories cannot say which directory a session came from",
   "type": "improvement",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent working in the simple-tools-demo repository, which runs a three member campaign at the pinned build of 2026-09-17, while reading the trajectories of three campaign members",
   "opened": "2026-09-19",
-  "resolved": null,
+  "resolved": "2026-09-22",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "53b38da",
+      "d941c25",
+      "ed1b53d",
+      "6f8208b",
+      "e0ddc4f"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "Headless loads of the rebuilt sites. The codex corpus, read from three dated directories, shows three groups on its index, holding 8, 8 and 20 of its rows, and a Collapse all control. A synthetic site over directories a, b and c groups its seven sessions as 1, 3 and 3, with each sub-agent under its parent. Sites read from one directory show no group and no control. The old build shows no group on any of them.\n\n`make ci` passes at the last cited commit: parity PASS, and every fixture check passes, 27 ok and 9 met. The regenerated goldens differ from the last ones only by the new field. Two fixture moves were approved against this record: the input grows 16 bytes per trajectory, and the index counts sessions where it counted lanes. The maintainer looked at the codex site and agreed it was right."
   },
-  "resolution": null,
+  "resolution": "Every trajectory now records the directory it was read from, relative to the directory the tool was given (R83). When the top-level trajectories come from more than one directory, the index groups them under a heading naming each, with each child under its parent. The groups start open, fold away under their heading, and one control folds or opens them all. A site read from one directory looks as it did. The index also counts sessions rather than lanes, since a lane also names a strip row.",
   "details": "`cs-tracer <path> --split` builds one index over every session under `<path>`. Each row is titled by what the agent CLI called the session. Nothing in a row says where under `<path>` the session was read from.\n\nA campaign archive holds one directory per member. The members' sessions are titled by their dispatch, for example `Campaign dispatch d002 execution`, and every member reports the same working directory. One site over the archive therefore shows several rows with near identical titles, and no way to tell the orchestrator's session from a member's.\n\n`--links` does not help, because it joins related sessions and does not label them.\n\nThe demo works around this in its Makefile. It runs `cs-tracer` once per member and writes a small index page of its own that names the members. That loses the one page where every session sits side by side with its tokens and cost, which is the view a fleet wants.\n\nThe relative directory a session was read from is already known when the index is built. Showing it as a column, or grouping rows by it, would be enough.\n\nTo reproduce, unpack two members' `transcript/cli-evidence.tgz` from a campaign archive into `src/a` and `src/b`, then run `cs-tracer src --split -o site`.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-22",
+      "text": "Before building, the code was checked for something that already covered this. Only the working directory was recorded, and every member of a campaign reports the same one, so it could not tell them apart."
+    }
+  ],
   "links": []
 }
