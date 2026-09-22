@@ -3,18 +3,23 @@
   "title": "Search rescans every chunk of every trace from scratch on each query",
   "type": "improvement",
   "severity": "low",
-  "status": "open",
+  "status": "wont-fix",
   "foundBy": "session agent, carried from the previous handoff",
   "opened": "2026-09-21",
-  "resolved": null,
-  "stint": null,
+  "resolved": "2026-09-22",
+  "stint": "2026-09-21 strip changes",
   "evidence": {
     "commits": [],
     "integrated": [],
-    "verified": null
+    "verified": "Timed in a headless Chromium on the longest trace page of each of four exported corpora, from the Enter key to the match count appearing with no scan pending. The longest is a Claude Code session of 2,360 events in three chunks, holding 354 thousand characters of text. There a search takes 20 to 50 ms end to end, across five queries and three rounds. The other three pages, of 391 to 803 events, take 5 to 30 ms.\n\nThe scan itself is a small part of that. Over the same 2,360 parsed events the substring pass takes under 1 ms per query, a median of 0.4 to 0.7 ms over 20 runs. Over the same events repeated ten times, 23,600 in all, it takes 3 to 4 ms. Parsing the three chunks once takes 2.4 ms. The rest of the time is the page re-rendering its list."
   },
-  "resolution": null,
+  "resolution": "Measured, the rescan costs nothing a reader can feel. A search on the largest trace at hand answers in under 50 ms. The scan it repeats is under 1 ms of that, growing to about 4 ms at ten times the size. The page re-render is the whole of the rest, and an index or a cache of matches would not touch it. The record's premise was also wider than the code: search runs over one trace page's own chunks, so adding trajectories to an export does not add to it. There is nothing here worth the code.",
   "details": "Each search walks every chunk again, with nothing kept between queries. On a large export that is the dominant cost of a search, and it grows with every trajectory added.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-22",
+      "text": "The first timing run read the status line one query late, because the previous result was still on screen when the poll began. Clearing the box between queries and waiting for a fresh status gave consistent numbers."
+    }
+  ],
   "links": []
 }
