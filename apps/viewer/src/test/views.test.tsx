@@ -78,7 +78,7 @@ describe("P0 views", () => {
     expect(groups.map((group) => group.getAttribute("data-source-dir"))).toEqual(["b", "a"]);
     // The child keeps its parent's group, though it was read from elsewhere.
     expect(Array.from(groups[0]!.querySelectorAll('[data-testid="lane"]'), (lane) => lane.getAttribute("data-trace-id"))).toEqual(["b1", "b1-child", "b2"]);
-    expect(groups[0]).toHaveTextContent("b/ · 3 lanes");
+    expect(groups[0]).toHaveTextContent("b/ · 3 sessions");
     unmount();
     render(<IndexPage traces={[at("one", "x"), at("two", "x")]} links={[]} />);
     expect(screen.queryAllByTestId("lane-group")).toHaveLength(0);
@@ -91,10 +91,10 @@ describe("P0 views", () => {
     const { rerender } = render(<IndexPage traces={[real, estimated, unpriced]} links={[]} />);
     const rollup = () => screen.getByRole("heading", { name: "Trajectory overview" }).nextElementSibling;
     expect(rollup()).toHaveTextContent("~$15.0000 est.");
-    expect(rollup()).toHaveTextContent("1 lane unpriced"); // the excluded lane is disclosed
+    expect(rollup()).toHaveTextContent("1 session unpriced"); // the excluded lane is disclosed
     rerender(<IndexPage traces={[real, unpriced]} links={[]} />);
     expect(rollup()).toHaveTextContent("$10.0000"); expect(rollup()).not.toHaveTextContent("~$10.0000"); expect(rollup()).not.toHaveTextContent("est.");
-    expect(rollup()).toHaveTextContent("1 lane unpriced");
+    expect(rollup()).toHaveTextContent("1 session unpriced");
     rerender(<IndexPage traces={[real, estimated]} links={[]} />);
     expect(rollup()).toHaveTextContent("~$15.0000 est."); expect(rollup()).not.toHaveTextContent("unpriced");
     rerender(<IndexPage traces={[unpriced, { ...unpriced, id: "unpriced-2", path: "unpriced-2" }]} links={[]} />);

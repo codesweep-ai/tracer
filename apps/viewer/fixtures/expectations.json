@@ -1001,31 +1001,31 @@
   "status": "keep",
   "note": "the rollup line under the index title",
   "value": {
-   "large-session/dark": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
-   "large-session/light": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
-   "codex-multi-agent-run/dark": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
-   "codex-multi-agent-run/light": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
-   "subagent-run/dark": "3 lanes · 56 events · 8K tokens · ~$1.7706 est.",
-   "subagent-run/light": "3 lanes · 56 events · 8K tokens · ~$1.7706 est."
+   "large-session/dark": "1 session · 1.4K events · 467K tokens · ~$131.0217 est.",
+   "large-session/light": "1 session · 1.4K events · 467K tokens · ~$131.0217 est.",
+   "codex-multi-agent-run/dark": "3 sessions · 73 events · 4.4K tokens · ~$0.3759 est.",
+   "codex-multi-agent-run/light": "3 sessions · 73 events · 4.4K tokens · ~$0.3759 est.",
+   "subagent-run/dark": "3 sessions · 56 events · 8K tokens · ~$1.7706 est.",
+   "subagent-run/light": "3 sessions · 56 events · 8K tokens · ~$1.7706 est."
   },
   "approval": {
-   "id": "TRC-021",
-   "reason": "The rollup follows the token and cost totals the goldens have carried since the cost fixes; main's goldens already sum to these figures.",
+   "id": "TRC-005",
+   "reason": "The maintainer asked for the index to count sessions rather than lanes, since a lane also names a strip row. Only the word changes; every figure is the same.",
    "previous": {
-    "large-session/dark": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
-    "large-session/light": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
-    "codex-multi-agent-run/dark": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
-    "codex-multi-agent-run/light": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
-    "subagent-run/dark": "3 lanes · 56 events · 5.2K tokens · ~$1.6279 est.",
-    "subagent-run/light": "3 lanes · 56 events · 5.2K tokens · ~$1.6279 est."
-   },
-   "measured": {
     "large-session/dark": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
     "large-session/light": "1 lane · 1.4K events · 467K tokens · ~$131.0217 est.",
     "codex-multi-agent-run/dark": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
     "codex-multi-agent-run/light": "3 lanes · 73 events · 4.4K tokens · ~$0.3759 est.",
     "subagent-run/dark": "3 lanes · 56 events · 8K tokens · ~$1.7706 est.",
     "subagent-run/light": "3 lanes · 56 events · 8K tokens · ~$1.7706 est."
+   },
+   "measured": {
+    "large-session/dark": "1 session · 1.4K events · 467K tokens · ~$131.0217 est.",
+    "large-session/light": "1 session · 1.4K events · 467K tokens · ~$131.0217 est.",
+    "codex-multi-agent-run/dark": "3 sessions · 73 events · 4.4K tokens · ~$0.3759 est.",
+    "codex-multi-agent-run/light": "3 sessions · 73 events · 4.4K tokens · ~$0.3759 est.",
+    "subagent-run/dark": "3 sessions · 56 events · 8K tokens · ~$1.7706 est.",
+    "subagent-run/light": "3 sessions · 56 events · 8K tokens · ~$1.7706 est."
    }
   }
  },

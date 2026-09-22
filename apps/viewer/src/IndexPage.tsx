@@ -96,11 +96,11 @@ export function IndexPage({ traces, links }: { traces: LoadedTrace[]; links: Lin
   const totals = traces.reduce((sum, t) => ({ events: sum.events + t.summary.totals.events, tokens: sum.tokens + t.summary.totals.input + t.summary.totals.output }), { events: 0, tokens: 0 });
   const cost = rollupCost(traces);
   return <section data-testid="index-page" className="index-page">
-    <div><h1 className="page-title">Trajectory overview</h1><p className="rollup">{traces.length} lane{traces.length === 1 ? "" : "s"} · {compact(totals.events)} events · {compact(totals.tokens)} tokens{cost.priced > 0 ? ` · ${costLabel(cost)}${cost.unpriced > 0 ? ` · ${cost.unpriced} lane${cost.unpriced === 1 ? "" : "s"} unpriced` : ""}` : ""}</p></div>
+    <div><h1 className="page-title">Trajectory overview</h1><p className="rollup">{traces.length} session{traces.length === 1 ? "" : "s"} · {compact(totals.events)} events · {compact(totals.tokens)} tokens{cost.priced > 0 ? ` · ${costLabel(cost)}${cost.unpriced > 0 ? ` · ${cost.unpriced} session${cost.unpriced === 1 ? "" : "s"} unpriced` : ""}` : ""}</p></div>
     <Legend aria-label="Event legend" className="index-legend" items={LEGEND_CHIPS.map((chip) => ({ id: chip.label, label: chip.label, color: TRACE_PALETTE[traceColorKey(chip.kinds[0]!)], shape: "square" as const }))} extras={<><span data-testid="index-legend-extra" className="legend-extra"><ErrorSwatch />error</span><span data-testid="index-legend-extra" className="legend-extra"><RedactedKey /></span><span data-testid="index-legend-extra">┄ link hint</span></>} />
     <div className="lane-list">{groups.length > 1
       ? groups.map((group) => <div key={group.dir} className="lane-group" data-testid="lane-group" data-source-dir={group.dir}>
-        <h2 className="lane-group-heading" title="Where these sessions were read from, under the directory the site was built over"><span className="lane-group-dir">{group.dir === "." ? "./" : `${group.dir}/`}</span> · {group.lanes.length} lane{group.lanes.length === 1 ? "" : "s"}</h2>
+        <h2 className="lane-group-heading" title="Where these sessions were read from, under the directory the site was built over"><span className="lane-group-dir">{group.dir === "." ? "./" : `${group.dir}/`}</span> · {group.lanes.length} session{group.lanes.length === 1 ? "" : "s"}</h2>
         {group.lanes.map(renderLane)}
       </div>)
       : ordered.map(renderLane)}</div>
