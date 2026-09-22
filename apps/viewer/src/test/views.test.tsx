@@ -71,6 +71,19 @@ describe("kind colours (token palette)", () => {
 
 describe("P0 views", () => {
   it("nests children when a root omits parentSessionId", () => { const rootMeta: Partial<typeof summary.meta> = { ...summary.meta }; delete rootMeta.parentSessionId; const rootWithoutParent: LoadedTrace = { ...trace, summary: { ...summary, meta: rootMeta as typeof summary.meta } }; const children: LoadedTrace[] = ["child-a", "child-b"].map((id) => ({ id, path: id, summary: { ...summary, meta: { ...summary.meta, sessionId: id, parentSessionId: "demo", title: id } } })); render(<IndexPage traces={[...children, rootWithoutParent]} links={[]} />); const lanes = screen.getAllByTestId("lane"); expect(lanes[0]?.style.marginLeft).toMatch(/^calc\(0 \*/); expect(lanes[1]?.style.marginLeft).toMatch(/^calc\(1 \*/); expect(lanes[2]?.style.marginLeft).toMatch(/^calc\(1 \*/); expect(screen.getAllByLabelText("Proven parent-child connector")).toHaveLength(2); });
+  it("groups lanes by the directory each was read from, only when there are several (TRC-005)", () => {
+    const at = (id: string, sourceDir: string, parentSessionId: string | null = null): LoadedTrace => ({ id, path: id, summary: { ...summary, meta: { ...summary.meta, sessionId: id, parentSessionId, title: id, sourceDir } } });
+    const { unmount } = render(<IndexPage traces={[at("b1", "b"), at("a1", "a"), at("b1-child", "b/b1/subagents", "b1"), at("b2", "b")]} links={[]} />);
+    const groups = screen.getAllByTestId("lane-group");
+    expect(groups.map((group) => group.getAttribute("data-source-dir"))).toEqual(["b", "a"]);
+    // The child keeps its parent's group, though it was read from elsewhere.
+    expect(Array.from(groups[0]!.querySelectorAll('[data-testid="lane"]'), (lane) => lane.getAttribute("data-trace-id"))).toEqual(["b1", "b1-child", "b2"]);
+    expect(groups[0]).toHaveTextContent("b/ · 3 lanes");
+    unmount();
+    render(<IndexPage traces={[at("one", "x"), at("two", "x")]} links={[]} />);
+    expect(screen.queryAllByTestId("lane-group")).toHaveLength(0);
+    expect(screen.getAllByTestId("lane")).toHaveLength(2);
+  });
   it("renders proven and hinted connectors distinctly", () => { const child: LoadedTrace = { id: "child", path: "child", summary: { ...summary, meta: { ...summary.meta, sessionId: "child", parentSessionId: "demo", title: "Child" } } }; render(<IndexPage traces={[trace, child]} links={[{ fromSessionId: "demo", toSessionId: "child", kind: "campaign" }]} />); expect(screen.getByTestId("index-page")).toBeInTheDocument(); expect(screen.getAllByTestId("lane")).toHaveLength(2); expect(screen.getByLabelText("Proven parent-child connector")).toHaveClass("border-solid"); expect(screen.getByLabelText("Dashed link hint")).toHaveClass("border-dashed"); expect(screen.getAllByTestId("strip")).toHaveLength(2); });
   it("marks the rollup estimated exactly when a known component is estimated", () => {
     const costTrace = (id: string, cost?: number, estimated?: boolean): LoadedTrace => ({ id, path: id, summary: { ...summary, meta: { ...summary.meta, sessionId: id, title: id }, totals: { ...summary.totals, cost: cost == null ? {} : estimated ? { estimated: { usd: cost } } : { reported: [{ usd: cost, covers: "trajectory" }] } } } });

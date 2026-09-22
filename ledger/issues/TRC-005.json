@@ -3,11 +3,11 @@
   "title": "A site built over several directories cannot say which directory a session came from",
   "type": "improvement",
   "severity": "med",
-  "status": "open",
+  "status": "in-progress",
   "foundBy": "session agent working in the simple-tools-demo repository, which runs a three member campaign at the pinned build of 2026-09-17, while reading the trajectories of three campaign members",
   "opened": "2026-09-19",
   "resolved": null,
-  "stint": null,
+  "stint": "2026-09-21 strip changes",
   "evidence": {
     "commits": [],
     "integrated": [],

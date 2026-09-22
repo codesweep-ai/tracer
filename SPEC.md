@@ -410,6 +410,13 @@ heights arrived.*
 from a `--links` file and is somebody's claim, and a connector comes from the session's own spawn
 event.*
 
+**R83.** Every trajectory **MUST** carry `meta.sourceDir`, the directory its file was read from,
+relative to the directory the tool was given. When the top-level trajectories come from more than
+one directory, the index page **MUST** group them under a heading naming each, with every child in
+its parent's group. *A site built over one directory per agent showed rows titled almost alike, and
+every agent reported the same working directory, so nothing told them apart.* A site read from one
+directory shows no headings.
+
 **R59.** A child whose spawning event is present **MUST** carry that event's index as
 `meta.parentEventIndex`. *The index page can derive it by scanning the parent's strip, because it
 holds every summary. A split-mode trace page holds only its own, so without the stamp a child has no

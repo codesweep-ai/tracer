@@ -11,10 +11,6 @@
       "why": "Long tool output is unbounded on the card."
     },
     {
-      "id": "TRC-005",
-      "why": "A multi-directory site cannot say where a session came from."
-    },
-    {
       "id": "TRC-031",
       "why": "Search cost grows with every trajectory added."
     },

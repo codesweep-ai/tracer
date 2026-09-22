@@ -73,6 +73,23 @@ export function IndexPage({ traces, links }: { traces: LoadedTrace[]; links: Lin
   const ordered: Array<{ trace: LoadedTrace; depth: number }> = []; const seen = new Set<string>();
   const visit = (trace: LoadedTrace, depth: number) => { if (seen.has(trace.id)) return; seen.add(trace.id); ordered.push({ trace, depth }); (byParent.get(trace.id) ?? []).forEach((child) => visit(child, depth + 1)); };
   (byParent.get(null) ?? traces).forEach((trace) => visit(trace, 0)); traces.forEach((trace) => visit(trace, 0));
+  // A site built over several directories groups its top-level sessions by the
+  // directory each was read from, children staying with their parents
+  // (TRC-005). Sessions a CLI titles alike are otherwise indistinguishable.
+  const groups: Array<{ dir: string; lanes: typeof ordered }> = [];
+  let block: typeof ordered = [];
+  const blocks: Array<typeof ordered> = [];
+  ordered.forEach((entry) => { if (entry.depth === 0 && block.length) { blocks.push(block); block = []; } block.push(entry); });
+  if (block.length) blocks.push(block);
+  blocks.forEach((lanes) => {
+    const dir = lanes[0]!.trace.summary.meta.sourceDir ?? ".";
+    const home = groups.find((group) => group.dir === dir);
+    if (home) home.lanes.push(...lanes); else groups.push({ dir, lanes: [...lanes] });
+  });
+  const renderLane = ({ trace, depth }: (typeof ordered)[number]) => { const parentId = trace.summary.meta.parentSessionId ?? undefined; // R59's stamp when the export carries it, else the scan this page has
+    // always done — which still works here, because the index holds every
+    // summary. Only a trace page needs the stamp.
+    const spawnIndex = trace.summary.meta.parentEventIndex ?? (parentId ? byId.get(parentId)?.summary.strip.find((event) => event.subtask && event.childSessionId === trace.id)?.i : undefined); return <Lane key={trace.id} trace={trace} depth={depth} hinted={links.some((link) => link.toSessionId === trace.id)} parentId={parentId} spawnIndex={spawnIndex} />; };
   // the rollup sums only the lanes that HAVE a cost, so it must say when
   // lanes are excluded — a plausible total that silently omits a lane presents an
   // unknowable quantity as a known one.
@@ -81,9 +98,11 @@ export function IndexPage({ traces, links }: { traces: LoadedTrace[]; links: Lin
   return <section data-testid="index-page" className="index-page">
     <div><h1 className="page-title">Trajectory overview</h1><p className="rollup">{traces.length} lane{traces.length === 1 ? "" : "s"} · {compact(totals.events)} events · {compact(totals.tokens)} tokens{cost.priced > 0 ? ` · ${costLabel(cost)}${cost.unpriced > 0 ? ` · ${cost.unpriced} lane${cost.unpriced === 1 ? "" : "s"} unpriced` : ""}` : ""}</p></div>
     <Legend aria-label="Event legend" className="index-legend" items={LEGEND_CHIPS.map((chip) => ({ id: chip.label, label: chip.label, color: TRACE_PALETTE[traceColorKey(chip.kinds[0]!)], shape: "square" as const }))} extras={<><span data-testid="index-legend-extra" className="legend-extra"><ErrorSwatch />error</span><span data-testid="index-legend-extra" className="legend-extra"><RedactedKey /></span><span data-testid="index-legend-extra">┄ link hint</span></>} />
-    <div className="lane-list">{ordered.map(({ trace, depth }) => { const parentId = trace.summary.meta.parentSessionId ?? undefined; // R59's stamp when the export carries it, else the scan this page has
-      // always done — which still works here, because the index holds every
-      // summary. Only a trace page needs the stamp.
-      const spawnIndex = trace.summary.meta.parentEventIndex ?? (parentId ? byId.get(parentId)?.summary.strip.find((event) => event.subtask && event.childSessionId === trace.id)?.i : undefined); return <Lane key={trace.id} trace={trace} depth={depth} hinted={links.some((link) => link.toSessionId === trace.id)} parentId={parentId} spawnIndex={spawnIndex} />; })}</div>
+    <div className="lane-list">{groups.length > 1
+      ? groups.map((group) => <div key={group.dir} className="lane-group" data-testid="lane-group" data-source-dir={group.dir}>
+        <h2 className="lane-group-heading" title="Where these sessions were read from, under the directory the site was built over"><span className="lane-group-dir">{group.dir === "." ? "./" : `${group.dir}/`}</span> · {group.lanes.length} lane{group.lanes.length === 1 ? "" : "s"}</h2>
+        {group.lanes.map(renderLane)}
+      </div>)
+      : ordered.map(renderLane)}</div>
   </section>;
 }

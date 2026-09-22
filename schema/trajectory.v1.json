@@ -178,6 +178,10 @@
             "null"
           ],
           "description": "Permission mode reported by the CLI (e.g. default)."
+        },
+        "sourceDir": {
+          "type": "string",
+          "description": "The directory the session file was read from, relative to the directory the tool was given, with forward slashes, and \".\" at its top. It tells apart sessions whose CLIs report the same working directory. Additive and optional: documents written before it omit it."
         }
       }
     },

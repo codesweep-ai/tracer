@@ -78,6 +78,12 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 			result.Diagnostics = append(result.Diagnostics, fmt.Sprintf("skipping %s: %v", filepath.ToSlash(rel), e))
 			continue
 		}
+		// Where under the input the session was read from (TRC-005). Relative,
+		// so a site built over several directories can tell their sessions
+		// apart by it, and it reads the same on any machine.
+		if dir, x := filepath.Rel(input, filepath.Dir(file)); x == nil {
+			object(get(doc, "meta")).Set("sourceDir", filepath.ToSlash(dir))
+		}
 		result.Documents = append(result.Documents, doc)
 		if str(get(object(get(doc, "meta")), "source")) == "claude-code" && strings.Contains(filepath.ToSlash(file), "subagents/") {
 			side := strings.TrimSuffix(file, ".jsonl") + ".meta.json"

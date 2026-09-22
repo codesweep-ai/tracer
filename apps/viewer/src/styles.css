@@ -41,6 +41,12 @@ canvas { image-rendering: pixelated; }
 .legend-extra { display: inline-flex; align-items: center; gap: var(--space-1); }
 
 .lane-list { display: flex; flex-direction: column; gap: var(--space-3); }
+/* A site over several directories groups its lanes by where each was read
+   from (TRC-005). Only rendered when there is more than one directory. */
+.lane-group { display: flex; flex-direction: column; gap: var(--space-3); }
+.lane-group + .lane-group { margin-top: var(--space-4); }
+.lane-group-heading { margin: 0; font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); color: var(--muted); }
+.lane-group-dir { font-family: var(--font-family-mono); color: var(--fg); }
 .lane { position: relative; }
 .lane-grid {
   display: grid;

@@ -177,3 +177,35 @@ func TestNormalizeDirectoryStampsParentEventIndex(t *testing.T) {
 		})
 	}
 }
+
+// Each session records the directory it was read from, relative to the input,
+// so a site built over several directories can tell them apart (TRC-005).
+func TestNormalizeDirectoryRecordsSourceDir(t *testing.T) {
+	input := t.TempDir()
+	copyInto := func(from, dir string) {
+		b, err := os.ReadFile(filepath.Join("..", "..", "fixtures", from))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.MkdirAll(filepath.Join(input, dir), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(input, dir, filepath.Base(from)), b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	copyInto("claude/v2.1/simple/session.jsonl", "a/nested")
+	copyInto("codex/v0.146/multi-agent-run/rollout-2026-07-31T01-13-27-77f0e564-f5d7-a937-aa50-ed64762175c7.jsonl", ".")
+	result, err := NormalizeDirectory(input, t.TempDir(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, doc := range result.Documents {
+		meta := object(get(doc, "meta"))
+		got[str(get(meta, "source"))] = str(get(meta, "sourceDir"))
+	}
+	if got["claude-code"] != "a/nested" || got["codex"] != "." {
+		t.Fatalf("sourceDir by source: %v", got)
+	}
+}
