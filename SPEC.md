@@ -568,14 +568,15 @@ run it.
 `make ci` runs the fixture suite and `make check` does not, because it takes about a minute and
 `make check` is the loop kept beside you while working.
 
-**The viewer gates skip rather than fail without npm.** `apps/viewer` resolves
-`@codesweep-ai/ui` from the registry, pinned to one exact version, so no second checkout is
-involved, but rebuilding it still needs a Node toolchain. The install runs through
-`scripts/with-npmrevs.sh`, which puts cs-npmrevs in front of npmjs.com. `@codesweep-ai/ui`
-publishes an image of every build, and a version that has not been released reaches npm only
-that way. The tool is pinned in `go.mod`, the images are public, and every other package still
-comes from npmjs.com. The compiled viewer assets are committed, so every Go gate above runs in any
-clone and the binary builds with Go alone.
+**The viewer gates skip rather than fail without npm.** `apps/viewer` resolves `@codesweep-ai/ui`
+from the registry, pinned to one exact version, so no second checkout is involved, but rebuilding it
+still needs a Node toolchain. The install runs through `scripts/with-npmrevs.sh`, which puts
+cs-npmrevs in front of npmjs.com. `@codesweep-ai/ui` publishes an image of every build, and a
+version that has not been released reaches npm only that way. The tool is pinned in `go.mod`, the
+images are public, and every other package still comes from npmjs.com. It also serves cs-npmrevs's
+shared data directory on port 4875, so a build packed on this machine (`make npm-pack` in npmrevs,
+lint or ledger, `npm run registry:pack` in ui) installs without being pushed. The compiled viewer
+assets are committed, so every Go gate above runs in any clone and the binary builds with Go alone.
 
 Rebuilding needs **Node 22.13 or newer**, the floor `@codesweep-ai/ui` sets. `make build` takes
 that path whenever `npm` is on your PATH and a source under `apps/viewer` is newer than the
