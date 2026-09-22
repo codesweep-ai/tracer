@@ -197,7 +197,7 @@ a kind of its own, so it is not in the kind list:
 |---|---|
 | Filled mark | An ordinary event of that kind. Its height is the time it took, and a square has no time to show. |
 | **Hollow square** | **Redacted at source.** The event exists and is counted, but its content was withheld before `cs-tracer` ever saw it: a thinking block that arrived empty. There is nothing to show, and a hollow mark says so rather than implying the event is missing. It is keyed beside the legend. |
-| Cross | The event errored. The **errors** toggle beside the legend narrows to these; it composes with the kind filters and the search box. |
+| Error colour | The event errored. The **errors** toggle beside the legend narrows to these, raising each to the top of its row with a dot above it and dimming the rest; it composes with the kind filters and the search box. |
 | Notch | The time ran past the row's limit. The bar stops there, and the tooltip gives the true figure. |
 | Marker | The event spawned a sub-agent. Its card links to that trajectory when the export contains it, and says so when it does not. |
 

@@ -207,7 +207,7 @@ export function TrajectoryPage({ trace }: { trace: LoadedTrace }) {
         </>}
       />
     </div>
-    <EventStrip events={trace.summary.strip} selected={selected} onSelect={selectEvent} label={`${trace.id} event strip`} laneLabel="" hiddenKinds={hiddenKinds} matches={stripMatches} textFiltering={Boolean(activeQuery) || errorsOnly} focus={centerRequest} />
+    <EventStrip events={trace.summary.strip} selected={selected} onSelect={selectEvent} label={`${trace.id} event strip`} laneLabel="" hiddenKinds={hiddenKinds} matches={stripMatches} textFiltering={Boolean(activeQuery) || errorsOnly} errorsOnly={errorsOnly} focus={centerRequest} />
     <div ref={viewport} data-testid="virtual-event-list" tabIndex={0} role="region" aria-label="Events" className="virtual-list" onWheel={yieldToReader} onTouchMove={yieldToReader} onKeyDown={yieldToReader} onPointerDown={yieldToReader} onScroll={(event) => { const top = event.currentTarget.scrollTop; setScrollTop(top); const index = displayed[positionAtOffset(offsets, top)]; const pending = pendingNavTarget.current; if (pending != null) return; if (programmaticTops.current.some((requested) => Math.abs(requested - top) < 1)) return; if (correctOnLand.current) return; if (index != null && index !== selected) setSelected(index); }}>
       {!displayed.length && <p role="status" data-testid="empty-filter" className="empty-filter">{kinds.size === 0 ? "No event kinds selected — pick one above, or choose all." : errorsOnly ? "No errored events in this trajectory." : "No events match this filter."}</p>}
       <div className="virtual-list-inner" style={{ height: offsets[offsets.length - 1] ?? 0 }}>

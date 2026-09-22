@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { EventLanes } from "@codesweep-ai/ui";
 import type { EventLaneEvent } from "@codesweep-ai/ui";
 import { duration, eventLabel } from "./format";
+import type { EventToken } from "@codesweep-ai/ui";
 import { TRACE_EVENT_PALETTE } from "./palette";
 import type { EventKind, StripEvent } from "./types";
 
@@ -35,6 +36,86 @@ export function stripAxisPadding(cellWidth: number): number {
 }
 
 const LANE_ID = "events";
+
+/** The work row's height. Six pixels above the tallest bar are kept for the
+ *  dot that marks a failed step (R47), so the dot never touches the bar or the
+ *  edge of the canvas. */
+const WORK_LANE_HEIGHT = 46;
+/** EventLanes insets a bar this far from each end of its row. */
+const BAR_INSET = 3;
+/** The tallest bar the work row draws: the row less the insets and the dot's
+ *  headroom. A step at the ceiling reaches it (R70), and so does a failed
+ *  step with errors only on (R47). */
+const TALLEST_BAR = WORK_LANE_HEIGHT - 2 * BAR_INSET - 6;
+/** The mark size at STRIP_CELL_WIDTH, which is also a bar's floor. */
+const MARK_SIZE = 12;
+/** The magnitude that draws the tallest bar: EventLanes runs a bar from the
+ *  floor at 0 to the row less the insets at 1. */
+export const FULL_MAGNITUDE = (TALLEST_BAR - MARK_SIZE) / (WORK_LANE_HEIGHT - 2 * BAR_INSET - MARK_SIZE);
+
+/**
+ * The kind EventLanes paints a failed step with. EventLanes takes one colour
+ * per kind, so a failed step is its own kind on the strip: the same event kind
+ * with the error colour (R47). The strip's palette and its hidden set carry
+ * both spellings, so a kind chip still hides its failed steps.
+ */
+export type StripKind = EventKind | `failed ${EventKind}`;
+export function failedKind(kind: EventKind): StripKind {
+  return `failed ${kind}`;
+}
+export const STRIP_PALETTE: Record<StripKind, EventToken> = Object.fromEntries([
+  ...Object.entries(TRACE_EVENT_PALETTE),
+  ...Object.keys(TRACE_EVENT_PALETTE).map((kind) => [failedKind(kind as EventKind), "--color-error"]),
+]) as Record<StripKind, EventToken>;
+
+/** With errors only on, a dot in the error colour sits above each raised bar,
+ *  as the other consumer of EventLanes draws it, so a reader moving between
+ *  the two learns one mark. A spawn's marker takes the foreground colour, so
+ *  the two dots never read alike. */
+export const FAILED_MARKER_TOKEN: EventToken = "--color-error";
+export const SPAWN_MARKER_TOKEN: EventToken = "--fg";
+
+/**
+ * tracer's events as EventLanes draws them. Work and waiting sit on separate
+ * rows (R77): a step's bar rises by the time it took (R70), and a turn end
+ * hangs in the row below by the wait after it (R68). A failed step takes the
+ * error colour, and with errors only on it rises to the top of its row with a
+ * dot above it, so failures stand out at any zoom (R47).
+ */
+export function stripLaneEvents(events: readonly StripEvent[], errorsOnly = false): EventLaneEvent<StripKind>[] {
+  return events.map((event) => {
+    const failed = Boolean(event.error);
+    const work = event.kind !== "turn_end";
+    const magnitude = !work
+      ? { magnitude: logFraction(event.idleMs ?? 0, IDLE_CEILING_MS), clipped: (event.idleMs ?? 0) > IDLE_CEILING_MS || undefined }
+      : failed && errorsOnly
+        ? { magnitude: FULL_MAGNITUDE }
+        : event.workMs != null
+          ? { magnitude: FULL_MAGNITUDE * logFraction(event.workMs, WORK_CEILING_MS), clipped: event.workMs > WORK_CEILING_MS || undefined }
+          : {};
+    const marker = failed && errorsOnly
+      ? { marker: "failed", markerToken: FAILED_MARKER_TOKEN }
+      : event.subtask && event.childSessionId
+        ? { marker: "spawn", markerToken: SPAWN_MARKER_TOKEN }
+        : {};
+    return {
+      i: event.i,
+      lane: work ? LANE_ID : WAIT_LANE_ID,
+      ...magnitude,
+      kind: failed ? failedKind(event.kind) : event.kind,
+      shape: event.redacted ? "hollow" : "square",
+      label: event.label ? `${eventLabel(event.kind)} — ${event.label}` : eventLabel(event.kind),
+      at: event.ts ?? "",
+      ...marker,
+    };
+  });
+}
+
+/** The hidden set EventLanes is given: every hidden kind in both spellings. */
+export function stripHiddenKinds(hiddenKinds: ReadonlySet<EventKind> | undefined): ReadonlySet<StripKind> | undefined {
+  if (!hiddenKinds) return undefined;
+  return new Set([...hiddenKinds].flatMap((kind) => [kind, failedKind(kind)]));
+}
 
 /** The time part of a cell's tooltip. A turn end reports its wait (R68). A
  *  model step reports its model time (R70): the round trip from the end of the
@@ -84,7 +165,7 @@ export interface StripFocus { index: number; sequence: number }
 
 /**
  * tracer's strip on ui's EventLanes (TR-20/24): i is already the global index;
- * redacted → hollow, a turn end → a bar in the wait row, error → the error cross overlay, a spawn →
+ * redacted → hollow, a turn end → a bar in the wait row, a failed step → the error colour, a spawn →
  * a marker. Search/chip dimming maps to `emphasis`; kind filters to
  * `hiddenKinds`. The tooltip body keeps tracer's wording inside EventLanes'
  * ChartTooltip shell (TR-28).
@@ -94,7 +175,7 @@ export interface StripFocus { index: number; sequence: number }
  * DOM, and the index page's fork connectors (which stay tracer's) plus the
  * fixture suite count them. They carry no paint of their own.
  */
-export function EventStrip({ events, selected, onSelect, label, laneLabel, hiddenKinds, matches, textFiltering = false, focus }: {
+export function EventStrip({ events, selected, onSelect, label, laneLabel, hiddenKinds, matches, textFiltering = false, errorsOnly = false, focus }: {
   events: readonly StripEvent[];
   selected?: number;
   onSelect?: (i: number) => void;
@@ -110,37 +191,22 @@ export function EventStrip({ events, selected, onSelect, label, laneLabel, hidde
   hiddenKinds?: ReadonlySet<EventKind>;
   matches?: ReadonlySet<number>;
   textFiltering?: boolean;
+  /** Errors only is on: failed steps rise to the top of the row (R47). */
+  errorsOnly?: boolean;
 }) {
-  // Work and waiting on separate rows (R77): a step's bar rises by the time it
-  // took (R70), and a turn end hangs in the row below by the wait after it (R68).
-  const laneEvents = useMemo<readonly EventLaneEvent<EventKind>[]>(() => events.map((event) => ({
-    i: event.i,
-    lane: event.kind === "turn_end" ? WAIT_LANE_ID : LANE_ID,
-    ...(event.kind === "turn_end"
-      ? { magnitude: logFraction(event.idleMs ?? 0, IDLE_CEILING_MS), clipped: (event.idleMs ?? 0) > IDLE_CEILING_MS || undefined }
-      : event.workMs != null
-        ? { magnitude: logFraction(event.workMs, WORK_CEILING_MS), clipped: event.workMs > WORK_CEILING_MS || undefined }
-        : {}),
-    kind: event.kind,
-    shape: event.redacted ? "hollow" : "square",
-    label: event.label ? `${eventLabel(event.kind)} — ${event.label}` : eventLabel(event.kind),
-    at: event.ts ?? "",
-    error: event.error || undefined,
-    marker: event.subtask && event.childSessionId ? "spawn" : undefined,
-  })), [events]);
+  const laneEvents = useMemo(() => stripLaneEvents(events, errorsOnly), [events, errorsOnly]);
   const byIndex = useMemo(() => new Map(events.map((event) => [event.i, event])), [events]);
   // EventLanes reseeds/reclamps when lanes/events identity changes — a fresh
   // array per render would reset the active descendant mid-keyboard-walk.
   const lanes = useMemo(() => [
-    { id: LANE_ID, label: laneLabel, className: "event-strip-lane-label", height: 40, bars: "up" as const },
+    { id: LANE_ID, label: laneLabel, className: "event-strip-lane-label", height: WORK_LANE_HEIGHT, bars: "up" as const },
     // Left out of the overview: its sparse bars squeezed the work row there
     // into a line.
     { id: WAIT_LANE_ID, label: "", className: "event-strip-lane-label", height: 16, bars: "down" as const, barFloor: 2, overview: false },
   ], [laneLabel]);
-  // Passed straight through: `hiddenKinds` is already keyed by EventKind, which
-  // is what TRACE_EVENT_PALETTE and the lane events are keyed by. Projecting it
-  // through the many-to-one colour map here is what erased system/meta/turn_end.
-  const hidden = hiddenKinds;
+  // Keyed by the fine-grained kind, in both spellings: projecting it through
+  // the many-to-one colour map once erased system/meta/turn_end.
+  const hidden = useMemo(() => stripHiddenKinds(hiddenKinds), [hiddenKinds]);
   const spawns = useMemo(() => events.filter((event) => event.subtask && event.childSessionId), [events]);
   const root = useRef<HTMLDivElement>(null);
   // Centre the focused cell (R62). EventLanes scrolls the selection into view
@@ -169,7 +235,7 @@ export function EventStrip({ events, selected, onSelect, label, laneLabel, hidde
     <EventLanes
       lanes={lanes}
       events={laneEvents}
-      palette={TRACE_EVENT_PALETTE}
+      palette={STRIP_PALETTE}
       selected={selected ?? null}
       hiddenKinds={hidden}
       emphasis={textFiltering ? matches : undefined}
@@ -182,7 +248,7 @@ export function EventStrip({ events, selected, onSelect, label, laneLabel, hidde
       renderTooltip={(laneEvent) => {
         const event = byIndex.get(laneEvent.i);
         if (!event) return null;
-        return <>#{event.i} · {event.error ? "✕ error · " : ""}{eventLabel(event.kind)}{event.redacted ? " · redacted at source" : event.label ? ` · ${event.label}` : ""}{timingLabel(event)}</>;
+        return <>#{event.i} · {event.error ? "error · " : ""}{eventLabel(event.kind)}{event.redacted ? " · redacted at source" : event.label ? ` · ${event.label}` : ""}{timingLabel(event)}</>;
       }}
     />
     {spawns.map((event) => <span key={`${event.i}:${event.childSessionId}`} data-testid="spawn-marker" data-spawn-index={event.i} data-spawn-x={event.i * STRIP_CELL_WIDTH + STRIP_CELL_WIDTH / 2} data-child-session-id={event.childSessionId} aria-hidden="true" className="spawn-marker-census" />)}

@@ -394,8 +394,13 @@ least 15.*
 **R46.** `system`, `meta` and `turn_end` **MUST** render in muted ink rather than a categorical hue.
 *Plumbing recedes, so the four content kinds carry the signal.*
 
-**R47.** An error **MUST** be drawn as a mark over the cell's kind colour, never as a replacement
-fill. *An errored tool call still has to read as a tool call.*
+**R47.** A failed step **MUST** be drawn in the error colour, never as a glyph inside the cell.
+With errors only on, a failed step **MUST** rise to the top of its row with a dot of that colour
+above it, and everything else **MUST** dim. A selection **MUST** ring the whole of the taller bar,
+and the dot **MUST** never be clipped. *A cross inside a 12-pixel cell was two strokes nobody
+found. Colour is what the eye finds at that size. The raised bar and its dot lift a failure clear
+of its neighbours when failures are what a reader is looking for. The cell's own kind still reads
+from its tooltip and its card (TRC-039).*
 
 **R48.** Where the strip aggregates events into buckets, it **MUST** carry errors in a channel of
 their own. *A bucket draws the kind it holds most of, and an error inside it cannot be what gets

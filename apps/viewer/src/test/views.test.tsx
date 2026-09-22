@@ -459,14 +459,20 @@ describe("legend extras stay atomic when narrow", () => {
 // TRC-020. A card's title opens with its event's strip mark, drawn from the same
 // token table, so a reader can match a card to a cell by sight.
 describe("card marks", () => {
-  it("opens each card title with the event's mark, error cross included", () => {
+  it("opens each card title with the event's mark, in the error colour when it failed", () => {
     render(<EventCard event={{ i: 12, kind: "tool_call", tool: { name: "Bash" }, result: { text: "Error: no", isError: true } }} />);
     const mark = screen.getByTestId("cell-mark");
     expect(mark).toHaveAttribute("data-kind", "tool_call");
     expect(mark).toHaveAttribute("data-error", "true");
-    expect(mark.style.getPropertyValue("--cell-mark-color")).toBe(`var(${TRACE_PALETTE.tool})`);
-    expect(mark.querySelector("canvas")).not.toBeNull();
+    // R47: the error colour is the fill, and nothing is drawn inside it.
+    expect(mark.style.getPropertyValue("--cell-mark-color")).toBe("var(--color-error)");
+    expect(mark.childElementCount).toBe(0);
     expect(mark.nextElementSibling).toHaveTextContent("#12 · tool call");
+  });
+  it("keeps the kind's colour on a mark that did not fail", () => {
+    render(<EventCard event={{ i: 13, kind: "tool_call", tool: { name: "Bash" }, result: { text: "ok" } }} />);
+    const mark = screen.getByTestId("cell-mark");
+    expect(mark.style.getPropertyValue("--cell-mark-color")).toBe(`var(${TRACE_PALETTE.tool})`);
   });
   it("draws a redacted thinking step hollow and a clean one without a cross", () => {
     const { rerender } = render(<EventCard event={{ i: 3, kind: "thinking", text: "" }} />);

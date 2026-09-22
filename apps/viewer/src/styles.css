@@ -285,7 +285,8 @@ button.fork-connector-vertical::after {
   background: var(--cell-mark-color); border-radius: var(--radius-xs);
 }
 .cell-mark-hollow { background: transparent; border: 1px solid var(--cell-mark-color); }
-.cell-mark .error-swatch { position: absolute; inset: 0; }
+/* The key for a failed step: a cell in the error colour, at legend scale. */
+.error-swatch { display: inline-block; flex: none; width: var(--space-3); height: var(--space-3); border-radius: var(--radius-xs); background: var(--color-error); }
 .event-card-body {
   display: flex;
   flex-direction: column;
