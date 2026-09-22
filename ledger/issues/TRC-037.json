@@ -3,17 +3,19 @@
   "title": "An export with no readable session shows a schema mismatch instead of an empty overview",
   "type": "defect",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, rendering every captured fixture for a gallery the maintainer asked for",
   "opened": "2026-09-22",
-  "resolved": null,
+  "resolved": "2026-09-22",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "77300d8"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "Exported the two fixtures that hold no readable session with the build before the change and the build after it, and loaded each page headlessly. Before, both pages showed the version-mismatch alert and no overview. After, both show the overview with no sessions, no events and no tokens, and raise no page error. A unit test loads an empty tree and asserts the index it stands in declares the version the build emits, with no trajectories. `make ci` passes: parity PASS, and every fixture check passes, 27 ok and 9 met."
   },
-  "resolution": null,
+  "resolution": "The index the assembler stands in for a tree with no readable session now declares the version this build emits. It does so through the same constant every other index uses, so the viewer renders an empty overview.",
   "details": "When every input file is skipped, the normalizer writes no index, and the export assembler stands in an empty index of its own. That stand-in declares schema version 1, while the viewer implements version 3 and refuses any other (R7). The page then refuses the document, naming the two versions and asking for a re-export with a matching cs-tracer, which sends whoever reads it after the wrong problem. The page that tells the truth shows an overview with no sessions.\n\nTwo captured fixtures, `claude/v2.1/all-skipped` and `claude/v2.1/empty-session`, produce this page when exported. R9 says every declaration of the version must agree, and this one is the fifth, written as a literal beside the constant the assembler uses everywhere else.",
   "notes": [],
   "links": []
