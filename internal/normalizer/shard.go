@@ -70,6 +70,11 @@ func stripEvent(e *obj) *obj {
 			out.Set("activeMs", integer(min(num(active), num(work))))
 		}
 	}
+	// Who could have been asked to approve a tool call, when it is not the CLI
+	// itself: the strip says the call's time may include that wait (TRC-028).
+	if approval := str(get(e, "approval")); approval == "person" || approval == "classifier" {
+		out.Set("approval", approval)
+	}
 	if str(get(e, "kind")) == "thinking" && str(get(e, "text")) == "" {
 		out.Set("redacted", true)
 	}

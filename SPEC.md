@@ -346,6 +346,19 @@ Codex records a start for reasoning items and messages, and OpenCode for reasoni
 Claude Code records only when a block finished, so its events carry neither field, and its model time
 stays whole. Both fields are additive and optional, so `schemaVersion` is unchanged (R7).
 
+**R82.** Where a CLI records the permission mode or approval policy behind a tool call, the call
+**MUST** carry `approval`. Its value names who approves the call if the CLI asks: `person`,
+`classifier` or `automatic`. The viewer **MUST** then say that the call's time may include that wait. *No CLI records the
+approval itself, so a prompted call's time runs from the call to its result and takes in the person
+deciding. In Claude Code's `default` mode an edit took a median 2.1 seconds, against 0.04 where edits
+were approved unasked.*
+
+Claude Code's adapter reads `permissionMode`, which can change mid-session, and knows which tools run
+unasked in each mode. The codex adapter reads each turn's `approval_policy`, under which only a call
+requesting escalated permissions can reach a person. OpenCode's adapter leaves the field absent,
+because no captured OpenCode session holds a prompt to learn from. The field is additive and
+optional, so `schemaVersion` is unchanged (R7).
+
 `parse.unreadable` is additive and optional in `schema/trajectory.v1.json`: the current adapters
 always emit it, and documents written before R56 omit it. `schemaVersion` is unchanged, because a
 consumer that ignores the field still renders such a document correctly (R7).

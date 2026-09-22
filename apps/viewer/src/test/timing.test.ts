@@ -9,6 +9,9 @@ describe("a cell's time in its tooltip", () => {
   });
   it("says where a bar stops short of the value", () => {
     expect(timingLabel({ i: 1, kind: "tool_call", error: false, workMs: 180_000 })).toBe(" · took 3.0 min (bar stops at 2.0 min)");
+    expect(timingLabel({ i: 2, kind: "tool_call", error: false, workMs: 13_700, approval: "person" })).toBe(" · took 13.7 s (may include waiting for approval)");
+    expect(timingLabel({ i: 3, kind: "tool_call", error: false, workMs: 2_100, approval: "classifier" })).toBe(" · took 2.1 s (may include an approval check)");
+    expect(timingLabel({ i: 4, kind: "tool_call", error: false, workMs: 180_000, approval: "person" })).toBe(" · took 3.0 min (may include waiting for approval, bar stops at 2.0 min)");
     expect(timingLabel({ i: 2, kind: "turn_end", error: false, idleMs: 4_320_000 })).toBe(" · waited 1.2 h (bar stops at 1.0 h)");
     expect(timingLabel({ i: 3, kind: "user", error: false })).toBe("");
   });

@@ -3,11 +3,11 @@
   "title": "An attended Claude Code tool call may count the user's permission prompt as the tool's time",
   "type": "improvement",
   "severity": "low",
-  "status": "open",
+  "status": "in-progress",
   "foundBy": "session agent, reviewing how R70 charges time in attended sessions; unverified",
   "opened": "2026-09-21",
   "resolved": null,
-  "stint": null,
+  "stint": "2026-09-21 strip changes",
   "evidence": {
     "commits": [],
     "integrated": [],
@@ -15,7 +15,16 @@
   },
   "resolution": null,
   "details": "A tool call's time runs from the end of the previous work to its result. In an attended session Claude Code can wait for the user to approve a tool before running it, and that wait would fall inside the tool's time. A slow bar would then show a person deciding, not a tool running.\n\nThis is a suspicion to verify first: find tool calls whose time far exceeds their run, and check whether a permission record sits between the call and its result.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-22",
+      "text": "The question is wider than Claude Code. Codex asks for approval under `approval_policy: on-request`, and OpenCode has permission prompts too. The captured codex corpus ran with `never`, so it cannot show a prompt. Local attended codex sessions hold about 1,590 tool calls that asked for escalated permissions. The only OpenCode sessions at hand store no prompt at all, so OpenCode stays unverified here."
+    },
+    {
+      "date": "2026-09-22",
+      "text": "Measured on local Claude Code transcripts, the wait is real where the mode prompts. In `default` mode an Edit takes a median 2.1 seconds from call to result, and 13.7 at the 90th percentile. With edits approved automatically it takes 0.04 and 0.10, and Read, which never prompts, stays near 0.01 in every mode. Bash under `acceptEdits`, which still prompts for commands, reaches 54 seconds at the 90th percentile. The transcript holds no record of the approval, so nothing marks where the wait ends and the tool starts.\n\nThe attended corpus runs in `auto` mode, where a classifier approves instead of a person, and adds about 2 seconds at the 90th percentile to writes. In local codex sessions under `on-request`, 1,972 escalated calls ran no slower than 2,390 plain ones, a median 0.16 seconds against 0.33. Their approvals cost no human time, and codex writes no approval record either."
+    }
+  ],
   "links": [
     "TRC-015"
   ]

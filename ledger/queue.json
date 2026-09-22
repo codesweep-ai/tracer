@@ -3,10 +3,6 @@
   "updated": "2026-09-21",
   "items": [
     {
-      "id": "TRC-028",
-      "why": "Attended tool bars may show a person deciding, not a tool running."
-    },
-    {
       "id": "TRC-029",
       "why": "The last unexplained share of attended elapsed time."
     },

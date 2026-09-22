@@ -264,3 +264,30 @@ func TestClaudeAPIErrorReplyIsAnError(t *testing.T) {
 		t.Fatalf("meta.model = %v, want absent", model)
 	}
 }
+
+// Who approves a tool call follows the permission mode in force when it was
+// made, and the mode can change mid-session (TRC-028).
+func TestClaudeToolCallNamesWhoApprovesIt(t *testing.T) {
+	call := func(uuid, name string) *obj {
+		return trajectory.NewObject("uuid", uuid, "sessionId", "s", "type", "assistant", "timestamp", "2026-01-01T10:00:00.000Z",
+			"message", trajectory.NewObject("id", uuid, "model", "claude-opus-5", "content", []any{trajectory.NewObject("type", "tool_use", "id", "t"+uuid, "name", name)}))
+	}
+	mode := func(m string) *obj { return trajectory.NewObject("type", "permission-mode", "permissionMode", m) }
+	doc := NormalizeClaude([]*obj{
+		call("a", "Edit"),
+		mode("default"), call("b", "Edit"), call("c", "Read"),
+		mode("acceptEdits"), call("d", "Write"), call("e", "Bash"),
+		mode("auto"), call("f", "Bash"),
+		mode("bypassPermissions"), call("g", "Bash"),
+	})
+	var got []string
+	for _, e := range get(doc, "events").([]*obj) {
+		if str(get(e, "kind")) == "tool_call" {
+			got = append(got, str(get(e, "approval")))
+		}
+	}
+	want := []string{"", "person", "automatic", "automatic", "person", "classifier", "automatic"}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Fatalf("approvals %v, want %v", got, want)
+	}
+}

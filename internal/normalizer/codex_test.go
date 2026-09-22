@@ -129,3 +129,32 @@ func TestNormalizeCodexItemCompletedIsSkippedByItemType(t *testing.T) {
 		t.Fatalf("events = %q, want %q", kinds, want)
 	}
 }
+
+// Under on-request a call runs in the sandbox unasked, and only one asking for
+// escalated permissions can reach a person (TRC-028).
+func TestNormalizeCodexToolCallNamesWhoApprovesIt(t *testing.T) {
+	call := func(id, args string) string {
+		return "{\"type\":\"response_item\",\"payload\":{\"type\":\"function_call\",\"name\":\"exec_command\",\"call_id\":\"" + id + "\",\"arguments\":" + args + "}}\n"
+	}
+	policy := func(p string) string {
+		return "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt\",\"approval_policy\":\"" + p + "\"}}\n"
+	}
+	doc, err := NormalizeBytes([]byte(
+		"{\"type\":\"session_meta\",\"payload\":{\"id\":\"t1\"}}\n" +
+			policy("never") + call("a", "\"{\\\"cmd\\\":\\\"ls\\\"}\"") +
+			policy("on-request") + call("b", "\"{\\\"cmd\\\":\\\"ls\\\"}\"") +
+			call("c", "\"{\\\"cmd\\\":\\\"rm x\\\",\\\"sandbox_permissions\\\":\\\"require_escalated\\\"}\"") +
+			policy("untrusted") + call("d", "\"{\\\"cmd\\\":\\\"ls\\\"}\"")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, e := range get(doc, "events").([]*obj) {
+		if str(get(e, "kind")) == "tool_call" {
+			got = append(got, str(get(e, "approval")))
+		}
+	}
+	if want := "automatic,automatic,person,person"; strings.Join(got, ",") != want {
+		t.Fatalf("approvals %v, want %s", got, want)
+	}
+}

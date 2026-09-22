@@ -33,6 +33,10 @@ func NormalizeClaude(records []*obj) *obj {
 	// Claude Code rewrites its running cost as the session goes, so the last copy
 	// is the whole figure.
 	var costState *obj
+	// The permission mode in force, which decides who approves a tool call
+	// when Claude Code asks (TRC-028). It is restated on user records and can
+	// change mid-session.
+	permissionMode := ""
 	unknown := func(kind string, ts, lane any) {
 		if warnings[kind] == 0 {
 			warningOrder = append(warningOrder, kind)
@@ -41,6 +45,9 @@ func NormalizeClaude(records []*obj) *obj {
 		events = append(events, trajectory.NewObject("kind", "meta", "ts", ts, "lane", lane, "rawType", kind, "text", "unrecognized Claude record/content type: "+kind))
 	}
 	for _, r := range records {
+		if mode := str(get(r, "permissionMode")); mode != "" {
+			permissionMode = mode
+		}
 		// Damaged bytes, not an unknown record type (R56): collapsed into one
 		// event per run (R57) and counted in parse.unreadable, never in
 		// parse.unrecognized.
@@ -259,6 +266,9 @@ func NormalizeClaude(records []*obj) *obj {
 						"command", trajectory.Undefined,
 					)
 					copyEvent(base, "kind", "tool_call", "tool", tool)
+					if approval := claudeApproval(permissionMode, str(get(b, "name"))); approval != "" {
+						base.Set("approval", approval)
+					}
 					if str(get(b, "name")) == "Task" || str(get(b, "name")) == "Agent" {
 						base.Set("subtask", true)
 						in := object(get(b, "input"))
@@ -518,4 +528,38 @@ func sumWarnings(m map[string]int) int {
 		n += v
 	}
 	return n
+}
+
+// Tools Claude Code runs without asking, in every mode that asks at all.
+var claudeReadOnlyTools = map[string]bool{
+	"Read": true, "Glob": true, "Grep": true, "LS": true, "NotebookRead": true, "TodoWrite": true,
+}
+
+// Tools that acceptEdits approves without asking.
+var claudeEditTools = map[string]bool{
+	"Edit": true, "MultiEdit": true, "Write": true, "NotebookEdit": true,
+}
+
+// claudeApproval is who approves a tool call if Claude Code asks, from the
+// permission mode it ran in (TRC-028). The transcript records no approval, so
+// a prompted call's time runs from the call to its result and takes in the
+// wait. This names who could have been asked; it does not claim anyone was.
+func claudeApproval(mode, tool string) string {
+	switch mode {
+	case "bypassPermissions":
+		return "automatic"
+	case "auto":
+		return "classifier"
+	case "acceptEdits":
+		if claudeReadOnlyTools[tool] || claudeEditTools[tool] {
+			return "automatic"
+		}
+		return "person"
+	case "default", "plan":
+		if claudeReadOnlyTools[tool] {
+			return "automatic"
+		}
+		return "person"
+	}
+	return ""
 }

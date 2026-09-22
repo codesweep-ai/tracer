@@ -40,7 +40,7 @@ const LANE_ID = "events";
  *  model step reports its model time (R70): the round trip from the end of the
  *  previous work to the end of this step. Where the CLI recorded when the model
  *  began (R79), the round trip splits into the wait and the generation. A tool
- *  call's time includes running it. */
+ *  call's time includes running it, and any wait for approval (R82). */
 export function timingLabel(event: StripEvent): string {
   if (event.kind === "turn_end") {
     if (event.idleMs == null) return "";
@@ -50,7 +50,10 @@ export function timingLabel(event: StripEvent): string {
   const clipped = event.workMs > WORK_CEILING_MS ? `, bar stops at ${duration(WORK_CEILING_MS)}` : "";
   const name = event.kind === "tool_call" ? "took" : "model time";
   const split = event.activeMs == null ? "" : `waited ${duration(event.workMs - event.activeMs)}, ${event.kind === "thinking" ? "thought" : "wrote"} ${duration(event.activeMs)}`;
-  const detail = [split, clipped.slice(2)].filter(Boolean).join(", ");
+  // No CLI records when a call was approved, so the wait for approval sits
+  // inside the call's time. The adapter says who could have been asked (TRC-028).
+  const approval = event.approval === "person" ? "may include waiting for approval" : event.approval === "classifier" ? "may include an approval check" : "";
+  const detail = [split, approval, clipped.slice(2)].filter(Boolean).join(", ");
   return ` · ${name} ${duration(event.workMs)}${detail ? ` (${detail})` : ""}`;
 }
 const WAIT_LANE_ID = "wait";

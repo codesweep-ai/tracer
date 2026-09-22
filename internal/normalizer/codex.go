@@ -49,6 +49,8 @@ func NormalizeCodex(records []*obj) *obj {
 	// just before the item, so a start waits here for its event, and an event
 	// written first waits for its start.
 	startedAt := map[string]any{}
+	// The approval policy of the turn in force, from its turn_context (TRC-028).
+	approvalPolicy := ""
 	stepByID := map[string]*obj{}
 	markStart := func(id string, e *obj) {
 		if id == "" {
@@ -132,6 +134,9 @@ func NormalizeCodex(records []*obj) *obj {
 				skipped.add("turn_context:no-spawn")
 			}
 		case "turn_context":
+			if policy := str(get(payload, "approval_policy")); policy != "" {
+				approvalPolicy = policy
+			}
 			setDefaultKey(meta, "model", payload, "model")
 			events = append(events, trajectory.NewObject("kind", "meta", "ts", ts, "text", "turn context — model "+jsStringOr(get(payload, "model"), "unknown")))
 		case "response_item":
@@ -174,6 +179,9 @@ func NormalizeCodex(records []*obj) *obj {
 					tool.Set("command", cmd)
 				}
 				e := trajectory.NewObject("kind", "tool_call", "ts", ts, "tool", tool)
+				if approval := codexApproval(approvalPolicy, object(input)); approval != "" {
+					e.Set("approval", approval)
+				}
 				if str(get(payload, "name")) == "spawn_agent" {
 					e.Set("subtask", true)
 					if in := object(input); in != nil && truthy(get(in, "task_name")) {
@@ -286,4 +294,23 @@ func NormalizeCodex(records []*obj) *obj {
 	// A run reaching the end of the file has no readable record to close it.
 	events = damage.flush(events)
 	return finalize(meta, events, warningReport("codex", "1.1.0", "0.146.x", skipped, counts, order, damage.total), nil)
+}
+
+// codexApproval is who approves a tool call if codex asks, from the turn's
+// approval policy (TRC-028). Under on-request a call runs in the sandbox
+// unasked, and only one requesting escalated permissions can reach a person.
+// Codex records no approval, so this names who could have been asked.
+func codexApproval(policy string, input *obj) string {
+	switch policy {
+	case "never":
+		return "automatic"
+	case "on-request":
+		if str(get(input, "sandbox_permissions")) == "require_escalated" || truthy(get(input, "with_escalated_permissions")) {
+			return "person"
+		}
+		return "automatic"
+	case "untrusted", "on-failure":
+		return "person"
+	}
+	return ""
 }
