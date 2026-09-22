@@ -27,6 +27,83 @@ func malformedRef(ref string) bool {
 	return ref != "" && strings.ContainsAny(ref, " \t\n")
 }
 
+// skippedDirs are never entered: a dependency tree, a build, a cache, and a
+// normalized tree's own chunks, whose files would otherwise read as sessions.
+var skippedDirs = map[string]bool{"node_modules": true, "dist": true, ".trace-cache": true, "chunks": true}
+
+// candidate reports whether a file name is one discovery reads: a .json or
+// .jsonl file that is not a sidecar and not a normalized tree's own index or
+// summary (SPEC.md §4).
+func candidate(name string) bool {
+	return (strings.HasSuffix(name, ".json") || strings.HasSuffix(name, ".jsonl")) && !strings.HasSuffix(name, ".meta.json") && name != "index.json" && name != "summary.json"
+}
+
+// discover lists the candidate files under input, depth first and in name
+// order within each directory, so two runs read the same files in the same
+// order (R36). A link to a folder is followed (R86): a set assembled from links
+// is the user saying what counts, and a sub-agent folder linked beside its
+// session used to vanish with no word said (TRC-038). Each real folder is read
+// once, however many paths lead to it, so a link back up the tree cannot loop
+// and a folder linked and present cannot ship its sessions twice. A link that
+// leads nowhere is returned in dangling for the caller to report as a skip.
+func discover(input string) (files, dangling []string, err error) {
+	info, err := os.Stat(input)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !info.IsDir() {
+		if candidate(filepath.Base(input)) {
+			files = append(files, input)
+		}
+		return files, nil, nil
+	}
+	visited := map[string]bool{}
+	var walk func(dir string) error
+	walk = func(dir string) error {
+		real, err := filepath.EvalSymlinks(dir)
+		if err != nil {
+			return err
+		}
+		if visited[real] {
+			return nil
+		}
+		visited[real] = true
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			return err
+		}
+		for _, d := range entries {
+			path := filepath.Join(dir, d.Name())
+			isDir := d.IsDir()
+			if d.Type()&fs.ModeSymlink != 0 {
+				target, err := os.Stat(path)
+				if err != nil {
+					dangling = append(dangling, path)
+					continue
+				}
+				isDir = target.IsDir()
+			}
+			if isDir {
+				if skippedDirs[d.Name()] {
+					continue
+				}
+				if err := walk(path); err != nil {
+					return err
+				}
+				continue
+			}
+			if candidate(d.Name()) {
+				files = append(files, path)
+			}
+		}
+		return nil
+	}
+	if err := walk(input); err != nil {
+		return nil, nil, err
+	}
+	return files, dangling, nil
+}
+
 func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 	var result TreeResult
 	// Resolve the input to an absolute path before discovery, but report skips
@@ -35,23 +112,7 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 	if abs, err := filepath.Abs(input); err == nil {
 		input = abs
 	}
-	var files []string
-	err := filepath.WalkDir(input, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			if path != input && (d.Name() == "node_modules" || d.Name() == "dist" || d.Name() == ".trace-cache" || d.Name() == "chunks") {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		n := d.Name()
-		if (strings.HasSuffix(n, ".json") || strings.HasSuffix(n, ".jsonl")) && !strings.HasSuffix(n, ".meta.json") && n != "index.json" && n != "summary.json" {
-			files = append(files, path)
-		}
-		return nil
-	})
+	files, dangling, err := discover(input)
 	if err != nil {
 		return result, err
 	}
@@ -62,6 +123,15 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 		return result, err
 	}
 	cwd, _ := os.Getwd()
+	for _, link := range dangling {
+		result.Skipped++
+		rel := link
+		if r, x := filepath.Rel(cwd, link); x == nil {
+			rel = r
+		}
+		result.Diagnostics = append(result.Diagnostics, fmt.Sprintf("skipping %s: link leads nowhere", filepath.ToSlash(rel)))
+	}
+	candidates := len(files) + len(dangling)
 	spawn := map[string]string{}
 	for _, file := range files {
 		doc, e := NormalizeFile(file)
@@ -97,7 +167,7 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 		}
 	}
 	if len(result.Documents) == 0 {
-		if len(files) > 0 && result.Skipped == len(files) {
+		if candidates > 0 && result.Skipped == candidates {
 			// Sort the skip lines for a stable order, then add the summary,
 			// which says "reported above" and has to follow them. Sorting the
 			// summary in with them put it first, because "0" sorts before "s".

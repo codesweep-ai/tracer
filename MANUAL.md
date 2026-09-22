@@ -237,6 +237,10 @@ Inside the input directory, `node_modules`, `dist`, `.trace-cache` and `chunks` 
 `index.json` and `summary.json`. Pointing the tool at a tree it already normalized therefore
 re-exports that tree rather than normalizing it twice.
 
+A link to a folder is followed, so an input assembled from links reads the same as one assembled
+from copies. A folder reached twice, through a link and directly, is read once. A link that leads
+nowhere is reported as skipped.
+
 ## Environment
 
 `cs-tracer` reads no environment variable of its own. Every setting is a flag, and there is no

@@ -179,6 +179,12 @@ part of the contract, because the goldens record it.*
 **R27.** An input path holding no candidate file **MUST** exit `1`. *A directory whose candidates
 all fail to normalize is the R23 case and exits `0`, so the two are distinguishable.*
 
+**R86.** Discovery **MUST** follow a link to a folder, **MUST** read each real folder once, and
+**MUST** report a link that leads nowhere as a skip. *A set assembled from
+links is the user saying what counts. The walk used to pass a linked folder over in silence, so a
+sub-agent folder linked beside its session vanished. The export then read as a session that never
+had sub-agents.*
+
 Exit code and streams are checked by running the tool and comparing, never by treating them as files
 in the output tree. The tool emits no record of its own invocation.
 [CONTRIBUTING.md](CONTRIBUTING.md) describes how that expectation is stored.

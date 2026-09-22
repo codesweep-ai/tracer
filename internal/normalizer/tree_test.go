@@ -209,3 +209,52 @@ func TestNormalizeDirectoryRecordsSourceDir(t *testing.T) {
 		t.Fatalf("sourceDir by source: %v", got)
 	}
 }
+
+// R86 (TRC-038). A link to a folder is followed, a folder reached twice is read
+// once, a link back up the tree does not loop, and a link that leads nowhere is
+// reported as a skip. The walk used to pass a linked folder over in silence, so
+// a sub-agent folder linked beside its session vanished from the export.
+func TestNormalizeDirectoryFollowsLinkedFolders(t *testing.T) {
+	fixture, err := filepath.Abs(filepath.Join("..", "..", "fixtures", "claude", "v2.1", "subagent-run"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	input := t.TempDir()
+	link := func(target, name string) {
+		if err := os.Symlink(target, filepath.Join(input, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	link(filepath.Join(fixture, "4f00d255-46e9-4373-7232-09f72fda039e.jsonl"), "session.jsonl")
+	link(filepath.Join(fixture, "58e37c63-95c0-4672-aca5-ad8a7e7ddc41"), "58e37c63-95c0-4672-aca5-ad8a7e7ddc41")
+	link(filepath.Join(fixture, "58e37c63-95c0-4672-aca5-ad8a7e7ddc41"), "same-folder-again")
+	link(input, "loop")
+	link(filepath.Join(input, "missing.jsonl"), "gone.jsonl")
+	result, err := NormalizeDirectory(input, t.TempDir(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Documents) != 3 {
+		t.Fatalf("documents = %d, want 3: the session and its two sub-agents, read once each", len(result.Documents))
+	}
+	seen := map[string]bool{}
+	for _, doc := range result.Documents {
+		id := str(get(object(get(doc, "meta")), "sessionId"))
+		if seen[id] {
+			t.Fatalf("session %s read twice", id)
+		}
+		seen[id] = true
+	}
+	if result.Skipped != 1 {
+		t.Fatalf("Skipped = %d, want 1 (the link that leads nowhere)", result.Skipped)
+	}
+	var found bool
+	for _, d := range result.Diagnostics {
+		if strings.Contains(d, "gone.jsonl") && strings.Contains(d, "link leads nowhere") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("no diagnostic for the dangling link in %q", result.Diagnostics)
+	}
+}
