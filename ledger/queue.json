@@ -1,5 +1,10 @@
 {
-  "recommendedBy": "session agent; the queue is empty",
+  "recommendedBy": "session agent",
   "updated": "2026-09-22",
-  "items": []
+  "items": [
+    {
+      "id": "TRC-037",
+      "why": "A one-line fix, and the page it fixes blames the user for the tool's mistake."
+    }
+  ]
 }

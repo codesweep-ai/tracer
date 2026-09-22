@@ -1,0 +1,20 @@
+{
+  "id": "TRC-037",
+  "title": "An export with no readable session shows a schema mismatch instead of an empty overview",
+  "type": "defect",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, rendering every captured fixture for a gallery the maintainer asked for",
+  "opened": "2026-09-22",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "When every input file is skipped, the normalizer writes no index, and the export assembler stands in an empty index of its own. That stand-in declares schema version 1, while the viewer implements version 3 and refuses any other (R7). The page then refuses the document, naming the two versions and asking for a re-export with a matching cs-tracer, which sends whoever reads it after the wrong problem. The page that tells the truth shows an overview with no sessions.\n\nTwo captured fixtures, `claude/v2.1/all-skipped` and `claude/v2.1/empty-session`, produce this page when exported. R9 says every declaration of the version must agree, and this one is the fifth, written as a literal beside the constant the assembler uses everywhere else.",
+  "notes": [],
+  "links": []
+}
