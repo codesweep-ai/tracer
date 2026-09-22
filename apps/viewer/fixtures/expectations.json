@@ -3055,26 +3055,40 @@
   "name": "size.page",
   "status": "must-change",
   "target": {
-   "large-session.bytes": "<=1130000",
+   "large-session.bytes": "<=1140000",
    "codex-multi-agent-run.bytes": "<=380000",
    "subagent-run.bytes": "<=375000"
   },
   "note": "single-file page bytes with the CSS / JS split; budget per page, at (just above) today's size — the CSS is expected to shrink when Tailwind goes",
   "value": {
    "large-session": {
-    "bytes": 1052004,
-    "css": 36608,
-    "js": 224529
+    "bytes": 1135566,
+    "css": 40947,
+    "js": 249426
    },
    "codex-multi-agent-run": {
-    "bytes": 301163,
-    "css": 36608,
-    "js": 224529
+    "bytes": 331527,
+    "css": 40947,
+    "js": 249426
    },
    "subagent-run": {
-    "bytes": 297046,
-    "css": 36608,
-    "js": 224529
+    "bytes": 327991,
+    "css": 40947,
+    "js": 249426
+   }
+  },
+  "approval": {
+   "id": "TRC-028",
+   "reason": "Tool calls now carry who approves them. The field adds 20.5 KB to large-session's data, so its page budget rises from 1,130,000 to 1,140,000 bytes.",
+   "previous": {
+    "large-session.bytes": "<=1130000",
+    "codex-multi-agent-run.bytes": "<=380000",
+    "subagent-run.bytes": "<=375000"
+   },
+   "measured": {
+    "large-session.bytes": "<=1140000",
+    "codex-multi-agent-run.bytes": "<=380000",
+    "subagent-run.bytes": "<=375000"
    }
   }
  },
@@ -3085,7 +3099,7 @@
   "note": "embedded data bytes and block count — the transport payload must not change",
   "value": {
    "large-session": {
-    "data": 823752,
+    "data": 844304,
     "blocks": 5
    },
    "codex-multi-agent-run": {
@@ -3093,28 +3107,14 @@
     "blocks": 8
    },
    "subagent-run": {
-    "data": 36183,
+    "data": 36543,
     "blocks": 8
    }
   },
   "approval": {
-   "id": "TRC-018",
-   "reason": "The embedded data grew by the time and cost fields in schema version 3.",
+   "id": "TRC-028",
+   "reason": "Tool calls now carry who approves them, in the events and in the strip. large-session's data grows by 20,552 bytes and subagent-run's by 360.",
    "previous": {
-    "large-session": {
-     "data": 789978,
-     "blocks": 5
-    },
-    "codex-multi-agent-run": {
-     "data": 38875,
-     "blocks": 8
-    },
-    "subagent-run": {
-     "data": 34834,
-     "blocks": 8
-    }
-   },
-   "measured": {
     "large-session": {
      "data": 823752,
      "blocks": 5
@@ -3125,6 +3125,20 @@
     },
     "subagent-run": {
      "data": 36183,
+     "blocks": 8
+    }
+   },
+   "measured": {
+    "large-session": {
+     "data": 844304,
+     "blocks": 5
+    },
+    "codex-multi-agent-run": {
+     "data": 40003,
+     "blocks": 8
+    },
+    "subagent-run": {
+     "data": 36543,
      "blocks": 8
     }
    }

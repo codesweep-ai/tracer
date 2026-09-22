@@ -45,7 +45,7 @@ export const CHECKS = [
   { id: "TF-24", name: "keys.listFocusable", status: "must-change", target: { "*.focusable": true }, note: "the virtual event list carries an explicit tabindex ≥ 0 (today none; Chromium reaches it only as a keyboard-scrollable region)" },
   { id: "TF-25", name: "keys.selectWithoutMouse", status: "must-change", target: { "*.selectable": true }, note: "Tab to the strip, ArrowRight ×3, Enter — or Tab to the list, ArrowDown, Enter — must select an event other than #0" },
   // F. size
-  { id: "TF-26", name: "size.page", status: "must-change", target: { "large-session.bytes": "<=1130000", "codex-multi-agent-run.bytes": "<=380000", "subagent-run.bytes": "<=375000" }, note: "single-file page bytes with the CSS / JS split; budget per page, at (just above) today's size — the CSS is expected to shrink when Tailwind goes" },
+  { id: "TF-26", name: "size.page", status: "must-change", target: { "large-session.bytes": "<=1140000", "codex-multi-agent-run.bytes": "<=380000", "subagent-run.bytes": "<=375000" }, note: "single-file page bytes with the CSS / JS split; budget per page, at (just above) today's size — the CSS is expected to shrink when Tailwind goes" },
   { id: "TF-27", name: "size.data", status: "keep", note: "embedded data bytes and block count — the transport payload must not change" },
   { id: "TF-28", name: "size.tailwind", status: "must-change", target: { "*.total": 0 }, note: "Tailwind bytes in the page CSS: the preflight segment plus tracer's utility rules (non-`.cs-` class rules with --tw- vars, escaped selectors, or sitting after the preflight); ui's own --tw- vars are not counted" },
   // G. hygiene
