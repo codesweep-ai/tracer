@@ -1,10 +1,5 @@
 {
-  "recommendedBy": "session agent, with the maintainer",
+  "recommendedBy": "session agent; the queue is empty",
   "updated": "2026-09-22",
-  "items": [
-    {
-      "id": "TRC-039",
-      "why": "Failures are the first thing a reader looks for on the strip, and today they cannot find them."
-    }
-  ]
+  "items": []
 }
