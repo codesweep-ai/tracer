@@ -3,18 +3,25 @@
   "title": "A --split export ships every trajectory's data twice",
   "type": "improvement",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, carried from the previous handoff; SPEC open question 3",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-22",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "a020ea9"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "Four corpora were exported through `--split` with the build before the change and the build after it, and the trace pages and assets compared byte for byte. The change reached only `index.html`. The codex corpus fell from 27.8 MB to 14.6 MB, its index from 13.7 MB to 0.5 MB, and it no longer trips the size warning. The attended Claude corpus fell from 26.0 MB to 14.6 MB, the unattended one from 8.6 MB to 4.8 MB, and the OpenCode corpus from 15.7 MB to 8.4 MB.\n\nHeadless loads of the codex site before and after render the same index markup, byte for byte, and the first lane's trace page renders the same cards. The index opened with `?trace=<id>#ev-3` lands on that trace's page at that event, with no page error. `make ci` passes: parity PASS, and every fixture check passes, 27 ok and 9 met. No golden and no fixture expectation moved, since both measure the single-file export."
   },
-  "resolution": null,
+  "resolution": "The split `index.html` now carries every trajectory's summary and no chunk, and each trace page carries its own events (R84). The index renders only the strips, so nothing on screen changes, and the export is about half the size. A split index opened with `?trace=<id>` used to render that trajectory in place. It now goes to the trace's own page, keeping any event anchor, since the index no longer holds the events.",
   "details": "In one measured export the split output was 24.6 MB against 12.4 MB for the same data. The split `index.html` embeds every trace's events, which the index never renders, and each trace page carries its own copy.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-22",
+      "text": "Only the trajectory page reads chunk blocks. The index page reads summaries and strips, and in split mode every lane link leads to a trace page, so the index never needed the events it carried. The one reader that did was the undocumented `?trace=<id>` query on a split index, which the viewer honoured in every mode."
+    }
+  ],
   "links": []
 }

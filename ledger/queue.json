@@ -1,6 +1,6 @@
 {
   "recommendedBy": "session agent, in the order the maintainer set",
-  "updated": "2026-09-21",
+  "updated": "2026-09-22",
   "items": [
     {
       "id": "TRC-029",
@@ -13,10 +13,6 @@
     {
       "id": "TRC-031",
       "why": "Search cost grows with every trajectory added."
-    },
-    {
-      "id": "TRC-032",
-      "why": "Split exports are twice the size they need to be."
     }
   ]
 }
