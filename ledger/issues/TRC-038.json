@@ -3,11 +3,11 @@
   "title": "A linked folder under the input is dropped without a skip line",
   "type": "defect",
   "severity": "med",
-  "status": "open",
+  "status": "in-progress",
   "foundBy": "another agent's report, relayed by the maintainer: \"A linked folder is skipped, and nothing says so. The sub-agents folder was dropped, and I got 1 trace instead of 11.\"",
   "opened": "2026-09-22",
   "resolved": null,
-  "stint": null,
+  "stint": "2026-09-21 strip changes",
   "evidence": {
     "commits": [],
     "integrated": [],
