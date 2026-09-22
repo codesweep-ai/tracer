@@ -1,0 +1,22 @@
+{
+  "id": "TRC-039",
+  "title": "A failed step on the strip is drawn as a cross too small to see",
+  "type": "improvement",
+  "severity": "med",
+  "status": "open",
+  "foundBy": "user report (maintainer): \"It's a very ugly x and isn't easy to spot\", with a design another agent built on a consuming page",
+  "opened": "2026-09-22",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "A failed step is marked by a cross painted inside its cell over the kind colour (R47). At the strip's cell width of 13 pixels the cross is two thin strokes inside a bar a few pixels wide. A reader scanning for failures does not find them. A mock of the same synthetic run showed three failures among forty events; with the cross they were all but invisible at real size.\n\nThe agreed design, from another agent's page and a mock the maintainer reviewed:\n\n- In the ordinary view a failed step takes the error colour as its fill, at its real height, with a dot in the accent colour drawn just above it. The accent is the one colour nothing else on the strip uses, and it differs by theme. The dot is what the eye finds.\n- With errors only on, a failed step is drawn at full lane height with the same dot, and everything else is dimmed, so failures stand out at any zoom. Height means time in the ordinary view and means failure in this mode, which is explicit.\n- The dot must never be clipped, at the top of a lane, at either end of the strip, or when the strip scrolls.\n- When a failed step is selected in errors-only mode, the selection highlight must cover the full-height bar, not the bar's ordinary height.\n\nR47 is rewritten, since it forbids replacing the kind fill. The legend's cross entry becomes the error swatch with the dot. The card's own mark, which mirrors its cell so the two can be matched, takes the same treatment. The dot's colour comes from the marker token the ui component gained on 2026-09-22, which is not yet in a published build. So ui publishes first, then tracer's pin moves, then the strip changes. The pixel parity gate and the fixture checks that read the strip will move and need approval.",
+  "notes": [],
+  "links": [
+    "TRC-020"
+  ]
+}
