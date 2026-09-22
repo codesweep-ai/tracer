@@ -16,6 +16,9 @@ func TestClaudeSimpleShardsMatchOracle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// The oracle is written by the directory walk, which records where each
+	// session was read from (R83). This file sits at the top of its input.
+	object(get(doc, "meta")).Set("sourceDir", ".")
 	files, err := ShardBytes(doc)
 	if err != nil {
 		t.Fatal(err)

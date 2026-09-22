@@ -3099,36 +3099,22 @@
   "note": "embedded data bytes and block count — the transport payload must not change",
   "value": {
    "large-session": {
-    "data": 844304,
+    "data": 844320,
     "blocks": 5
    },
    "codex-multi-agent-run": {
-    "data": 40003,
+    "data": 40051,
     "blocks": 8
    },
    "subagent-run": {
-    "data": 36543,
+    "data": 36681,
     "blocks": 8
    }
   },
   "approval": {
-   "id": "TRC-028",
-   "reason": "Tool calls now carry who approves them, in the events and in the strip. large-session's data grows by 20,552 bytes and subagent-run's by 360.",
+   "id": "TRC-005",
+   "reason": "Each trajectory now records the directory it was read from. That adds 16 bytes per trajectory at the top of its input, and 61 for each sub-agent under its subagents directory.",
    "previous": {
-    "large-session": {
-     "data": 823752,
-     "blocks": 5
-    },
-    "codex-multi-agent-run": {
-     "data": 40003,
-     "blocks": 8
-    },
-    "subagent-run": {
-     "data": 36183,
-     "blocks": 8
-    }
-   },
-   "measured": {
     "large-session": {
      "data": 844304,
      "blocks": 5
@@ -3139,6 +3125,20 @@
     },
     "subagent-run": {
      "data": 36543,
+     "blocks": 8
+    }
+   },
+   "measured": {
+    "large-session": {
+     "data": 844320,
+     "blocks": 5
+    },
+    "codex-multi-agent-run": {
+     "data": 40051,
+     "blocks": 8
+    },
+    "subagent-run": {
+     "data": 36681,
      "blocks": 8
     }
    }
