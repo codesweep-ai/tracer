@@ -3,17 +3,20 @@
   "title": "A turn end followed only by bookkeeping reports no idle, while elapsed runs to the bookkeeping",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, characterising the unclassified time TRC-029 measured across the attended Claude Code corpus",
   "opened": "2026-09-22",
-  "resolved": null,
+  "resolved": "2026-09-22",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "5157f43",
+      "adb8def"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "The attended corpus was normalized with the build before the change and the build after it. Every trajectory's idle and work intervals were then rebuilt from the events, as TRC-029 did. The remainder that belongs to neither falls from 5.75 to 0.57 hours of 343.5, from 1.67 to 0.17 per cent, and no gap after a session's last turn end remains. The session that held the five-hour wait now reports 50.2 of its 52.7 open hours as idle, against 45.1 before. The codex corpus is unchanged at 2.45 per cent, since its remainder has another cause.\n\nUnit tests cover the wait running to the last record, and the field staying absent on a turn end that is the last record of all. A third covers two turn ends with no work between, which never overlap. The regenerated goldens differ only by the new idle on three final turn ends, its total, and the strip entry size that carries it. `make ci` passes: parity PASS, and every fixture check passes, 27 ok and 9 met."
   },
-  "resolution": null,
+  "resolution": "A turn end that no work follows is now idle to the last record after it. That record proves the session was still open and waiting, and elapsed already counted the interval. A turn end that is the last record of all still carries no field, because waiting for nothing and waiting no time are different claims. The scan stops at the next turn end, so two never overlap. R68's text says so.",
   "details": "Idle is stamped on a turn end only when a later event resumes work, and elapsed time runs to the latest timestamp the trajectory records. When a session's last turn ends and the only records after it are bookkeeping, such as a local command run hours later, the two rules disagree. Elapsed counts the hours up to that record and idle counts none of them, so they land in the remainder that belongs to neither.\n\nIn the attended corpus this is 5.18 of the 5.75 hours that TRC-029 could not place, in 3 of the 6 top-level sessions. One session ended a turn at night and the user ran a local command five hours later, with nothing after it. That is 5.10 hours of remainder on its own.\n\nThe agent was waiting through that whole interval: the later record proves the session was still open. Idle should run to the last timestamp the trajectory records when no work resumes but a later record exists. A turn end that is the last record of all still carries no field, since then nothing says how long the wait was.",
   "notes": [],
   "links": [
