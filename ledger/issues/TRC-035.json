@@ -3,17 +3,17 @@
   "title": "A sub-agent that stops with no tool call pending reports no turn end, so its wait is neither idle nor work",
   "type": "defect",
   "severity": "low",
-  "status": "open",
+  "status": "wont-fix",
   "foundBy": "session agent, characterising the unclassified time TRC-029 measured across the attended Claude Code corpus",
   "opened": "2026-09-22",
-  "resolved": null,
+  "resolved": "2026-09-22",
   "stint": null,
   "evidence": {
     "commits": [],
     "integrated": [],
     "verified": null
   },
-  "resolution": null,
+  "resolution": "The maintainer read the three defects that TRC-029's investigation filed and chose to fix only the turn end followed by bookkeeping, which holds 89 per cent of the remainder. This one is 23 minutes across a corpus of 343 hours, in sub-agent trajectories. The defect stays recorded, and can be reopened if the figure ever matters.",
   "details": "The Claude Code adapter derives every turn end from the CLI's turn-duration record. Sub-agent transcripts carry none: across the 25 sub-agent trajectories in the attended corpus there is no turn-duration record and no turn end, against 426 in the 6 top-level sessions. A sub-agent may reply with no tool call pending, for instance to say it is waiting for a background monitor. It then sits until a notification arrives as a user message minutes later. With no turn end there is no idle, and the reply's work ended at the reply, so the wait belongs to nothing.\n\nThis is 23 minutes of the remainder TRC-029 measured, in 5 gaps of 4 to 6 minutes. The reply's own record says the turn ended: its stop reason reads `end_turn`, which is exactly the definition R68 gives. Where no turn-duration record follows such a reply before work resumes, the adapter can derive the turn end from the stop reason.",
   "notes": [],
   "links": [

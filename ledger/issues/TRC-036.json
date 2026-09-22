@@ -3,17 +3,17 @@
   "title": "The interval before a turn end that ended in an error belongs to nothing",
   "type": "defect",
   "severity": "low",
-  "status": "open",
+  "status": "wont-fix",
   "foundBy": "session agent, characterising the unclassified time TRC-029 measured across the attended Claude Code corpus",
   "opened": "2026-09-22",
-  "resolved": null,
+  "resolved": "2026-09-22",
   "stint": null,
   "evidence": {
     "commits": [],
     "integrated": [],
     "verified": null
   },
-  "resolution": null,
+  "resolution": "The maintainer read the three defects that TRC-029's investigation filed and chose to fix only the turn end followed by bookkeeping, which holds 89 per cent of the remainder. This one is milliseconds per turn on Claude Code, and on codex only turns that a rate-limit error ended. The defect stays recorded, and can be reopened if the figure ever matters.",
   "details": "A turn end draws no work: work is stamped on thinking, replies and tool calls, and a turn end's idle starts at its own timestamp. When a turn ends without a final reply, the interval from the last piece of work to the turn end record is neither. In the codex corpus this is the whole of its remainder: 0.34 of 13.8 hours, or 2.45 per cent, in 23 gaps of up to 1.6 minutes. Each is a turn that a rate-limit error ended one to two minutes after the last tool result. The agent was waiting on the provider through that interval, which R70 calls work.\n\nIn the Claude Code corpus the same shape is 419 gaps of a few milliseconds each, 36 seconds in all. Each sits between a final reply and the turn-duration record that follows it.",
   "notes": [],
   "links": [
