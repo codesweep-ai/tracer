@@ -1,0 +1,20 @@
+{
+  "id": "TRC-038",
+  "title": "A linked folder under the input is dropped without a skip line",
+  "type": "defect",
+  "severity": "med",
+  "status": "open",
+  "foundBy": "another agent's report, relayed by the maintainer: \"A linked folder is skipped, and nothing says so. The sub-agents folder was dropped, and I got 1 trace instead of 11.\"",
+  "opened": "2026-09-22",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Discovery walks the input with Go's directory walker, which does not enter a symbolic link to a folder. A link to a session file is read. A link to a folder, such as a session's sub-agents directory, is passed over, and the tool says nothing. Every other file it passes over gets a skip line on stderr, so a sub-agent tree lost this way looks exactly like a session that never had sub-agents.\n\nReproduced on the subagent-run fixture. Read directly it normalizes 3 trajectories. Read through a directory holding a link to its session file and a link to its sub-agents folder, it normalizes 1, and the output names no skip. Neither the manual nor the spec mentions links.\n\nNot entering links may be right, since it keeps a walk from looping. What is wrong is the silence. Either follow a linked folder, guarding against loops, or print a skip line naming it, and say which in the manual. This only affects an input assembled from links; pointing the tool at a projects directory directly is unaffected.",
+  "notes": [],
+  "links": []
+}
