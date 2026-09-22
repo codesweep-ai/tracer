@@ -414,7 +414,8 @@ event.*
 relative to the directory the tool was given. When the top-level trajectories come from more than
 one directory, the index page **MUST** group them under a heading naming each, with every child in
 its parent's group. *A site built over one directory per agent showed rows titled almost alike, and
-every agent reported the same working directory, so nothing told them apart.* A site read from one
+every agent reported the same working directory, so nothing told them apart.* Each group starts open
+and folds away under its heading, and one control folds or opens them all. A site read from one
 directory shows no headings.
 
 **R59.** A child whose spawning event is present **MUST** carry that event's index as

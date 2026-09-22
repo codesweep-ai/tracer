@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Card, Legend, StatusBadge } from "@codesweep-ai/ui";
+import { Button, Card, Legend, StatusBadge } from "@codesweep-ai/ui";
 import { compact, timeLabel } from "./format";
 import { costLabel, rollupCost, traceCostLabel } from "./cost";
 import { hasTrace, linkTo } from "./routes";
@@ -86,6 +86,10 @@ export function IndexPage({ traces, links }: { traces: LoadedTrace[]; links: Lin
     const home = groups.find((group) => group.dir === dir);
     if (home) home.lanes.push(...lanes); else groups.push({ dir, lanes: [...lanes] });
   });
+  // Groups start open, so a site looks as it did until a reader folds one away.
+  // Session-only: storage under file:// can throw or come back empty.
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const allCollapsed = groups.length > 1 && groups.every((group) => collapsed.has(group.dir));
   const renderLane = ({ trace, depth }: (typeof ordered)[number]) => { const parentId = trace.summary.meta.parentSessionId ?? undefined; // R59's stamp when the export carries it, else the scan this page has
     // always done — which still works here, because the index holds every
     // summary. Only a trace page needs the stamp.
@@ -96,13 +100,16 @@ export function IndexPage({ traces, links }: { traces: LoadedTrace[]; links: Lin
   const totals = traces.reduce((sum, t) => ({ events: sum.events + t.summary.totals.events, tokens: sum.tokens + t.summary.totals.input + t.summary.totals.output }), { events: 0, tokens: 0 });
   const cost = rollupCost(traces);
   return <section data-testid="index-page" className="index-page">
-    <div><h1 className="page-title">Trajectory overview</h1><p className="rollup">{traces.length} session{traces.length === 1 ? "" : "s"} · {compact(totals.events)} events · {compact(totals.tokens)} tokens{cost.priced > 0 ? ` · ${costLabel(cost)}${cost.unpriced > 0 ? ` · ${cost.unpriced} session${cost.unpriced === 1 ? "" : "s"} unpriced` : ""}` : ""}</p></div>
+    <div><h1 className="page-title">Trajectory overview</h1><p className="rollup">{traces.length} session{traces.length === 1 ? "" : "s"} · {compact(totals.events)} events · {compact(totals.tokens)} tokens{cost.priced > 0 ? ` · ${costLabel(cost)}${cost.unpriced > 0 ? ` · ${cost.unpriced} session${cost.unpriced === 1 ? "" : "s"} unpriced` : ""}` : ""}{groups.length > 1 && <Button size="sm" variant="ghost" className="lane-group-toggle" data-testid="lane-groups-toggle" onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(groups.map((group) => group.dir)))}>{allCollapsed ? "Expand all" : "Collapse all"}</Button>}</p></div>
     <Legend aria-label="Event legend" className="index-legend" items={LEGEND_CHIPS.map((chip) => ({ id: chip.label, label: chip.label, color: TRACE_PALETTE[traceColorKey(chip.kinds[0]!)], shape: "square" as const }))} extras={<><span data-testid="index-legend-extra" className="legend-extra"><ErrorSwatch />error</span><span data-testid="index-legend-extra" className="legend-extra"><RedactedKey /></span><span data-testid="index-legend-extra">┄ link hint</span></>} />
     <div className="lane-list">{groups.length > 1
-      ? groups.map((group) => <div key={group.dir} className="lane-group" data-testid="lane-group" data-source-dir={group.dir}>
-        <h2 className="lane-group-heading" title="Where these sessions were read from, under the directory the site was built over"><span className="lane-group-dir">{group.dir === "." ? "./" : `${group.dir}/`}</span> · {group.lanes.length} session{group.lanes.length === 1 ? "" : "s"}</h2>
-        {group.lanes.map(renderLane)}
-      </div>)
+      ? groups.map((group) => <details key={group.dir} className="lane-group" data-testid="lane-group" data-source-dir={group.dir} open={!collapsed.has(group.dir)} onToggle={(event) => {
+        const open = event.currentTarget.open;
+        setCollapsed((current) => { if (open === !current.has(group.dir)) return current; const next = new Set(current); if (open) next.delete(group.dir); else next.add(group.dir); return next; });
+      }}>
+        <summary className="lane-group-heading" title="Where these sessions were read from, under the directory the site was built over"><span className="lane-group-dir">{group.dir === "." ? "./" : `${group.dir}/`}</span> · {group.lanes.length} session{group.lanes.length === 1 ? "" : "s"}</summary>
+        <div className="lane-group-body">{group.lanes.map(renderLane)}</div>
+      </details>)
       : ordered.map(renderLane)}</div>
   </section>;
 }

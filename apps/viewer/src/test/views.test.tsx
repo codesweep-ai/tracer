@@ -79,9 +79,17 @@ describe("P0 views", () => {
     // The child keeps its parent's group, though it was read from elsewhere.
     expect(Array.from(groups[0]!.querySelectorAll('[data-testid="lane"]'), (lane) => lane.getAttribute("data-trace-id"))).toEqual(["b1", "b1-child", "b2"]);
     expect(groups[0]).toHaveTextContent("b/ · 3 sessions");
+    // Groups start open and fold away together, so a reader can open one at a time.
+    expect(groups.every((group) => (group as HTMLDetailsElement).open)).toBe(true);
+    fireEvent.click(screen.getByTestId("lane-groups-toggle"));
+    expect(screen.getAllByTestId("lane-group").some((group) => (group as HTMLDetailsElement).open)).toBe(false);
+    expect(screen.getByTestId("lane-groups-toggle")).toHaveTextContent("Expand all");
+    fireEvent.click(screen.getByTestId("lane-groups-toggle"));
+    expect(screen.getAllByTestId("lane-group").every((group) => (group as HTMLDetailsElement).open)).toBe(true);
     unmount();
     render(<IndexPage traces={[at("one", "x"), at("two", "x")]} links={[]} />);
     expect(screen.queryAllByTestId("lane-group")).toHaveLength(0);
+    expect(screen.queryByTestId("lane-groups-toggle")).toBeNull();
     expect(screen.getAllByTestId("lane")).toHaveLength(2);
   });
   it("renders proven and hinted connectors distinctly", () => { const child: LoadedTrace = { id: "child", path: "child", summary: { ...summary, meta: { ...summary.meta, sessionId: "child", parentSessionId: "demo", title: "Child" } } }; render(<IndexPage traces={[trace, child]} links={[{ fromSessionId: "demo", toSessionId: "child", kind: "campaign" }]} />); expect(screen.getByTestId("index-page")).toBeInTheDocument(); expect(screen.getAllByTestId("lane")).toHaveLength(2); expect(screen.getByLabelText("Proven parent-child connector")).toHaveClass("border-solid"); expect(screen.getByLabelText("Dashed link hint")).toHaveClass("border-dashed"); expect(screen.getAllByTestId("strip")).toHaveLength(2); });
