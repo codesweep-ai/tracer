@@ -303,9 +303,12 @@ reports a user instruction only for a message the agent is meant to act on. A CL
 local command is not one, and read as one it ended waits of hours (TRC-016).
 
 Idle travels as `idleMs` on the event that ends the turn and on its strip entry, so the viewer never
-subtracts timestamps across neighbours a filter removed. A turn end with nothing after it carries no
-field rather than a zero, because waiting for nothing and waiting no time are different claims. Both
-fields are additive and optional, so `schemaVersion` is unchanged (R7).
+subtracts timestamps across neighbours a filter removed. A turn end that no work follows is idle to
+the last record after it, since that record proves the session was still open and waiting. *Stopped
+at the turn end, idle left a five-hour wait before a late local command to neither figure, while
+elapsed counted it (TRC-034).* A turn end that is the last record of all carries no field rather
+than a zero, because waiting for nothing and waiting no time are different claims. Both fields are
+additive and optional, so `schemaVersion` is unchanged (R7).
 
 **R70.** Every thinking step, assistant message and tool call **MUST** report the time it accounts
 for, consistently across every adapter. The interval runs from the end of the previous piece of work

@@ -244,16 +244,37 @@ func TestIdleRunsPastTimestampedBookkeeping(t *testing.T) {
 	}
 }
 
-// A turn end followed only by bookkeeping carries no field. The agent never
-// resumed, and "waited for nothing" is not "waited no time".
-func TestIdleAbsentWhenWorkNeverResumes(t *testing.T) {
+// TRC-034. A turn end followed only by bookkeeping is idle to the last of it:
+// the later record proves the session was still open and waiting. Left out,
+// elapsed ran to that record while idle stopped at the turn end, and one
+// session's five-hour wait belonged to neither.
+func TestIdleRunsToTheLastRecordWhenWorkNeverResumes(t *testing.T) {
 	events := []*obj{
 		trajectory.NewObject("kind", "turn_end", "ts", "2026-01-01T12:00:00.000Z"),
 		trajectory.NewObject("kind", "meta", "ts", "2026-01-01T12:00:02.000Z"),
+		trajectory.NewObject("kind", "system", "ts", "2026-01-01T17:00:00.000Z", "rawType", "local_command"),
+		trajectory.NewObject("kind", "system", "ts", "2026-01-01T17:00:00.000Z", "rawType", "local_command"),
 	}
 	markIdle(events)
-	if _, ok := events[0].Get("idleMs"); ok {
-		t.Fatal("idleMs is set although work never resumed")
+	if got := num(get(events[0], "idleMs")); got != 5*60*60*1000 {
+		t.Fatalf("idleMs = %v, want five hours — the wait runs to the last record", got)
+	}
+}
+
+// Two turn ends with no work between them never overlap: the first waits to
+// the second, and only the second waits to the last record.
+func TestIdleStopsAtTheNextTurnEndWhenWorkNeverResumes(t *testing.T) {
+	events := []*obj{
+		trajectory.NewObject("kind", "turn_end", "ts", "2026-01-01T12:00:00.000Z"),
+		trajectory.NewObject("kind", "turn_end", "ts", "2026-01-01T12:01:00.000Z"),
+		trajectory.NewObject("kind", "meta", "ts", "2026-01-01T12:31:00.000Z"),
+	}
+	markIdle(events)
+	if got := num(get(events[0], "idleMs")); got != 60000 {
+		t.Fatalf("first idleMs = %v, want one minute", got)
+	}
+	if got := num(get(events[1], "idleMs")); got != 30*60*1000 {
+		t.Fatalf("second idleMs = %v, want thirty minutes", got)
 	}
 }
 

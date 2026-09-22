@@ -349,20 +349,49 @@ func markIdle(events []*obj) {
 		if from == "" {
 			continue
 		}
+		to := ""
 		for _, next := range events[i+1:] {
 			if !resumesWork[str(get(next, "kind"))] {
 				continue
 			}
-			to := str(get(next, "ts"))
-			if to == "" {
-				continue
+			if to = str(get(next, "ts")); to != "" {
+				break
 			}
-			if ms := millis(from, to); isJSNumber(ms) {
-				e.Set("idleMs", ms)
-			}
+		}
+		if to == "" {
+			// Work never resumed, but a later record proves the session was
+			// still open and waiting, so the wait runs to the last of them
+			// (TRC-034). A turn end that is the last record of all carries no
+			// field: waiting for nothing and waiting no time are different
+			// claims. The scan stops at the next turn end so two never overlap.
+			to = lastTimestampBefore(events[i+1:], "turn_end")
+		}
+		if ms := millis(from, to); isJSNumber(ms) && num(ms) >= 0 {
+			e.Set("idleMs", ms)
+		}
+	}
+}
+
+// lastTimestampBefore returns the latest timestamp among events, a tool
+// result's included, scanning up to and including the first event of kind stop.
+// Empty when none of them carries one.
+func lastTimestampBefore(events []*obj, stop string) string {
+	var last string
+	var hi time.Time
+	see := func(v any) {
+		at, ok := parseTS(v)
+		if ok && (last == "" || at.After(hi)) {
+			last, hi = str(v), at
+		}
+	}
+	for _, e := range events {
+		see(get(e, "ts"))
+		see(get(object(get(e, "result")), "ts"))
+		if str(get(e, "kind")) == stop {
 			break
 		}
 	}
+	return last
 }
 
 // drawsWork is the set of kinds that carry `workMs` (R70): the model thinking,
