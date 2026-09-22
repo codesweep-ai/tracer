@@ -3,11 +3,11 @@
   "title": "An export with no readable session shows a schema mismatch instead of an empty overview",
   "type": "defect",
   "severity": "low",
-  "status": "open",
+  "status": "in-progress",
   "foundBy": "session agent, rendering every captured fixture for a gallery the maintainer asked for",
   "opened": "2026-09-22",
   "resolved": null,
-  "stint": null,
+  "stint": "2026-09-21 strip changes",
   "evidence": {
     "commits": [],
     "integrated": [],
