@@ -3,19 +3,26 @@
   "title": "Tool output renders as one escaped block with no bound on its length",
   "type": "improvement",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, carried from TRC-011, which fixed tool inputs and deferred outputs",
   "opened": "2026-09-21",
-  "resolved": null,
+  "resolved": "2026-09-22",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "d6103a3"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "Four corpora were normalized and every tool result measured. The median output runs 8 to 28 lines by corpus, the 90th percentile 48 to 376, and the longest 1,489. Between 13 and 42 per cent of outputs run past 40 lines. Almost all are plain text: JSON documents and patches together make up under 5 per cent.\n\nOn the codex site, the card holding the longest output stood 29,260 px tall once its output was opened, in a list viewport of 532 px. With the change it stands 628 px, offers `Show all · 1,489 lines`, and grows to 31,274 px when asked, with the control then reading `Fold`. Closed, the card is unchanged at 236 px. Neither build raised a page error.\n\n`make ci` passes: parity PASS, and every fixture check passes, 27 ok and 9 met. No expectation moved. The single-file page budget is close: the large fixture measures 1,139,136 bytes against a limit of 1,140,000."
   },
-  "resolution": null,
+  "resolution": "A tool's output renders in the same bounded block as an input, whole and unaltered, scrolling on its own past the bound (R85). Past twenty lines the block offers a control that lifts the bound, so the whole text flows in the page. Shape, never tool name, picks the grammar: a document that parses as JSON is coloured as JSON, a patch as a diff, and everything else stays plain. The output stays folded under its summary as before, opening by itself only when the call failed.",
   "details": "An event card shows a tool's output as `<pre>{event.result.text}</pre>`. Outputs run far longer than inputs, so the open question is bounding and truncation, with the full text still reachable. The shape detection `ToolInput.tsx` uses for inputs is the likely model.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-22",
+      "text": "A bound alone, with the block scrolling inside the card, already keeps the list navigable. The control exists for reading. A long output read through a 20 rem window is a chore, and a reader who asks for all of it has chosen the tall card."
+    }
+  ],
   "links": [
     "TRC-011"
   ]

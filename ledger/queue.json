@@ -7,10 +7,6 @@
       "why": "The last unexplained share of attended elapsed time."
     },
     {
-      "id": "TRC-030",
-      "why": "Long tool output is unbounded on the card."
-    },
-    {
       "id": "TRC-031",
       "why": "Search cost grows with every trajectory added."
     }
