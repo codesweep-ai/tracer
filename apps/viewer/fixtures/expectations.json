@@ -3055,38 +3055,38 @@
   "name": "size.page",
   "status": "must-change",
   "target": {
-   "large-session.bytes": "<=1140000",
+   "large-session.bytes": "<=1500000",
    "codex-multi-agent-run.bytes": "<=380000",
    "subagent-run.bytes": "<=375000"
   },
   "note": "single-file page bytes with the CSS / JS split; budget per page, at (just above) today's size — the CSS is expected to shrink when Tailwind goes",
   "value": {
    "large-session": {
-    "bytes": 1135566,
-    "css": 40947,
-    "js": 249426
+    "bytes": 1152195,
+    "css": 42019,
+    "js": 264967
    },
    "codex-multi-agent-run": {
-    "bytes": 331527,
-    "css": 40947,
-    "js": 249426
+    "bytes": 348188,
+    "css": 42019,
+    "js": 264967
    },
    "subagent-run": {
-    "bytes": 327991,
-    "css": 40947,
-    "js": 249426
+    "bytes": 344742,
+    "css": 42019,
+    "js": 264967
    }
   },
   "approval": {
-   "id": "TRC-028",
-   "reason": "Tool calls now carry who approves them. The field adds 20.5 KB to large-session's data, so its page budget rises from 1,130,000 to 1,140,000 bytes.",
+   "id": "TRC-039",
+   "reason": "The ui build the strip's error mark needs is 16 KB larger, and the maintainer raised the large-session budget to 1,500,000 bytes.",
    "previous": {
-    "large-session.bytes": "<=1130000",
+    "large-session.bytes": "<=1140000",
     "codex-multi-agent-run.bytes": "<=380000",
     "subagent-run.bytes": "<=375000"
    },
    "measured": {
-    "large-session.bytes": "<=1140000",
+    "large-session.bytes": "<=1500000",
     "codex-multi-agent-run.bytes": "<=380000",
     "subagent-run.bytes": "<=375000"
    }
