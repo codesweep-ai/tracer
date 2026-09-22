@@ -1,10 +1,18 @@
 {
-  "recommendedBy": "session agent, in the order the maintainer set",
+  "recommendedBy": "session agent, after characterising TRC-029",
   "updated": "2026-09-22",
   "items": [
     {
-      "id": "TRC-029",
-      "why": "The last unexplained share of attended elapsed time."
+      "id": "TRC-034",
+      "why": "Five hours of one session's wait count as neither idle nor work, and the fix is one rule."
+    },
+    {
+      "id": "TRC-035",
+      "why": "Sub-agents never report a turn end, so their waits are invisible."
+    },
+    {
+      "id": "TRC-036",
+      "why": "A turn that an error ended leaves its last wait unaccounted."
     }
   ]
 }

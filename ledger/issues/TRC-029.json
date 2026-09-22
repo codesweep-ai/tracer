@@ -3,21 +3,29 @@
   "title": "A small share of attended elapsed time is neither idle nor work",
   "type": "improvement",
   "severity": "low",
-  "status": "open",
+  "status": "closed",
   "foundBy": "session agent, measuring totals.time across the attended Claude Code corpus",
   "opened": "2026-09-21",
-  "resolved": null,
-  "stint": null,
+  "resolved": "2026-09-22",
+  "stint": "2026-09-21 strip changes",
   "evidence": {
     "commits": [],
     "integrated": [],
-    "verified": null
+    "verified": "Rebuilt every trajectory's idle and work intervals from the normalized events, following the same rules the normalizer applies, and took the uncovered intervals of elapsed time. Across the 31 attended trajectories that gives 5.75 of 343.5 hours, 1.67 per cent, matching the figure this record opened with. Each uncovered interval was then labelled by the events on either side of it.\n\nThe attended remainder has three shapes. Most of it, 5.18 hours, follows a session's last turn end when only bookkeeping records come after it, and one session holds 5.10 of those hours. Another 23 minutes, in five gaps, follow a sub-agent's reply that ended its turn with no turn-duration record, while it waited for a notification. A further 9 minutes precede the first instruction, where a session file opens with local commands and an informational record. The rest is 36 seconds of milliseconds between final replies and their turn-duration records.\n\nThe codex remainder of 2.45 per cent is one shape: the one to two minutes between a turn's last tool result and the rate-limit error that ended it. The unattended Claude and OpenCode corpora leave 0.0 per cent."
   },
-  "resolution": null,
+  "resolution": "The remainder is characterised, and three specific defects carry it. The wait after a session's last turn end, when only bookkeeping follows, is 89 per cent of the attended remainder. It is filed as the turn end followed only by bookkeeping. A sub-agent's wait after a reply that ended its turn, with no turn-duration record in its transcript, is filed as the sub-agent that stops with no tool call pending. The interval before a turn end that an error ended, which is the whole codex remainder, is filed as the interval before a turn end that ended in an error. The minutes before a session's opening instruction are by design: elapsed runs from the earliest record, and local commands run before that instruction.",
   "details": "Across thirty attended trajectories, 5.7 of 332.1 hours of elapsed time sit in neither an idle interval nor any event's work interval, 1.7% in all. The unattended corpora leave 0.0% to 2.5%. The gaps were not characterised. They may be interruptions, a turn that ended with no turn-end record, or another record type that should end or start work.",
-  "notes": [],
+  "notes": [
+    {
+      "date": "2026-09-22",
+      "text": "The turn-duration record is the only source of turn ends in the Claude Code adapter, and sub-agent transcripts do not carry it. That is why every gap between a reply and a notification sits in a sub-agent trajectory."
+    }
+  ],
   "links": [
     "TRC-016",
-    "TRC-018"
+    "TRC-018",
+    "TRC-034",
+    "TRC-035",
+    "TRC-036"
   ]
 }

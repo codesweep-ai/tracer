@@ -1,0 +1,22 @@
+{
+  "id": "TRC-034",
+  "title": "A turn end followed only by bookkeeping reports no idle, while elapsed runs to the bookkeeping",
+  "type": "defect",
+  "severity": "med",
+  "status": "open",
+  "foundBy": "session agent, characterising the unclassified time TRC-029 measured across the attended Claude Code corpus",
+  "opened": "2026-09-22",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Idle is stamped on a turn end only when a later event resumes work, and elapsed time runs to the latest timestamp the trajectory records. When a session's last turn ends and the only records after it are bookkeeping, such as a local command run hours later, the two rules disagree. Elapsed counts the hours up to that record and idle counts none of them, so they land in the remainder that belongs to neither.\n\nIn the attended corpus this is 5.18 of the 5.75 hours that TRC-029 could not place, in 3 of the 6 top-level sessions. One session ended a turn at night and the user ran a local command five hours later, with nothing after it. That is 5.10 hours of remainder on its own.\n\nThe agent was waiting through that whole interval: the later record proves the session was still open. Idle should run to the last timestamp the trajectory records when no work resumes but a later record exists. A turn end that is the last record of all still carries no field, since then nothing says how long the wait was.",
+  "notes": [],
+  "links": [
+    "TRC-029"
+  ]
+}
