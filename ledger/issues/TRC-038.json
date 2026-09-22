@@ -3,17 +3,19 @@
   "title": "A linked folder under the input is dropped without a skip line",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "another agent's report, relayed by the maintainer: \"A linked folder is skipped, and nothing says so. The sub-agents folder was dropped, and I got 1 trace instead of 11.\"",
   "opened": "2026-09-22",
-  "resolved": null,
+  "resolved": "2026-09-22",
   "stint": "2026-09-21 strip changes",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "be9e278"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "The report's layout was rebuilt as a directory of four links. Two point at the subagent-run fixture's session file and its sub-agents folder. One points back at the directory itself, and one at a file that does not exist. The build before the change normalized 1 trajectory from it and printed no skip. The build after normalizes 3, the same as reading the fixture directly. It prints one skip line naming the dangling entry, and returns at once despite the loop. Each sub-agent records the linked path as the directory it was read from.\n\nA unit test pins all of that, including the same folder linked twice reading its sessions once. `make ci` passes: parity PASS, and every fixture check passes, 27 ok and 9 met. No golden moved, since discovery order is unchanged for a tree without links."
   },
-  "resolution": null,
+  "resolution": "Discovery now follows a link to a folder, reads each real folder once however many paths lead to it, and reports a link that leads nowhere as a skip (R86). The manual says so. A set assembled from links therefore reads the same as one assembled from copies. Remembering every real folder already visited closes off both the loop and the double read that made following risky.",
   "details": "Discovery walks the input with Go's directory walker, which does not enter a symbolic link to a folder. A link to a session file is read. A link to a folder, such as a session's sub-agents directory, is passed over, and the tool says nothing. Every other file it passes over gets a skip line on stderr, so a sub-agent tree lost this way looks exactly like a session that never had sub-agents.\n\nReproduced on the subagent-run fixture. Read directly it normalizes 3 trajectories. Read through a directory holding a link to its session file and a link to its sub-agents folder, it normalizes 1, and the output names no skip. Neither the manual nor the spec mentions links.\n\nNot entering links may be right, since it keeps a walk from looping. What is wrong is the silence. Either follow a linked folder, guarding against loops, or print a skip line naming it, and say which in the manual. This only affects an input assembled from links; pointing the tool at a projects directory directly is unaffected.",
   "notes": [],
   "links": []
