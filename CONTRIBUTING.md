@@ -42,7 +42,9 @@ while you work, and `make ci` is the one that has to pass.
 No linter needs installing. Every one the gates shell out to is pinned and built from the module
 cache on first use: `golangci-lint`, `deadcode`, `actionlint`, `cs-lint` and `cs-ledger`.
 `make repin` moves the `cs-` pins to the last commit each one's CI built, and leaves one whose
-project names none. `make versions` says which builds the gates used.
+project names none. It moves the viewer's `@codesweep-ai/ui` pin the same way, through
+`scripts/repin-npm.mjs`, and rebuilds the committed viewer on it. `make versions` says which builds
+the gates used.
 
 Moving a linter pin is an edit to `go.mod`, or to `go.golangci.mod` for `golangci-lint`. A linter
 release reaches you when you ask for it, not on an unrelated pull request.
