@@ -91,7 +91,7 @@ jobs:
         with:
           window: "20"
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
       # The same Jekyll, the same gem and the same repository settings the
       # branch-served site was built with, so the documents render here exactly
@@ -106,7 +106,7 @@ jobs:
       - name: check the status file was published
         run: test -s _site/ci-status.json
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: ./_site
 
@@ -122,4 +122,4 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
