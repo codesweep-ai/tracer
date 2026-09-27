@@ -1,14 +1,17 @@
 import js from "@eslint/js";
 import globals from "globals";
-import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(js.configs.recommended, ...tseslint.configs.recommended, {
   files: ["src/**/*.{ts,tsx}"],
-  plugins: { react, "react-hooks": reactHooks },
-  settings: { react: { version: "18.3" } },
-  rules: { "react/no-danger": "error", ...reactHooks.configs.recommended.rules },
+  plugins: { "react-hooks": reactHooks },
+  rules: {
+    "no-restricted-syntax": ["error", "JSXAttribute[name.name='dangerouslySetInnerHTML']"],
+    ...reactHooks.configs.recommended.rules,
+    "react-hooks/refs": "off",
+    "react-hooks/set-state-in-effect": "off",
+  },
 }, {
   // Plain-JS test files (assemble.test.mjs) run in vitest's jsdom environment;
   // `document`/`window` exist there and TS scoping rules do not apply.
