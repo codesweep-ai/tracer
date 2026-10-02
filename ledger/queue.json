@@ -1,5 +1,18 @@
 {
-  "recommendedBy": "session agent; the queue is empty",
-  "updated": "2026-09-22",
-  "items": []
+  "recommendedBy": "session agent, after the pricing audit of 2026-09-29",
+  "updated": "2026-09-29",
+  "items": [
+    {
+      "id": "TRC-047",
+      "why": "Every Claude Opus 5.5 session is estimated at more than twice its list price."
+    },
+    {
+      "id": "TRC-049",
+      "why": "The same silent inheritance will misprice the next model that extends an existing name."
+    },
+    {
+      "id": "TRC-048",
+      "why": "GPT-5.6 Sol sessions are estimated 29% above the current list price."
+    }
+  ]
 }

@@ -1,0 +1,22 @@
+{
+  "id": "TRC-052",
+  "title": "The Fireworks rows were read on 2026-08-03, and the Fireworks price page has changed since",
+  "type": "improvement",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, auditing `pricing.json` against the provider price pages fetched on 2026-09-29; filed at the host's request: \"file ledger entries in the tracer repo to report any issues with the pricing\"",
+  "opened": "2026-09-29",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The Fireworks entries were read on 2026-08-03. The price page fetched on 2026-09-29 differs from them in three ways.\n\nIt no longer lists 12 of the table's 16 Fireworks models: `kimi-k2p7-code`, `kimi-k2p6`, `kimi-k2p6-turbo`, `deepseek-v4-pro`, `deepseek-v4-flash`, `deepseek-v4-flash-0731`, `glm-5p2`, `glm-5p1`, `glm-5p1-fast`, `qwen3p7-plus`, `minimax-m2p7` and `gpt-oss-20b`. They may be retired, and their rates can no longer be checked there.\n\nIt lists models the table does not have: DeepSeek V4.1 Flash, GLM 5.3, GLM 5.3 Flash, Qwen 3.8 Max, Ember-1 and NVIDIA Nemotron 3.5 Lightning.\n\nIt lists Kimi K3 Fast and a US-hosted Kimi K3, both at $4.50 input, $0.45 cached input and $22.50 output per million tokens. If their model ids contain `kimi-k3`, they are priced at Kimi K3's $3, $0.30 and $15 (TRC-049).\n\nThe four rows still listed, `kimi-k3`, `minimax-m3`, `gpt-oss-120b` and `nemotron-3-ultra-nvfp4`, match the page. The page was read through a fetch tool that summarizes, so check the absences by hand before removing any row.",
+  "notes": [],
+  "links": [
+    "TRC-049"
+  ]
+}

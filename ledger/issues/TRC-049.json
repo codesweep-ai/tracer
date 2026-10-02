@@ -1,0 +1,23 @@
+{
+  "id": "TRC-049",
+  "title": "A model the price table does not list is priced silently at the rates of a shorter model name it contains",
+  "type": "improvement",
+  "severity": "med",
+  "status": "open",
+  "foundBy": "session agent, auditing `pricing.json` against the provider price pages fetched on 2026-09-29; filed at the host's request: \"file ledger entries in the tracer repo to report any issues with the pricing\"",
+  "opened": "2026-09-29",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The estimator prices a model by the longest table key contained in its name. A new model whose name extends an existing key therefore inherits that model's rates. Nothing says so, and the estimate looks normal.\n\nThis has now gone wrong twice. Claude Fable 5.1 took Claude Fable 5's cache-read rate, which TRC-006 fixed. Claude Opus 5.5 takes all of Claude Opus 5's rates, at more than twice its cost (TRC-047). Claude Sonnet 5.5 takes Claude Sonnet 5's rates, and is right only because the two are equal. A Kimi K3 variant whose id contains `kimi-k3` would be priced at the base model's rates, which are a third below the Fast and US variants' price.\n\nA name that matches a key only because it adds a version or a variant suffix should get no estimate, or at least a warning on the trajectory. That keeps the table's own rule, which prefers no estimate to a wrong one.",
+  "notes": [],
+  "links": [
+    "TRC-006",
+    "TRC-047"
+  ]
+}

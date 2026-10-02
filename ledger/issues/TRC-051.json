@@ -1,0 +1,22 @@
+{
+  "id": "TRC-051",
+  "title": "The price table has no rows for Claude Sonnet 5.5, the GPT-6 models, or GPT-5.2 and earlier",
+  "type": "improvement",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, auditing `pricing.json` against the provider price pages fetched on 2026-09-29; filed at the host's request: \"file ledger entries in the tracer repo to report any issues with the pricing\"",
+  "opened": "2026-09-29",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The provider pages fetched on 2026-09-29 list models that `pricing.json` does not.\n\nClaude Sonnet 5.5 is $2 input, $2.50 and $4 for cache writes, $0.20 for cache reads and $10 output per million tokens. Its name contains `claude-sonnet-5`, whose rates are the same, so it is priced correctly by coincidence (TRC-049).\n\nOpenAI lists four GPT-6 models, each with a short-context and a long-context tier. Short context, in input, cached input, cache writes and output per million tokens:\n\n| Model | Input | Cached input | Cache writes | Output |\n|---|---|---|---|---|\n| `gpt-6-astra` | $10 | $1 | $12.50 | $50 |\n| `gpt-6-sol` | $2 | $0.20 | $2.50 | $10 |\n| `gpt-6.1-sol` | $2 | $0.10 | $2.50 | $10 |\n| `gpt-6-luna` | $0.10 | $0.01 | $0.125 | $0.50 |\n\nIt also lists `gpt-5.2`, `gpt-5.1`, `gpt-5`, `gpt-5-mini` and `gpt-5-nano`. None of these names contains a table key, so their sessions get no estimate. No session on the host that found this used any of them.",
+  "notes": [],
+  "links": [
+    "TRC-049"
+  ]
+}

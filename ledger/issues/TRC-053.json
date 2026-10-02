@@ -1,0 +1,20 @@
+{
+  "id": "TRC-053",
+  "title": "Models older than Claude 4.6 carry a US-inference price multiplier they cannot incur",
+  "type": "defect",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, auditing `pricing.json` against the provider price pages fetched on 2026-09-29; filed at the host's request: \"file ledger entries in the tracer repo to report any issues with the pricing\"",
+  "opened": "2026-09-29",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The entries for Claude Opus 4.5, 4.1 and 4, Sonnet 4.5 and 4, Haiku 4.5 and Haiku 3.5 carry `geoMultipliers: {\"us\": 1.1}`. The provider's price page fetched on 2026-09-29 applies that multiplier to Claude 4.6 and later models only. It says earlier models reject `inference_geo` with a 400.\n\nA transcript on those models cannot record US inference, so no estimate is wrong today. The entries still state a price the provider does not charge, and another tool that reads the table would inherit the error.",
+  "notes": [],
+  "links": []
+}

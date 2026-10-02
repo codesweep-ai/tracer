@@ -1,0 +1,20 @@
+{
+  "id": "TRC-050",
+  "title": "The GPT-5.6 long-context tier can now be priced, because the provider publishes its 272K threshold",
+  "type": "improvement",
+  "severity": "low",
+  "status": "open",
+  "foundBy": "session agent, auditing `pricing.json` against the provider price pages fetched on 2026-09-29; filed at the host's request: \"file ledger entries in the tracer repo to report any issues with the pricing\"",
+  "opened": "2026-09-29",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "`pricing.json` records OpenAI's long-context tier as unrepresentable, because the threshold that separates the tiers was unpublished. The provider's page fetched on 2026-09-29 now states it: short context is up to 272K input tokens, and long context is anything above.\n\nOn the GPT-5.6 models, long context costs twice the input, cached-input and cache-write rates, and 1.5 times the output rate. GPT-5.6 Sol, for example, is $8, $0.80, $10 and $30 per million tokens above the threshold. GPT-5.4 and GPT-5.4 Pro have a long-context tier as well.\n\nThe tier is decided per request, so pricing it needs each call's input tokens rather than a trajectory's totals. The codex adapter already records usage per call.\n\nNone of the 384 Codex calls on the host that found this crossed 272K. In a longer session, calls above it are estimated at as little as half their cost.",
+  "notes": [],
+  "links": []
+}

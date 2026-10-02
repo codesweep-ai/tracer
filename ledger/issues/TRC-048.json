@@ -1,0 +1,20 @@
+{
+  "id": "TRC-048",
+  "title": "GPT-5.6 Sol sessions are priced at $5 and $30 per million tokens, where the provider now lists $4 and $20",
+  "type": "defect",
+  "severity": "med",
+  "status": "open",
+  "foundBy": "session agent, auditing `pricing.json` against the provider price pages fetched on 2026-09-29; filed at the host's request: \"file ledger entries in the tracer repo to report any issues with the pricing\"",
+  "opened": "2026-09-29",
+  "resolved": null,
+  "stint": null,
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "The `gpt-5.6-sol` entry charges $5 input, $0.50 cached input, $6.25 cache writes and $30 output per million tokens. Those rates were read from the provider's page on 2026-08-03.\n\nThe page fetched on 2026-09-29 lists $4, $0.40, $5 and $20 for the short-context tier. A note on it says the model's promotional pricing is available at least through November 21, 2026. The page does not say when the promotion began.\n\nOn one host, 60 Codex trajectories on this model held 22 million tokens. The estimate for them is $19.66. At the current list rates they cost $15.27, which is 29% less.\n\nDated rates can carry the promotional period once its start is known. The entry needs checking again after 2026-11-21.",
+  "notes": [],
+  "links": []
+}
