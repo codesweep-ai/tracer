@@ -5,7 +5,7 @@
   "description": "Schema-conformance harness for the fixture corpus. Run: node fixtures/test/schema-conformance.mjs",
   "type": "module",
   "engines": {
-    "node": ">=22.13"
+    "node": ">=24.21.0"
   },
   "devDependencies": {
     "ajv": "^8.20.0"

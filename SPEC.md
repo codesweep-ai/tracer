@@ -578,7 +578,7 @@ shared data directory on port 4875, so a build packed on this machine (`make npm
 lint or ledger, `npm run registry:pack` in ui) installs without being pushed. The compiled viewer
 assets are committed, so every Go gate above runs in any clone and the binary builds with Go alone.
 
-Rebuilding needs **Node 22.13 or newer**, the floor `@codesweep-ai/ui` sets. `make build` takes
+Rebuilding needs **Node 24.21.0 or newer**, the floor `@codesweep-ai/ui` sets. `make build` takes
 that path whenever `npm` is on your PATH and a source under `apps/viewer` is newer than the
 artifacts. It runs `npm ci` and
 the Vite builds first, because `//go:embed` reads the artifacts at compile time; when nothing has
