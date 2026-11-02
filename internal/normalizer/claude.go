@@ -97,6 +97,12 @@ func NormalizeClaude(records []*obj) *obj {
 				// Session settings restated about once per turn, with no timestamp,
 				// so they mark no moment. The value almost never changes, and the
 				// agent's display colour is the only one that has been seen to.
+			case "api-request", "api-request-blob", "api-request-shape", "tools-used":
+				// Claude Code's record of each request it sent: its parameters, its
+				// system prompt and tool definitions, and its messages as content
+				// blobs, plus the tools each turn used. The steps they describe are
+				// already events, and in a 2.1.312 session they were a third of all
+				// records (TRC-057).
 			case "":
 				// No `type` at all. This is not an unclassified record type — it
 				// is not a record: a non-object JSON line reads as all-undefined,

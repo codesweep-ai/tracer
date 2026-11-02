@@ -191,6 +191,26 @@ func TestClaudeRestatedSettingsAreIgnored(t *testing.T) {
 	}
 }
 
+// TRC-057. Claude Code's records of the API requests it sent are ignored by
+// name, not reported as unrecognized.
+func TestClaudeAPIRequestRecordsAreIgnored(t *testing.T) {
+	var records []*obj
+	for _, typ := range []string{"api-request", "api-request-blob", "api-request-shape", "tools-used"} {
+		records = append(records, trajectory.NewObject("type", typ, "sessionId", "s"))
+	}
+	doc := NormalizeClaude(records)
+	parse := object(get(doc, "parse"))
+	if got := num(get(parse, "unrecognized")); got != 0 {
+		t.Fatalf("parse.unrecognized = %v, want 0", got)
+	}
+	if got := len(get(doc, "events").([]*obj)); got != 0 {
+		t.Fatalf("events = %d, want 0", got)
+	}
+	if got := len(get(parse, "skippedByType").([]any)); got != 4 {
+		t.Fatalf("skippedByType has %d types, want 4", got)
+	}
+}
+
 // TRC-016. The echo of a local command is Claude Code's own record, not an
 // instruction, so the wait runs past it. An isMeta record with any other parent,
 // such as a sub-agent's hand-back, still starts work.
