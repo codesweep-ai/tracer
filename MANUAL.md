@@ -168,6 +168,7 @@ marked `est.`. A figure marked `incl. sub-agents` covers the session and every s
 - **Deep links.** `#ev-1050` jumps to an event, and works in both export modes.
 - **Filter.** The search box matches event text and tool names, scanning across chunk boundaries.
 - **Sub-agents.** Each appears as its own trajectory, linked from the parent event that spawned it.
+  It is titled with the description its parent gave it, where the CLI records one.
 
 ### What a mark on the strip means
 
@@ -218,7 +219,7 @@ so it stays small as trajectories are added.
 | Path | Read or written |
 |---|---|
 | `<path>/**/*.jsonl`, `<path>/**/*.json` | read: every session file under the input directory |
-| `<path>/**/*.meta.json` | read: the sidecar that names a sub-agent's parent |
+| `<path>/**/*.meta.json` | read: the sidecar that names a sub-agent's parent and the description it was given |
 | `<path>/**/subagents/workflows/*/journal.jsonl` | not read: a Claude Code workflow's record of its agents, which are read from their own files |
 | the `--links` file | read: a JSON array of link records |
 | `-o <dest>` | written: one `.html` file, or a directory with `--split` |

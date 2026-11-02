@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/codesweep-ai/tracer/internal/oracletest"
+	"github.com/codesweep-ai/tracer/internal/trajectory"
 )
 
 // TestOracleTrees checks the LIBRARY seam: NormalizeDirectory must produce a
@@ -214,6 +215,43 @@ func TestNormalizeDirectoryPassesOverAWorkflowJournal(t *testing.T) {
 		if got := workflowJournal(filepath.FromSlash(path)); got != want {
 			t.Errorf("workflowJournal(%q) = %v, want %v", path, got, want)
 		}
+	}
+}
+
+// R87 (TRC-055). A Claude Code sub-agent carries the description from its
+// sidecar as meta.label, and a root session, which has no sidecar, carries none.
+func TestNormalizeDirectoryLabelsSubAgentsFromTheirSidecar(t *testing.T) {
+	fixture := filepath.Join("..", "..", "fixtures", "claude", "v2.1", "subagent-run")
+	result, err := NormalizeDirectory(fixture, t.TempDir(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var labelled int
+	for _, doc := range result.Documents {
+		meta := object(get(doc, "meta"))
+		agent := str(get(meta, "agentId"))
+		label, has := meta.Get("label")
+		if agent == "" {
+			if has {
+				t.Fatalf("root session carries label %v", label)
+			}
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(fixture, str(get(meta, "sourceDir")), "agent-"+agent+".meta.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := trajectory.Decode(b)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := str(get(object(v), "description")); label != want {
+			t.Fatalf("agent %s: label = %v, want the sidecar's description %q", agent, label, want)
+		}
+		labelled++
+	}
+	if labelled != 2 {
+		t.Fatalf("labelled %d sub-agents, want 2", labelled)
 	}
 }
 

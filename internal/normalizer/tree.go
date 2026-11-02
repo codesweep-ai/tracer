@@ -172,6 +172,12 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 					if id := str(get(object(v), "toolUseId")); id != "" {
 						spawn[str(get(object(get(doc, "meta")), "sessionId"))] = id
 					}
+					// The description the parent gave the agent (R87). Untitled, a
+					// lane falls back to the agent's first prompt, and a workflow's
+					// agents all open on the same preamble (TRC-055).
+					if d := str(get(object(v), "description")); d != "" {
+						object(get(doc, "meta")).Set("label", d)
+					}
 				}
 			}
 		}

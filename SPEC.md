@@ -438,6 +438,12 @@ every agent reported the same working directory, so nothing told them apart.* Ea
 and folds away under its heading, and one control folds or opens them all. A site read from one
 directory shows no headings.
 
+**R87.** A sub-agent whose CLI records the description its parent gave it **MUST** carry that
+description as `meta.label`. The index names a lane by `meta.title` where it is set, and falls back
+to `meta.label` and then to `meta.autoTitle`. *A lane titled from its first prompt cannot tell a workflow's agents apart,
+because every one of them opens on the same harness preamble.* Claude Code records the description
+in each sub-agent's `.meta.json` sidecar.
+
 **R59.** A child whose spawning event is present **MUST** carry that event's index as
 `meta.parentEventIndex`. *The index page can derive it by scanning the parent's strip, because it
 holds every summary. A split-mode trace page holds only its own, so without the stamp a child has no
