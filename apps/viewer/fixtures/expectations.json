@@ -98,14 +98,14 @@
      },
      {
       "id": "0ab5e331349408f01",
-      "label": "and the handles records remain values expected input when…",
+      "label": "reads reads files document",
       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
       "depth": 1,
       "spawnIndex": 17
      },
      {
       "id": "25ae75425a8bc0e94",
-      "label": "normalized each module normalized module this normalized…",
+      "label": "no handles tests across build",
       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
       "depth": 1,
       "spawnIndex": 16
@@ -125,14 +125,14 @@
      },
      {
       "id": "0ab5e331349408f01",
-      "label": "and the handles records remain values expected input when…",
+      "label": "reads reads files document",
       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
       "depth": 1,
       "spawnIndex": 17
      },
      {
       "id": "25ae75425a8bc0e94",
-      "label": "normalized each module normalized module this normalized…",
+      "label": "no handles tests across build",
       "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
       "depth": 1,
       "spawnIndex": 16
@@ -141,8 +141,8 @@
    }
   },
   "approval": {
-   "id": "host",
-   "reason": "Re-freeze after run 4 changed the viewer and the corpora without re-recording: the legend vocabulary was unified (c9974e3), the hollow mark gained a legend key and a tab stop (296f347), the title links home (aa7c30e), and the scrubber repair restored child links and tool names (4f1886b, 252aede). The a11y and tailwind rows now meet their targets rather than missing them.",
+   "id": "2026-11-02 workflow runs",
+   "reason": "Sub-agents now carry the description their sidecar records as meta.label, and the index titles a lane with it (R87, TRC-055, goldens in 26df952). The two subagent-run sub-agent lanes read their descriptions instead of their first prompts, and the data block grows by those two fields.",
    "previous": {
     "large-session/dark": {
      "title": "Trajectory overview",
@@ -184,16 +184,16 @@
       {
        "id": "02ecf77d-bf39-c187-3db5-cb7715c123ec",
        "label": "successfully the the for document when confirm then writes…",
-       "parent": "no successfully runs",
-       "depth": 0,
-       "spawnIndex": null
+       "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "depth": 1,
+       "spawnIndex": 12
       },
       {
        "id": "c8e73c0e-6c5e-f739-41f7-898c508d90be",
        "label": "successfully the the for document when confirm then writes…",
-       "parent": "no successfully runs",
-       "depth": 0,
-       "spawnIndex": null
+       "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "depth": 1,
+       "spawnIndex": 14
       }
      ]
     },
@@ -211,16 +211,16 @@
       {
        "id": "02ecf77d-bf39-c187-3db5-cb7715c123ec",
        "label": "successfully the the for document when confirm then writes…",
-       "parent": "no successfully runs",
-       "depth": 0,
-       "spawnIndex": null
+       "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "depth": 1,
+       "spawnIndex": 12
       },
       {
        "id": "c8e73c0e-6c5e-f739-41f7-898c508d90be",
        "label": "successfully the the for document when confirm then writes…",
-       "parent": "no successfully runs",
-       "depth": 0,
-       "spawnIndex": null
+       "parent": "77f0e564-f5d7-a937-aa50-ed64762175c7",
+       "depth": 1,
+       "spawnIndex": 14
       }
      ]
     },
@@ -373,14 +373,14 @@
       },
       {
        "id": "0ab5e331349408f01",
-       "label": "and the handles records remain values expected input when…",
+       "label": "reads reads files document",
        "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
        "depth": 1,
        "spawnIndex": 17
       },
       {
        "id": "25ae75425a8bc0e94",
-       "label": "normalized each module normalized module this normalized…",
+       "label": "no handles tests across build",
        "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
        "depth": 1,
        "spawnIndex": 16
@@ -400,14 +400,14 @@
       },
       {
        "id": "0ab5e331349408f01",
-       "label": "and the handles records remain values expected input when…",
+       "label": "reads reads files document",
        "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
        "depth": 1,
        "spawnIndex": 17
       },
       {
        "id": "25ae75425a8bc0e94",
-       "label": "normalized each module normalized module this normalized…",
+       "label": "no handles tests across build",
        "parent": "4f00d255-46e9-4373-7232-09f72fda039e",
        "depth": 1,
        "spawnIndex": 16
@@ -3107,24 +3107,24 @@
     "blocks": 8
    },
    "subagent-run": {
-    "data": 36681,
+    "data": 36758,
     "blocks": 8
    }
   },
   "approval": {
-   "id": "TRC-005",
-   "reason": "Each trajectory now records the directory it was read from. That adds 16 bytes per trajectory at the top of its input, and 61 for each sub-agent under its subagents directory.",
+   "id": "2026-11-02 workflow runs",
+   "reason": "Sub-agents now carry the description their sidecar records as meta.label, and the index titles a lane with it (R87, TRC-055, goldens in 26df952). The two subagent-run sub-agent lanes read their descriptions instead of their first prompts, and the data block grows by those two fields.",
    "previous": {
     "large-session": {
-     "data": 844304,
+     "data": 844320,
      "blocks": 5
     },
     "codex-multi-agent-run": {
-     "data": 40003,
+     "data": 40051,
      "blocks": 8
     },
     "subagent-run": {
-     "data": 36543,
+     "data": 36681,
      "blocks": 8
     }
    },
@@ -3138,7 +3138,7 @@
      "blocks": 8
     },
     "subagent-run": {
-     "data": 36681,
+     "data": 36758,
      "blocks": 8
     }
    }
