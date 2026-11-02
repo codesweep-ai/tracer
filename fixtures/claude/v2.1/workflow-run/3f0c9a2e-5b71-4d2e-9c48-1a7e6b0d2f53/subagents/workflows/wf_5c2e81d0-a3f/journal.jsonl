@@ -1,0 +1,5 @@
+{"type":"launched"}
+{"type":"started","key":"v2:62ed756162e4b886093f95474b78617423ab069d4643d71200563ee3327420e0","agentId":"a1c4e7f9b2d3a6e08","label":"verify:json.go","phase":"Verify"}
+{"type":"started","key":"v2:24b3c3ce258752ef09bd51fc397ee0850f4c4eda1a202f0b1b8b91e802520001","agentId":"a9b3d5f1c7e2a4b60","label":"verify:csv.go","phase":"Verify"}
+{"type":"result","key":"v2:62ed756162e4b886093f95474b78617423ab069d4643d71200563ee3327420e0","agentId":"a1c4e7f9b2d3a6e08","result":{"verdict":"holds","rules":4}}
+{"type":"result","key":"v2:24b3c3ce258752ef09bd51fc397ee0850f4c4eda1a202f0b1b8b91e802520001","agentId":"a9b3d5f1c7e2a4b60","result":{"verdict":"holds","rules":3}}

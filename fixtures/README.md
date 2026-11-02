@@ -34,6 +34,7 @@ The adapters read what each CLI actually writes:
 | `all-skipped` | Every file skipped. Same shape as above, for the exit-0-when-nothing-normalizes rule. |
 | `large-session` | A large real capture, multi-chunk — messier and longer than any authored case. |
 | `large-multi-agent` | A large real capture with sub-agents. |
+| `workflow-run` | Authored rather than captured: a session that runs a workflow of two agents, laid out as Claude Code 2.1.312 stores one. The agents sit under `subagents/workflows/<runId>/` beside the run's `journal.jsonl`, which must not become a session. Their sidecars name no `toolUseId`, so each must join the `Workflow` call whose result carries that `runId`. Every file also carries the API request records the adapter ignores. |
 
 ### `codex/v0.146/`
 

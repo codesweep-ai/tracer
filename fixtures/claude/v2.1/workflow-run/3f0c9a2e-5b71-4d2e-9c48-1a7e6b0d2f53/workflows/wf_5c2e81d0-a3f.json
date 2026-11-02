@@ -1,0 +1,1 @@
+{"runId":"wf_5c2e81d0-a3f","timestamp":"2026-11-01T10:01:35.515Z","taskId":"t4k9m2","args":{"modules":["json","csv"]},"result":{"verdicts":["holds","holds"]},"agentCount":2,"durationMs":87000,"summary":"Verify each parser module against its spec","workflowName":"verify-parsers","status":"completed","defaultModel":"claude-opus-5-5","totalToolCalls":2}
