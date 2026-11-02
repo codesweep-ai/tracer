@@ -38,14 +38,23 @@ func candidate(name string) bool {
 	return (strings.HasSuffix(name, ".json") || strings.HasSuffix(name, ".jsonl")) && !strings.HasSuffix(name, ".meta.json") && name != "index.json" && name != "summary.json"
 }
 
-// workflowJournal reports whether path is the journal Claude Code keeps beside
-// a workflow's agents, at <session>/subagents/workflows/<runId>/journal.jsonl.
-// It records each agent starting and returning, and read as a transcript it
-// became a session of its own named unknown-session (TRC-054).
-func workflowJournal(path string) bool {
+// workflowRun is the run id of a file Claude Code stores with a workflow's
+// agents, at <session>/subagents/workflows/<runId>/, or "" for any other file.
+func workflowRun(path string) string {
 	run := filepath.Dir(path)
 	workflows := filepath.Dir(run)
-	return filepath.Base(path) == "journal.jsonl" && filepath.Base(workflows) == "workflows" && filepath.Base(filepath.Dir(workflows)) == "subagents"
+	if filepath.Base(workflows) != "workflows" || filepath.Base(filepath.Dir(workflows)) != "subagents" {
+		return ""
+	}
+	return filepath.Base(run)
+}
+
+// workflowJournal reports whether path is the journal Claude Code keeps beside
+// a workflow's agents. It records each agent starting and returning, and read
+// as a transcript it became a session of its own named unknown-session
+// (TRC-054).
+func workflowJournal(path string) bool {
+	return filepath.Base(path) == "journal.jsonl" && workflowRun(path) != ""
 }
 
 // discover lists the candidate files under input, depth first and in name
@@ -143,6 +152,9 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 	}
 	candidates := len(files) + len(dangling)
 	spawn := map[string]string{}
+	// A workflow agent's run id, from where it is stored. Its sidecar names no
+	// spawning call, so it joins the Workflow call carrying that run (R88).
+	runs := map[string]string{}
 	for _, file := range files {
 		doc, e := NormalizeFile(file)
 		if e == nil && len(get(doc, "events").([]*obj)) == 0 {
@@ -166,6 +178,9 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 		}
 		result.Documents = append(result.Documents, doc)
 		if str(get(object(get(doc, "meta")), "source")) == "claude-code" && strings.Contains(filepath.ToSlash(file), "subagents/") {
+			if run := workflowRun(file); run != "" {
+				runs[str(get(object(get(doc, "meta")), "sessionId"))] = run
+			}
 			side := strings.TrimSuffix(file, ".jsonl") + ".meta.json"
 			if b, x := os.ReadFile(side); x == nil {
 				if v, x := trajectory.Decode(b); x == nil {
@@ -239,7 +254,7 @@ func NormalizeDirectory(input, out, linksPath string) (TreeResult, error) {
 			found := -1
 			for _, event := range get(candidate, "events").([]*obj) {
 				tool := object(get(event, "tool"))
-				if (spawn[sid] != "" && str(get(tool, "callId")) == spawn[sid]) || str(get(event, "childSessionId")) == sid {
+				if (spawn[sid] != "" && str(get(tool, "callId")) == spawn[sid]) || (runs[sid] != "" && str(get(tool, "runId")) == runs[sid]) || str(get(event, "childSessionId")) == sid {
 					found = int(num(get(event, "i")))
 					break
 				}

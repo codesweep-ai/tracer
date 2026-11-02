@@ -449,6 +449,13 @@ in each sub-agent's `.meta.json` sidecar.
 holds every summary. A split-mode trace page holds only its own, so without the stamp a child has no
 route back to its fork point on a cold load.*
 
+**R88.** An agent a workflow launched **MUST** take the call that launched the workflow as its
+spawning event. Claude Code stores those agents under `subagents/workflows/<runId>/`, and their
+sidecars name no spawning call. The `Workflow` call's result carries the same `runId`, which the
+adapter keeps as `tool.runId`. *Without the join, every agent of a workflow sat under its session
+with no route back to the call that started it.* The field is additive and optional, so
+`schemaVersion` is unchanged (R7).
+
 **R60.** A proven connector **MUST** name the event it points at, and the lane **MUST** offer a
 route to it. *Ten pixels per event makes a long parent a scroller thousands of pixels wide, so the
 spawn cell is usually off screen and the connector degrades to a stub. A stub that cannot point can

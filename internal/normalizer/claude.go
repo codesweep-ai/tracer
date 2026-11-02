@@ -172,6 +172,14 @@ func NormalizeClaude(records []*obj) *obj {
 							call.Set("childSessionId", jsString(get(tur, "agentId")))
 						}
 					}
+					// A Workflow call launches a run of many agents, and their sidecars
+					// name no toolUseId. The run id is what joins them back (R88).
+					tool := object(get(call, "tool"))
+					if str(get(tool, "name")) == "Workflow" {
+						if run := str(get(object(get(r, "toolUseResult")), "runId")); run != "" {
+							tool.Set("runId", run)
+						}
+					}
 				}
 			} else if truthy(get(r, "isMeta")) && localCommands[str(get(r, "parentUuid"))] {
 				// The echo of a local command, written by Claude Code rather than

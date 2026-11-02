@@ -477,6 +477,10 @@
             "string",
             "null"
           ]
+        },
+        "runId": {
+          "type": "string",
+          "description": "The workflow run this call launched. Joins the agents of that run, which carry no spawning call of their own."
         }
       }
     },

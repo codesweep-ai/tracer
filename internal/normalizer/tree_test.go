@@ -255,6 +255,48 @@ func TestNormalizeDirectoryLabelsSubAgentsFromTheirSidecar(t *testing.T) {
 	}
 }
 
+// R88 (TRC-056). An agent a workflow launched takes the Workflow call carrying
+// its run id as its spawning event, although its sidecar names no call.
+func TestNormalizeDirectoryJoinsWorkflowAgentsToTheirCall(t *testing.T) {
+	input := t.TempDir()
+	write := func(rel string, lines ...string) {
+		path := filepath.Join(input, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(strings.Join(lines, "\n")+"\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("s.jsonl",
+		`{"uuid":"u1","sessionId":"s","type":"user","timestamp":"2026-01-01T10:00:00.000Z","message":{"role":"user","content":"go"}}`,
+		`{"uuid":"u2","sessionId":"s","type":"assistant","timestamp":"2026-01-01T10:00:01.000Z","message":{"id":"m1","model":"m","content":[{"type":"tool_use","id":"t1","name":"Workflow","input":{}}]}}`,
+		`{"uuid":"u3","sessionId":"s","type":"user","timestamp":"2026-01-01T10:00:02.000Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"launched"}]},"toolUseResult":{"runId":"wf_1"}}`,
+	)
+	write("s/subagents/workflows/wf_1/agent-a1.jsonl",
+		`{"uuid":"v1","sessionId":"s","agentId":"a1","isSidechain":true,"type":"user","timestamp":"2026-01-01T10:00:03.000Z","message":{"role":"user","content":"verify"}}`,
+	)
+	write("s/subagents/workflows/wf_1/agent-a1.meta.json", `{"agentType":"t","description":"verify:a"}`)
+	write("s/subagents/workflows/wf_2/agent-a2.jsonl",
+		`{"uuid":"w1","sessionId":"s","agentId":"a2","isSidechain":true,"type":"user","timestamp":"2026-01-01T10:00:04.000Z","message":{"role":"user","content":"other run"}}`,
+	)
+	result, err := NormalizeDirectory(input, t.TempDir(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	stamps := map[string]any{}
+	for _, doc := range result.Documents {
+		meta := object(get(doc, "meta"))
+		stamps[str(get(meta, "sessionId"))], _ = meta.Get("parentEventIndex")
+	}
+	if num(stamps["a1"]) != 1 {
+		t.Fatalf("a1 parentEventIndex = %v, want 1, the Workflow call", stamps["a1"])
+	}
+	if stamps["a2"] != nil {
+		t.Fatalf("a2 parentEventIndex = %v, want none: no call launched run wf_2", stamps["a2"])
+	}
+}
+
 // Each session records the directory it was read from, relative to the input,
 // so a site built over several directories can tell them apart (TRC-005).
 func TestNormalizeDirectoryRecordsSourceDir(t *testing.T) {

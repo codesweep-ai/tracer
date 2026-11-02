@@ -168,7 +168,8 @@ marked `est.`. A figure marked `incl. sub-agents` covers the session and every s
 - **Deep links.** `#ev-1050` jumps to an event, and works in both export modes.
 - **Filter.** The search box matches event text and tool names, scanning across chunk boundaries.
 - **Sub-agents.** Each appears as its own trajectory, linked from the parent event that spawned it.
-  It is titled with the description its parent gave it, where the CLI records one.
+  It is titled with the description its parent gave it, where the CLI records one. An agent a
+  Claude Code workflow ran is linked from the call that launched the workflow.
 
 ### What a mark on the strip means
 

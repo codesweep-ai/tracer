@@ -311,3 +311,28 @@ func TestClaudeToolCallNamesWhoApprovesIt(t *testing.T) {
 		t.Fatalf("approvals %v, want %v", got, want)
 	}
 }
+
+// R88 (TRC-056). A Workflow call keeps the run id its result reports, which is
+// what joins the run's agents back to it. Another tool's result does not lend
+// its call one.
+func TestClaudeWorkflowCallKeepsItsRunID(t *testing.T) {
+	call := func(uuid, name string) *obj {
+		return trajectory.NewObject("uuid", uuid, "sessionId", "s", "type", "assistant", "timestamp", "2026-01-01T10:00:00.000Z",
+			"message", trajectory.NewObject("id", uuid, "model", "m", "content", []any{trajectory.NewObject("type", "tool_use", "id", "t"+uuid, "name", name)}))
+	}
+	result := func(uuid, callID string) *obj {
+		return trajectory.NewObject("uuid", uuid, "sessionId", "s", "type", "user", "timestamp", "2026-01-01T10:00:01.000Z",
+			"message", trajectory.NewObject("role", "user", "content", []any{trajectory.NewObject("type", "tool_result", "tool_use_id", callID, "content", "launched")}),
+			"toolUseResult", trajectory.NewObject("status", "async_launched", "runId", "wf_1"))
+	}
+	doc := NormalizeClaude([]*obj{call("a", "Workflow"), result("b", "ta"), call("c", "Bash"), result("d", "tc")})
+	got := map[string]any{}
+	for _, e := range get(doc, "events").([]*obj) {
+		if tool := object(get(e, "tool")); tool != nil {
+			got[str(get(tool, "name"))], _ = tool.Get("runId")
+		}
+	}
+	if got["Workflow"] != "wf_1" || got["Bash"] != nil {
+		t.Fatalf("runId by tool: %v, want wf_1 on the Workflow call only", got)
+	}
+}
