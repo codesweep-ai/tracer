@@ -38,6 +38,16 @@ func candidate(name string) bool {
 	return (strings.HasSuffix(name, ".json") || strings.HasSuffix(name, ".jsonl")) && !strings.HasSuffix(name, ".meta.json") && name != "index.json" && name != "summary.json"
 }
 
+// workflowJournal reports whether path is the journal Claude Code keeps beside
+// a workflow's agents, at <session>/subagents/workflows/<runId>/journal.jsonl.
+// It records each agent starting and returning, and read as a transcript it
+// became a session of its own named unknown-session (TRC-054).
+func workflowJournal(path string) bool {
+	run := filepath.Dir(path)
+	workflows := filepath.Dir(run)
+	return filepath.Base(path) == "journal.jsonl" && filepath.Base(workflows) == "workflows" && filepath.Base(filepath.Dir(workflows)) == "subagents"
+}
+
 // discover lists the candidate files under input, depth first and in name
 // order within each directory, so two runs read the same files in the same
 // order (R36). A link to a folder is followed (R86): a set assembled from links
@@ -92,7 +102,7 @@ func discover(input string) (files, dangling []string, err error) {
 				}
 				continue
 			}
-			if candidate(d.Name()) {
+			if candidate(d.Name()) && !workflowJournal(path) {
 				files = append(files, path)
 			}
 		}

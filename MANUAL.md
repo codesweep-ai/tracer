@@ -219,6 +219,7 @@ so it stays small as trajectories are added.
 |---|---|
 | `<path>/**/*.jsonl`, `<path>/**/*.json` | read: every session file under the input directory |
 | `<path>/**/*.meta.json` | read: the sidecar that names a sub-agent's parent |
+| `<path>/**/subagents/workflows/*/journal.jsonl` | not read: a Claude Code workflow's record of its agents, which are read from their own files |
 | the `--links` file | read: a JSON array of link records |
 | `-o <dest>` | written: one `.html` file, or a directory with `--split` |
 | `<dest>/.cs-tracer.json` | written by `--split`: the manifest of generated paths |

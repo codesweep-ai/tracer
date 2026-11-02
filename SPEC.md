@@ -160,7 +160,9 @@ replacement corrupts it.*
 
 Exit code, **stdout** and stderr are all part of the contract, not incidental. A *candidate file*
 below is a `.json` or `.jsonl` file under the input path, excluding the `.meta.json` sidecars and a
-normalized tree's own `index.json` and `summary.json`.
+normalized tree's own `index.json` and `summary.json`. It also excludes the `journal.jsonl` Claude
+Code keeps in each `subagents/workflows/<runId>/` folder. *That journal records a workflow's agents
+starting and returning. Read as a transcript, it became a session of its own.*
 
 **R23.** A run that produces no documents **MUST** exit `0` and explain itself on stderr. *A session
 with no events is a session with no events, not a failure.* The `empty-session` and `all-skipped`

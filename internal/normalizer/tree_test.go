@@ -178,6 +178,45 @@ func TestNormalizeDirectoryStampsParentEventIndex(t *testing.T) {
 	}
 }
 
+// TRC-054. The journal Claude Code keeps beside a workflow's agents is not a
+// transcript: it is neither read nor reported as a skip. Only that path is
+// excluded, so a journal.jsonl anywhere else is still a candidate.
+func TestNormalizeDirectoryPassesOverAWorkflowJournal(t *testing.T) {
+	input := t.TempDir()
+	b, err := os.ReadFile(filepath.Join("..", "..", "fixtures", "claude", "v2.1", "simple", "session.jsonl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(input, "session.jsonl"), b, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run := filepath.Join(input, "session", "subagents", "workflows", "wf_1")
+	if err := os.MkdirAll(run, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	journal := `{"type":"launched"}` + "\n" + `{"type":"started","key":"k","agentId":"a1","label":"l","phase":"p"}` + "\n"
+	if err := os.WriteFile(filepath.Join(run, "journal.jsonl"), []byte(journal), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	result, err := NormalizeDirectory(input, t.TempDir(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Documents) != 1 || result.Skipped != 0 {
+		t.Fatalf("documents = %d, skipped = %d, want 1 and 0: the journal must be passed over", len(result.Documents), result.Skipped)
+	}
+	for path, want := range map[string]bool{
+		"s/subagents/workflows/wf_1/journal.jsonl": true,
+		"s/subagents/wf_1/journal.jsonl":           false,
+		"s/workflows/wf_1/journal.jsonl":           false,
+		"s/subagents/workflows/wf_1/agent-a.jsonl": false,
+	} {
+		if got := workflowJournal(filepath.FromSlash(path)); got != want {
+			t.Errorf("workflowJournal(%q) = %v, want %v", path, got, want)
+		}
+	}
+}
+
 // Each session records the directory it was read from, relative to the input,
 // so a site built over several directories can tell them apart (TRC-005).
 func TestNormalizeDirectoryRecordsSourceDir(t *testing.T) {
