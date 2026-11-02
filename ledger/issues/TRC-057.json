@@ -1,0 +1,20 @@
+{
+  "id": "TRC-057",
+  "title": "Claude Code's API request records are reported as unrecognized",
+  "type": "defect",
+  "severity": "low",
+  "status": "in-progress",
+  "foundBy": "session agent, while exporting a Claude Code 2.1.312 session that ran a workflow of 83 agents",
+  "opened": "2026-11-02",
+  "resolved": null,
+  "stint": "2026-11-02 workflow runs",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Claude Code 2.1.312 writes `api-request`, `api-request-blob` and `api-request-shape` records, and a `tools-used` record per turn. None carries a `uuid`, and the adapter classifies none of them. Each becomes a visible `meta` event and a `parse.warnings` entry (R38).\n\nIn the session that found it they were 1,148 of the 3,193 events across the 86 trajectories exported. Every lane carried an `unrecognized` badge, which hides a record type that is genuinely new. The records restate the requests the transcript already shows, so they belong in the ignore list (R37).",
+  "notes": [],
+  "links": []
+}

@@ -1,0 +1,22 @@
+{
+  "id": "TRC-056",
+  "title": "A workflow's agents are not joined to the tool call that launched them",
+  "type": "defect",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "session agent, while exporting a Claude Code 2.1.312 session that ran a workflow of 83 agents",
+  "opened": "2026-11-02",
+  "resolved": null,
+  "stint": "2026-11-02 workflow runs",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "A direct sub-agent's sidecar names the tool call that spawned it, so its trajectory carries `parentEventIndex` and the index draws a connector from that call. A workflow agent's sidecar carries no `toolUseId`. The agents of a workflow therefore sit under their session with no spawn position.\n\nThe join is recoverable. The `Workflow` call's result carries `toolUseResult.runId`, such as `wf_11f49915-5fe`, and the agents live under `subagents/workflows/<runId>/`. Neither is read today.",
+  "notes": [],
+  "links": [
+    "TRC-054"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "TRC-054",
+  "title": "A Claude Code workflow's journal is exported as a session of its own",
+  "type": "defect",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "session agent, while exporting a Claude Code 2.1.312 session that ran a workflow of 83 agents",
+  "opened": "2026-11-02",
+  "resolved": null,
+  "stint": "2026-11-02 workflow runs",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Claude Code stores a workflow's agents under `<session>/subagents/workflows/<runId>/`, beside a `journal.jsonl` that records each agent starting and returning. Discovery reads that journal as a transcript. It becomes a root trajectory named `unknown-session`, with one unrecognized `meta` event per journal line.\n\nIn the session that found it, the journal added a 167-event trajectory to an index of 85 real ones. Nothing marks it as anything other than a session. The journal is the workflow's own bookkeeping, not a conversation, so it should not reach the index.",
+  "notes": [],
+  "links": [
+    "TRC-056"
+  ]
+}

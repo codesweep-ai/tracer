@@ -1,0 +1,20 @@
+{
+  "id": "TRC-055",
+  "title": "A sub-agent's description is ignored, so sub-agents are titled with their first prompt",
+  "type": "improvement",
+  "severity": "med",
+  "status": "in-progress",
+  "foundBy": "session agent, while exporting a Claude Code 2.1.312 session that ran a workflow of 83 agents",
+  "opened": "2026-11-02",
+  "resolved": null,
+  "stint": "2026-11-02 workflow runs",
+  "evidence": {
+    "commits": [],
+    "integrated": [],
+    "verified": null
+  },
+  "resolution": null,
+  "details": "Each Claude Code sub-agent has a `.meta.json` sidecar carrying the `description` its parent gave it, such as `Write rule characterization tests`. Discovery reads the sidecar only for `toolUseId`, and `meta.label` stays unset, although the viewer would show it.\n\nThe lane is titled instead with the first 60 characters of the agent's prompt. For a workflow every agent shares the harness preamble, so all 83 agents in one run read `[Workflow harness — user request] The harness relays,…` and cannot be told apart in the index.",
+  "notes": [],
+  "links": []
+}
