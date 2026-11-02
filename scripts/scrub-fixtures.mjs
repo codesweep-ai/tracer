@@ -224,6 +224,10 @@ const STRUCTURAL_KEYS = new Set([
   // not exercise the sub-agent spawning its own README says it exercises.
   // Behaviour depends on this value, which is the test for belonging here.
   "tool", "subagent_type",
+  // A Claude Code workflow's run id names the folder its agents are stored in,
+  // and the Workflow call's result repeats it. Redacted, the two disagree and
+  // the agents lose the call that launched them.
+  "runId",
   "agent_thread_id", "parent_thread_id", "parentID", "thread_id", "event_id",
   "call_id", "callId", "conversationId", "conversation_id", "turnId", "turn_id",
   "mode", "permissionMode", "operation", "name", "timestamp", "ts", "cwd",
