@@ -3,17 +3,21 @@
   "title": "A sub-agent's description is ignored, so sub-agents are titled with their first prompt",
   "type": "improvement",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, while exporting a Claude Code 2.1.312 session that ran a workflow of 83 agents",
   "opened": "2026-11-02",
-  "resolved": null,
+  "resolved": "2026-11-02",
   "stint": "2026-11-02 workflow runs",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "1cc3a8b",
+      "26df952",
+      "5228524"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`go test ./internal/normalizer/ -count=1 -run TestNormalizeDirectoryLabelsSubAgentsFromTheirSidecar`: PASS, and it fails without the change with `label = <nil>`. The golden diff in 26df952 adds `meta.label` to the five sub-agents whose sidecar carries a description, and changes nothing else. The fixture suite's TF-01 and TF-27 moved with it and were re-frozen in 5228524. On the session that found it (Claude Code 2.1.312, one root, 1 sub-agent, a workflow of 83 agents), `cs-tracer normalize` at 19d47fc writes 85 trajectories with one root. All 84 children carry a label and a parentEventIndex, the 83 workflow agents point at event 76, which is the Workflow call, and parse.unrecognized sums to 0. The installed build before these changes wrote 86 trajectories, no labels, no workflow stamps and 1,315 unrecognized records. `make ci` with CS_TRACER_CHROMIUM=/usr/bin/google-chrome passes: parity PASS, fixture suite 27 ok and 9 met, and schema conformance passes over the committed and fresh output."
   },
-  "resolution": null,
+  "resolution": "A Claude Code sub-agent carries its sidecar's `description` as `meta.label` (R87), which the index already prefers over the first-prompt title. Each agent in a workflow now reads as its own step, such as `verify:schema.sql`.",
   "details": "Each Claude Code sub-agent has a `.meta.json` sidecar carrying the `description` its parent gave it, such as `Write rule characterization tests`. Discovery reads the sidecar only for `toolUseId`, and `meta.label` stays unset, although the viewer would show it.\n\nThe lane is titled instead with the first 60 characters of the agent's prompt. For a workflow every agent shares the harness preamble, so all 83 agents in one run read `[Workflow harness — user request] The harness relays,…` and cannot be told apart in the index.",
   "notes": [],
   "links": []

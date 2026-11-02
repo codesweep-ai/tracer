@@ -3,17 +3,19 @@
   "title": "Claude Code's API request records are reported as unrecognized",
   "type": "defect",
   "severity": "low",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, while exporting a Claude Code 2.1.312 session that ran a workflow of 83 agents",
   "opened": "2026-11-02",
-  "resolved": null,
+  "resolved": "2026-11-02",
   "stint": "2026-11-02 workflow runs",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "84b2dd0"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`go test ./internal/normalizer/ -count=1 -run TestClaudeAPIRequestRecordsAreIgnored`: PASS, and it fails without the change. No existing golden moved. The authored workflow-run fixture (19d47fc) reproduces it. The build before the change normalizes it to 4 trajectories, unknown-session among them, with no labels, no spawn stamps and unrecognized records throughout. On the session that found it (Claude Code 2.1.312, one root, 1 sub-agent, a workflow of 83 agents), `cs-tracer normalize` at 19d47fc writes 85 trajectories with one root. All 84 children carry a label and a parentEventIndex, the 83 workflow agents point at event 76, which is the Workflow call, and parse.unrecognized sums to 0. The installed build before these changes wrote 86 trajectories, no labels, no workflow stamps and 1,315 unrecognized records. `make ci` with CS_TRACER_CHROMIUM=/usr/bin/google-chrome passes: parity PASS, fixture suite 27 ok and 9 met, and schema conformance passes over the committed and fresh output."
   },
-  "resolution": null,
+  "resolution": "`api-request`, `api-request-blob`, `api-request-shape` and `tools-used` are on the Claude adapter's ignore list (R37). They are counted in `parse.skippedByType` rather than shown as events.",
   "details": "Claude Code 2.1.312 writes `api-request`, `api-request-blob` and `api-request-shape` records, and a `tools-used` record per turn. None carries a `uuid`, and the adapter classifies none of them. Each becomes a visible `meta` event and a `parse.warnings` entry (R38).\n\nIn the session that found it they were 1,148 of the 3,193 events across the 86 trajectories exported. Every lane carried an `unrecognized` badge, which hides a record type that is genuinely new. The records restate the requests the transcript already shows, so they belong in the ignore list (R37).",
   "notes": [],
   "links": []

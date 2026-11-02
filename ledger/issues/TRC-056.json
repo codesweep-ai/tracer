@@ -3,17 +3,21 @@
   "title": "A workflow's agents are not joined to the tool call that launched them",
   "type": "defect",
   "severity": "med",
-  "status": "in-progress",
+  "status": "closed",
   "foundBy": "session agent, while exporting a Claude Code 2.1.312 session that ran a workflow of 83 agents",
   "opened": "2026-11-02",
-  "resolved": null,
+  "resolved": "2026-11-02",
   "stint": "2026-11-02 workflow runs",
   "evidence": {
-    "commits": [],
+    "commits": [
+      "b3133ad",
+      "d6d00c3",
+      "19d47fc"
+    ],
     "integrated": [],
-    "verified": null
+    "verified": "`go test ./internal/normalizer/ -count=1 -run 'TestClaudeWorkflowCallKeepsItsRunID|TestNormalizeDirectoryJoinsWorkflowAgentsToTheirCall'`: both PASS, and both fail without the change. In the workflow-run golden both agents carry parentEventIndex 2, the Workflow call, whose tool carries runId wf_5c2e81d0-a3f. On the session that found it (Claude Code 2.1.312, one root, 1 sub-agent, a workflow of 83 agents), `cs-tracer normalize` at 19d47fc writes 85 trajectories with one root. All 84 children carry a label and a parentEventIndex, the 83 workflow agents point at event 76, which is the Workflow call, and parse.unrecognized sums to 0. The installed build before these changes wrote 86 trajectories, no labels, no workflow stamps and 1,315 unrecognized records. `make ci` with CS_TRACER_CHROMIUM=/usr/bin/google-chrome passes: parity PASS, fixture suite 27 ok and 9 met, and schema conformance passes over the committed and fresh output."
   },
-  "resolution": null,
+  "resolution": "The adapter keeps a Workflow call's `toolUseResult.runId` as `tool.runId`, and the join stamps each agent stored under `subagents/workflows/<runId>/` with that call's index (R88). The schema declares the field as optional. The fixture scrubber now keeps `runId`, since a redacted one would sever the join.",
   "details": "A direct sub-agent's sidecar names the tool call that spawned it, so its trajectory carries `parentEventIndex` and the index draws a connector from that call. A workflow agent's sidecar carries no `toolUseId`. The agents of a workflow therefore sit under their session with no spawn position.\n\nThe join is recoverable. The `Workflow` call's result carries `toolUseResult.runId`, such as `wf_11f49915-5fe`, and the agents live under `subagents/workflows/<runId>/`. Neither is read today.",
   "notes": [],
   "links": [
