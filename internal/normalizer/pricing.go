@@ -214,11 +214,16 @@ func estimateCost(doc *obj, pricing *obj) {
 			// under-bill by 60% while looking plausible — refuse instead.
 			return
 		}
-		writeCost = write5m*writeRate + write1h*rate1h
+		writeCost = float64(write5m*writeRate) + float64(write1h*rate1h)
 	} else {
-		writeCost = cacheWrite * writeRate
+		writeCost = float64(cacheWrite * writeRate)
 	}
-	micros := input*inRate + output*outRate + cacheRead*readRate + writeCost
+	// Each product is rounded on its own before the sum. Go may otherwise fuse
+	// a multiply into the add that follows it, which arm64 does and amd64 does
+	// not, and the same session then costs 0.2452108 on one machine and
+	// 0.24521079999999998 on the other; the goldens pin one figure. An
+	// explicit conversion is the one thing the language promises stops that.
+	micros := float64(input*inRate) + float64(output*outRate) + float64(cacheRead*readRate) + writeCost
 	// A recorded geo must name a declared multiplier, or we do not know the
 	// price. Applied to the summed micro-dollar figure so float noise stays at
 	// one place.
