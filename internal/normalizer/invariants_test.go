@@ -1,8 +1,10 @@
 package normalizer
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -197,4 +199,77 @@ func itoa(n int) string {
 		n /= 10
 	}
 	return string(b)
+}
+
+// Every fixture must normalize with almost nothing unrecognized: at most 2% of
+// its events, summed over the documents of its tree. A new CLI version writes
+// record types nobody has classified, and each one surfaces as a meta event
+// (R38), so the capture that introduces the version fails here until every
+// type is read, harvested or named in the ignore list (R37). Claude 2.1.312
+// and Codex 0.165 both landed in November 2026 with their new records drawn
+// as unrecognized, and the goldens recorded them, because no gate held the
+// count independently of the goldens. This one does.
+func TestFixturesLeaveAlmostNothingUnrecognized(t *testing.T) {
+	// Fixtures built to carry an unknown record, so that the warnings path
+	// has a golden. Nothing else belongs here.
+	designed := map[string]bool{
+		"claude/v2.1/malformed": true,
+	}
+	root := filepath.Join("..", "..", "fixtures")
+	seen := 0
+	for _, cli := range []string{"claude", "codex", "opencode"} {
+		versions, err := os.ReadDir(filepath.Join(root, cli))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, v := range versions {
+			if !v.IsDir() {
+				continue
+			}
+			cases, err := os.ReadDir(filepath.Join(root, cli, v.Name()))
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, c := range cases {
+				if !c.IsDir() {
+					continue
+				}
+				name := cli + "/" + v.Name() + "/" + c.Name()
+				seen++
+				t.Run(name, func(t *testing.T) {
+					if designed[name] {
+						t.Skip("built to carry an unknown record")
+					}
+					in := filepath.Join(root, cli, v.Name(), c.Name())
+					links := ""
+					if _, err := os.Stat(filepath.Join(in, "links.json")); err == nil {
+						links = filepath.Join(in, "links.json")
+					}
+					result, err := NormalizeDirectory(in, t.TempDir(), links)
+					if err != nil {
+						t.Fatal(err)
+					}
+					events, unrecognized := 0, 0
+					types := map[string]bool{}
+					for _, doc := range result.Documents {
+						events += int(num(get(object(get(doc, "totals")), "events")))
+						parse := object(get(doc, "parse"))
+						unrecognized += int(num(get(parse, "unrecognized")))
+						warnings, _ := get(parse, "warnings").([]any)
+						for _, w := range warnings {
+							if raw := str(get(object(w), "rawType")); raw != "" && raw != "unreadable" {
+								types[raw] = true
+							}
+						}
+					}
+					if unrecognized*50 > events {
+						t.Fatalf("%d of %d events are unrecognized records %v; classify each type in the adapter (SPEC.md R37)", unrecognized, events, slices.Sorted(maps.Keys(types)))
+					}
+				})
+			}
+		}
+	}
+	if seen < 20 {
+		t.Fatalf("walked %d fixtures, which is too few to be the corpus", seen)
+	}
 }

@@ -262,6 +262,9 @@ would order its keys by whichever types appeared first, and this output is compa
 says which kinds of record produced no event, and the second counts the ones nothing classified.
 Together they are what separates correctly ignored bookkeeping from silently lost data.*
 
+A test holds every fixture to at most 2% unrecognized records, measured against its events. A
+capture from a new CLI version fails it until each new record type is classified.
+
 **R56.** Input that is not JSON **MUST** be reported as damage, not as an unrecognized record type:
 counted in `parse.unreadable`, never in `parse.unrecognized`, and carrying `rawType: "unreadable"`.
 *The two call for opposite responses: restore the file, or teach the adapter. Rendered identically,

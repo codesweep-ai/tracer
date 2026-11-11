@@ -204,6 +204,11 @@ func NormalizeCodex(records []*obj) *obj {
 					}
 				}
 				events = append(events, trajectory.NewObject("kind", "system", "ts", ts, "text", b.String(), "label", "msg "+tpl(payload, "author")+" → "+tpl(payload, "recipient")))
+			case "additional_tools":
+				// A developer-role record listing the schemas of the tools the
+				// turn may call. Nothing happens in it, so it is tallied like
+				// the other records that repeat what the adapter already reads.
+				skipped.add("response_item:" + pt)
 			case "custom_tool_call_output", "function_call_output":
 				text := blockText(get(payload, "output"))
 				call := calls[str(get(payload, "call_id"))]
@@ -251,6 +256,16 @@ func NormalizeCodex(records []*obj) *obj {
 					}
 				}
 				events = append(events, turn)
+			case "turn_aborted":
+				// A turn that was cut off, by the person or the parent that
+				// spawned the thread, never reaches task_complete. It still
+				// ended the turn, and it ended in failure (R67), so the reason
+				// labels the cell as codex_error_info does above.
+				turn := trajectory.NewObject("kind", "turn_end", "ts", ts, "isError", true, "text", "turn aborted")
+				if reason := str(get(payload, "reason")); reason != "" {
+					turn.Set("label", reason)
+				}
+				events = append(events, turn)
 			case "user_message", "agent_message", "patch_apply_end", "thread_settings_applied":
 				// Notifications duplicating content that arrives via response
 				// items. Rendering them would double every turn.
@@ -290,6 +305,18 @@ func NormalizeCodex(records []*obj) *obj {
 					skipped.add(it)
 					continue
 				}
+				// A built-in tool's notice: an image the model viewed, or an
+				// extension such as web.search or clock.sleep. The call that ran
+				// it is drawn already, from the exec script or the function
+				// call that carries it, so the notice is tallied under its kind.
+				if it == "event_msg:item_completed:ImageView" {
+					skipped.add(it)
+					continue
+				}
+				if it == "event_msg:item_completed:Extension" {
+					skipped.add(it + ":" + fallback(str(get(item, "kind")), "missing"))
+					continue
+				}
 				if it == "event_msg:item_completed:Reasoning" || it == "event_msg:item_completed:AgentMessage" {
 					if at := iso(get(payload, "started_at_ms")); at != trajectory.Undefined {
 						id := str(get(item, "id"))
@@ -314,6 +341,14 @@ func NormalizeCodex(records []*obj) *obj {
 			// The context was summarized and replaced, which changes what the
 			// model sees from here on, so a reader needs to see where.
 			events = append(events, trajectory.NewObject("kind", "meta", "ts", ts, "rawType", typ, "text", "context compacted"))
+		case "token_usage_record":
+			// Codex 0.165 writes one of these per model response, beside the
+			// token_count notice whose last_token_usage already carries the
+			// same usage, cache writes included. Read as well it would count
+			// every response twice, so it is tallied. It is the richer source
+			// (response_id, turn and thread totals), and the one to read if
+			// token_count ever goes the way of sub_agent_activity (2026-11-07).
+			skipped.add(typ)
 		case "world_state", "inter_agent_communication_metadata":
 			skipped.add(typ)
 		default:

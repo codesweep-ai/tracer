@@ -149,8 +149,17 @@ func NormalizeClaude(records []*obj) *obj {
 				}
 			}
 			if blocks != nil && hasResult {
+				// A fork's first record answers the Fork call with a
+				// tool_result and carries the fork's task in a text block
+				// beside it. The text is the instruction the fork acts on,
+				// so it is a user event after the results are attached.
+				var texts []any
 				for _, x := range blocks {
 					b := object(x)
+					if str(get(b, "type")) == "text" {
+						texts = append(texts, b)
+						continue
+					}
 					if str(get(b, "type")) != "tool_result" {
 						unknown("user-content:"+fallback(str(get(b, "type")), "unknown"), ts, lane)
 						continue
@@ -180,6 +189,9 @@ func NormalizeClaude(records []*obj) *obj {
 							tool.Set("runId", run)
 						}
 					}
+				}
+				if texts != nil {
+					events = append(events, trajectory.NewObject("kind", "user", "ts", ts, "lane", lane, "text", blockTextClaude(texts)))
 				}
 			} else if truthy(get(r, "isMeta")) && localCommands[str(get(r, "parentUuid"))] {
 				// The echo of a local command, written by Claude Code rather than

@@ -49,7 +49,7 @@ The adapters read what each CLI actually writes:
 
 | Case | Exercises |
 |---|---|
-| `multi-agent-run` | A root that spawns four children through `spawn_agent` at effort ultra, plus a second root. The parent names a child only in an `item_completed` notice whose item is a `SubAgentActivity`, keyed by the spawning call's id; 0.146's `sub_agent_activity` is gone. The spawn's own output names the task alone. |
+| `multi-agent-run` | A root that spawns four children through `spawn_agent` at effort ultra, plus a second root. The parent names a child only in an `item_completed` notice whose item is a `SubAgentActivity`, keyed by the spawning call's id; 0.146's `sub_agent_activity` is gone. The spawn's own output names the task alone. Each rollout carries a `token_usage_record` beside every `token_count`, one developer-role `additional_tools` listing the tool schemas, and each child a `turn_aborted` for the turn that was cut off. |
 
 ### `opencode/v1.18/`
 

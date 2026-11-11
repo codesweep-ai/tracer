@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/codesweep-ai/tracer/internal/trajectory"
@@ -63,5 +64,43 @@ func TestClaudeUsageDeduplicatesMessageID(t *testing.T) {
 	events := get(doc, "events").([]*obj)
 	if get(events[0], "tokens") == nil || get(events[1], "tokens") != nil {
 		t.Fatal("duplicate message usage was not attached exactly once")
+	}
+}
+
+// A fork's first record answers the Fork call with a tool_result and carries
+// the fork's task as a text block beside it. The adapter read arrays of
+// results and arrays of text, and drew the mixed form as an unrecognized
+// `user-content:text`, losing the one instruction the fork acts on.
+func TestClaudeToolResultBesideTextIsTheForkInstruction(t *testing.T) {
+	doc := NormalizeClaude([]*obj{
+		trajectory.NewObject("uuid", "a1", "sessionId", "s", "type", "assistant", "timestamp", "2026-11-05T10:00:00.000Z",
+			"message", trajectory.NewObject("role", "assistant", "content", []any{
+				trajectory.NewObject("type", "tool_use", "id", "toolu_1", "name", "Fork", "input", trajectory.NewObject("directive", "run the suite")),
+			})),
+		trajectory.NewObject("uuid", "u1", "sessionId", "s", "type", "user", "isSidechain", true, "agentId", "ab79", "timestamp", "2026-11-05T10:00:01.000Z",
+			"message", trajectory.NewObject("role", "user", "content", []any{
+				trajectory.NewObject("type", "tool_result", "tool_use_id", "toolu_1", "content", []any{trajectory.NewObject("type", "text", "text", "Fork started")}),
+				trajectory.NewObject("type", "text", "text", "<fork-boilerplate>\nYou are a worker fork. Execute ONE directive, then stop."),
+			})),
+	})
+	events := get(doc, "events").([]*obj)
+	if len(events) != 2 {
+		t.Fatalf("events = %d, want the call and the instruction", len(events))
+	}
+	if got := str(get(object(get(events[0], "result")), "text")); got != "Fork started" {
+		t.Fatalf("the result did not reach its call: %q", got)
+	}
+	instruction := events[1]
+	if got := str(get(instruction, "kind")); got != "user" {
+		t.Fatalf("kind = %q, want user", got)
+	}
+	if got := str(get(instruction, "text")); !strings.HasPrefix(got, "<fork-boilerplate>") {
+		t.Fatalf("text = %q, want the fork's task", got)
+	}
+	if got := str(get(instruction, "lane")); got != "sidechain" {
+		t.Fatalf("lane = %q, want sidechain", got)
+	}
+	if n := num(get(object(get(doc, "parse")), "unrecognized")); n != 0 {
+		t.Fatalf("unrecognized = %v", n)
 	}
 }
