@@ -45,6 +45,12 @@ The adapters read what each CLI actually writes:
 | `tool-heavy` | A stepwise build-and-test rollout. |
 | `subagent-depth2` | A depth-2 chain carrying explicit `thread_spawn.parent_thread_id` and `depth`, so it normalizes with no special-casing. |
 
+### `codex/v0.165/`
+
+| Case | Exercises |
+|---|---|
+| `multi-agent-run` | A root that spawns four children through `spawn_agent` at effort ultra, plus a second root. The parent names a child only in an `item_completed` notice whose item is a `SubAgentActivity`, keyed by the spawning call's id; 0.146's `sub_agent_activity` is gone. The spawn's own output names the task alone. |
+
 ### `opencode/v1.18/`
 
 | Case | Exercises |

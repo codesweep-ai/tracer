@@ -261,6 +261,35 @@ func NormalizeCodex(records []*obj) *obj {
 				// (R37). ContextCompaction repeats the `compacted` record.
 				item := object(get(payload, "item"))
 				it := "event_msg:item_completed:" + fallback(str(get(item, "type")), "missing")
+				// Codex 0.165 reports a sub-agent's start and end as this item,
+				// where 0.146 wrote `sub_agent_activity`. The item's id is the
+				// spawning call's, and it is the one record in the parent that
+				// names the child thread, so the join is made here.
+				if it == "event_msg:item_completed:SubAgentActivity" {
+					call := calls[str(get(item, "id"))]
+					if call != nil && truthy(get(call, "subtask")) {
+						call.Set("childSessionId", keepOrUndef(item, "agent_thread_id"))
+						if tool := object(get(call, "tool")); tool != nil {
+							tool.Set("command", "spawn "+tpl(item, "agent_path"))
+						}
+					}
+					events = append(events, trajectory.NewObject("kind", "meta", "ts", ts, "text", "sub-agent "+tpl(item, "agent_path")+" "+tpl(item, "kind")+" (thread "+tpl(item, "agent_thread_id")+")"))
+					continue
+				}
+				// A collaboration tool's notice repeats a call the adapter has
+				// already read, so it is tallied. In multi-agent v1 the spawn
+				// is one of these, and its receivers are the threads it
+				// started: the one place that run names the child.
+				if it == "event_msg:item_completed:CollabAgentToolCall" {
+					call := calls[str(get(item, "id"))]
+					if call != nil && truthy(get(call, "subtask")) && !present(get(call, "childSessionId")) {
+						if receivers := array(get(item, "receiver_thread_ids")); len(receivers) > 0 {
+							call.Set("childSessionId", jsString(receivers[0]))
+						}
+					}
+					skipped.add(it)
+					continue
+				}
 				if it == "event_msg:item_completed:Reasoning" || it == "event_msg:item_completed:AgentMessage" {
 					if at := iso(get(payload, "started_at_ms")); at != trajectory.Undefined {
 						id := str(get(item, "id"))

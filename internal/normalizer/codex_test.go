@@ -158,3 +158,67 @@ func TestNormalizeCodexToolCallNamesWhoApprovesIt(t *testing.T) {
 		t.Fatalf("approvals %v, want %s", got, want)
 	}
 }
+
+// Codex 0.165 names a spawned child only in an `item_completed` notice whose
+// item is a `SubAgentActivity`, keyed by the spawning call's id. The spawn
+// call must learn its child from it, as it learned it from 0.146's
+// `sub_agent_activity`, or no Codex child can point back at its spawn.
+func TestNormalizeCodexSubAgentActivityItemJoinsTheSpawn(t *testing.T) {
+	doc, err := NormalizeBytes([]byte(
+		"{\"type\":\"session_meta\",\"payload\":{\"id\":\"t1\"}}\n" +
+			"{\"timestamp\":\"2026-11-07T05:50:08.000Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"function_call\",\"name\":\"spawn_agent\",\"call_id\":\"call_1\",\"arguments\":\"{\\\"task_name\\\":\\\"state_checks\\\"}\"}}\n" +
+			"{\"timestamp\":\"2026-11-07T05:50:08.571Z\",\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"SubAgentActivity\",\"id\":\"call_1\",\"kind\":\"started\",\"agent_thread_id\":\"t2\",\"agent_path\":\"/root/state_checks\"}}}\n" +
+			"{\"timestamp\":\"2026-11-07T05:50:09.000Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"function_call_output\",\"call_id\":\"call_1\",\"output\":\"{\\\"task_name\\\":\\\"/root/state_checks\\\"}\"}}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	events := get(doc, "events").([]*obj)
+	if len(events) != 2 {
+		t.Fatalf("events = %d, want the spawn and the activity notice", len(events))
+	}
+	spawn := events[0]
+	if !truthy(get(spawn, "subtask")) || str(get(spawn, "childSessionId")) != "t2" {
+		t.Fatalf("the spawn does not name its child: %v", spawn)
+	}
+	if cmd := str(get(object(get(spawn, "tool")), "command")); cmd != "spawn /root/state_checks" {
+		t.Fatalf("spawn command %q", cmd)
+	}
+	if text := str(get(events[1], "text")); text != "sub-agent /root/state_checks started (thread t2)" {
+		t.Fatalf("activity notice %q", text)
+	}
+	if n := num(get(object(get(doc, "parse")), "unrecognized")); n != 0 {
+		t.Fatalf("unrecognized = %v", n)
+	}
+}
+
+// In multi-agent v1 the spawn's notice is a `CollabAgentToolCall` item whose
+// receivers are the threads it started. Written from the 0.165 source: no v1
+// capture backs it, so the shape here is the struct every collaboration tool
+// shares, as the `wait` notices of a v2 capture show it.
+func TestNormalizeCodexCollabSpawnNoticeNamesTheChild(t *testing.T) {
+	doc, err := NormalizeBytes([]byte(
+		"{\"type\":\"session_meta\",\"payload\":{\"id\":\"t1\"}}\n" +
+			"{\"timestamp\":\"2026-11-07T05:50:08.000Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"function_call\",\"name\":\"spawn_agent\",\"call_id\":\"call_1\",\"arguments\":\"{\\\"task_name\\\":\\\"state_checks\\\"}\"}}\n" +
+			"{\"timestamp\":\"2026-11-07T05:50:08.571Z\",\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"CollabAgentToolCall\",\"id\":\"call_1\",\"tool\":\"spawn_agent\",\"status\":\"completed\",\"sender_thread_id\":\"t1\",\"receiver_thread_ids\":[\"t2\"],\"receiver_agents\":[],\"agents_states\":{}}}}\n" +
+			"{\"timestamp\":\"2026-11-07T05:50:09.000Z\",\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"CollabAgentToolCall\",\"id\":\"call_9\",\"tool\":\"wait\",\"status\":\"completed\",\"sender_thread_id\":\"t1\",\"receiver_thread_ids\":[],\"receiver_agents\":[],\"agents_states\":{}}}}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	events := get(doc, "events").([]*obj)
+	if len(events) != 1 {
+		t.Fatalf("events = %d, want the spawn alone: a collaboration notice repeats a call", len(events))
+	}
+	if str(get(events[0], "childSessionId")) != "t2" {
+		t.Fatalf("the spawn does not name its child: %v", events[0])
+	}
+	parse := object(get(doc, "parse"))
+	if n := num(get(parse, "unrecognized")); n != 0 {
+		t.Fatalf("unrecognized = %v", n)
+	}
+	for _, s := range get(parse, "skippedByType").([]any) {
+		if str(get(object(s), "type")) == "event_msg:item_completed:CollabAgentToolCall" && num(get(object(s), "count")) == 2 {
+			return
+		}
+	}
+	t.Fatal("the two notices are not tallied under their item type")
+}
