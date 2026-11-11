@@ -32,8 +32,146 @@ func markStepStart(e *obj, start, end any) {
 	}
 }
 
+// An OpenCode session reaches the adapter in one of two shapes.
+//
+// The CLI's own `session export`, as OpenCode 1.18 writes it, is `{info,
+// messages: [{info, parts}]}`. On OpenCode 2 that export carries each
+// message's text alone, so it is not read.
+//
+// A store file is the CLI's SQLite rows as they are, written by cs-campaign's
+// archive: `{store: {generation, version}, session, messages: [{...row, data,
+// parts: [{...row, data}]}]}`. Generation 1 keeps a message's parts as rows
+// of its own, generation 2 keeps them inside the message's `data.content`.
+//
+// openCodeSession reads either into the one form the part loop takes: the
+// session's info, and its messages as `{info, parts}` in the 1.18 export's
+// terms. A store message that yields no part is counted under its type.
+func openCodeSession(doc *obj, skipped skipTally) (*obj, []*obj, string) {
+	store := object(get(doc, "store"))
+	if store == nil {
+		var messages []*obj
+		for _, mv := range array(get(doc, "messages")) {
+			messages = append(messages, object(mv))
+		}
+		return object(get(doc, "info")), messages, "1.18.x"
+	}
+	session := object(get(doc, "session"))
+	info := trajectory.NewObject("id", get(session, "id"))
+	if truthy(get(session, "parent_id")) {
+		info.Set("parentID", get(session, "parent_id"))
+	}
+	for _, k := range []string{"title", "directory", "version", "cost"} {
+		if v := get(session, k); v != nil {
+			info.Set(k, v)
+		}
+	}
+	// Generation 1 stores the session's model as a JSON string.
+	if m := str(get(session, "model")); m != "" {
+		if v, err := trajectory.Decode([]byte(m)); err == nil {
+			info.Set("model", v)
+		}
+	}
+	generation := num(get(store, "generation"))
+	var messages []*obj
+	for _, mv := range array(get(doc, "messages")) {
+		row := object(mv)
+		data := object(get(row, "data"))
+		if generation < 2 {
+			mi := trajectory.NewObject()
+			for _, m := range data.Members() {
+				mi.Set(m.Key, m.Value)
+			}
+			mi.Set("id", get(row, "id"))
+			mi.Set("sessionID", get(row, "session_id"))
+			var parts []any
+			for _, pv := range array(get(row, "parts")) {
+				parts = append(parts, get(object(pv), "data"))
+			}
+			messages = append(messages, trajectory.NewObject("info", mi, "parts", parts))
+			continue
+		}
+		if m := storeMessage(row, data, skipped); m != nil {
+			messages = append(messages, m)
+		}
+	}
+	if generation < 2 {
+		return info, messages, "1.18.x"
+	}
+	return info, messages, "2.2.x"
+}
+
+// storeMessage reads one generation-2 store row as `{info, parts}`.
+//
+// The row's type is its role. A user or synthetic message is one text part.
+// An assistant message's `content` holds its parts: `reasoning` and `text`
+// as they are, and `tool` with the call's state. Its `finish` is the reason
+// OpenCode 1 wrote on a `step-finish` part, with the message's tokens and
+// cost beside it, so the row reads as that part too (R69). An `idle` row
+// marks the session waiting and yields no part.
+func storeMessage(row, data *obj, skipped skipTally) *obj {
+	typ := str(get(row, "type"))
+	mi := trajectory.NewObject("role", typ, "id", get(row, "id"), "sessionID", get(row, "session_id"), "time", get(data, "time"))
+	mt := object(get(data, "time"))
+	switch typ {
+	case "user", "synthetic":
+		return trajectory.NewObject("info", mi, "parts", []any{trajectory.NewObject("type", "text", "text", nullishOr(get(data, "text"), ""))})
+	case "idle":
+		skipped.add("message:idle")
+		return nil
+	case "assistant":
+	default:
+		return trajectory.NewObject("info", mi, "parts", []any{trajectory.NewObject("type", "message:"+fallback(typ, "missing"))})
+	}
+	model := object(get(data, "model"))
+	mi.Set("agent", get(data, "agent"))
+	mi.Set("modelID", keepOrUndef(model, "id"))
+	mi.Set("providerID", keepOrUndef(model, "providerID"))
+	mi.Set("cost", get(data, "cost"))
+	mi.Set("tokens", get(data, "tokens"))
+	var parts []any
+	for _, pv := range array(get(data, "content")) {
+		p := object(pv)
+		tm := object(get(p, "time"))
+		switch str(get(p, "type")) {
+		case "reasoning":
+			parts = append(parts, trajectory.NewObject("type", "reasoning", "text", get(p, "text"),
+				"time", trajectory.NewObject("start", get(tm, "created"), "end", get(tm, "completed"))))
+		case "text":
+			// The part carries no time of its own. It is the last thing the
+			// message streamed, so it ends when the message completed, and
+			// the model began it when the message was created (R70).
+			parts = append(parts, trajectory.NewObject("type", "text", "text", get(p, "text"),
+				"time", trajectory.NewObject("start", get(mt, "created"), "end", get(mt, "completed"))))
+		case "tool":
+			state := object(get(p, "state"))
+			st := trajectory.NewObject("status", get(state, "status"), "input", get(state, "input"))
+			var output []string
+			for _, cv := range array(get(state, "content")) {
+				if t := str(get(object(cv), "text")); t != "" {
+					output = append(output, t)
+				}
+			}
+			st.Set("output", strings.Join(output, "\n"))
+			for _, k := range []string{"error", "title", "metadata"} {
+				if v := get(state, k); v != nil {
+					st.Set(k, v)
+				}
+			}
+			st.Set("time", trajectory.NewObject("start", firstNonNull(get(tm, "ran"), get(tm, "created")), "end", get(tm, "completed")))
+			parts = append(parts, trajectory.NewObject("type", "tool", "tool", get(p, "name"), "callID", get(p, "id"), "state", st))
+		default:
+			parts = append(parts, p)
+		}
+	}
+	if truthy(get(data, "finish")) {
+		parts = append(parts, trajectory.NewObject("type", "step-finish", "reason", get(data, "finish"), "tokens", get(data, "tokens"), "cost", get(data, "cost")))
+	}
+	return trajectory.NewObject("info", mi, "parts", parts)
+}
+
 func NormalizeOpenCode(doc *obj) *obj {
-	info := object(get(doc, "info"))
+	skipped := skipTally{}
+	info, messages, cliVersions := openCodeSession(doc, skipped)
 	meta := trajectory.NewObject("source", "opencode", "sessionId", nullishOr(get(info, "id"), "unknown-session"))
 	if truthy(get(info, "title")) {
 		meta.Set("title", get(info, "title"))
@@ -50,7 +188,6 @@ func NormalizeOpenCode(doc *obj) *obj {
 	var events []*obj
 	counts := map[string]int{}
 	var order []string
-	skipped := skipTally{}
 	providers := map[string]bool{}
 	unknown := func(k string, ts any) {
 		if counts[k] == 0 {
@@ -79,8 +216,7 @@ func NormalizeOpenCode(doc *obj) *obj {
 			}
 		}
 	}
-	for _, mv := range array(get(doc, "messages")) {
-		message := object(mv)
+	for _, message := range messages {
 		mi := object(get(message, "info"))
 		role := str(get(mi, "role"))
 		step := false
@@ -132,7 +268,8 @@ func NormalizeOpenCode(doc *obj) *obj {
 					tool.Set("command", get(state, "title"))
 				}
 				e := trajectory.NewObject("kind", "tool_call", "ts", firstISO(get(st, "start"), ts), "tool", tool)
-				if str(get(p, "tool")) == "task" {
+				switch str(get(p, "tool")) {
+				case "task":
 					e.Set("subtask", true)
 					md := object(get(state, "metadata"))
 					if truthy(get(md, "sessionId")) {
@@ -140,6 +277,16 @@ func NormalizeOpenCode(doc *obj) *obj {
 					}
 					in := object(get(state, "input"))
 					tool.Set("command", fmt.Sprintf("task(%s): %s", jsStringOr(get(in, "subagent_type"), "agent"), jsStringOr(get(in, "description"), "")))
+				case "subagent":
+					// OpenCode 2 spawns through `subagent`, whose input names
+					// the agent and whose metadata names the child session.
+					e.Set("subtask", true)
+					md := object(get(state, "metadata"))
+					if truthy(get(md, "sessionID")) {
+						e.Set("childSessionId", get(md, "sessionID"))
+					}
+					in := object(get(state, "input"))
+					tool.Set("command", fmt.Sprintf("subagent(%s): %s", jsStringOr(get(in, "agent"), "agent"), jsStringOr(get(in, "description"), "")))
 				}
 				status := str(get(state, "status"))
 				if status == "completed" || status == "error" {
@@ -202,7 +349,7 @@ func NormalizeOpenCode(doc *obj) *obj {
 	// the CLI's SQL store, so there are no per-line records to lose. A damaged
 	// extract fails whole, and is reported at detection (R58) — the fix there
 	// is to run the extraction again, not to salvage part of a file.
-	parse := warningReport("opencode", "1.0.0", "1.18.x", skipped, counts, order, 0)
+	parse := warningReport("opencode", "1.0.0", cliVersions, skipped, counts, order, 0)
 	if len(providers) > 1 {
 		var p []string
 		for x := range providers {

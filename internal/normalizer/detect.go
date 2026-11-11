@@ -80,12 +80,21 @@ func DetectFormat(input []byte) (Source, error) {
 	return SourceClaudeCode, nil
 }
 
+// isOpenCode accepts the CLI's own export, `info` beside `messages`, and a
+// store file, whose `session` row and `messages` rows sit beside `store`.
 func isOpenCode(value any) bool {
 	doc, ok := value.(map[string]any)
 	if !ok {
 		return false
 	}
-	_, hasInfo := doc["info"]
 	_, messages := doc["messages"].([]any)
-	return hasInfo && messages
+	if !messages {
+		return false
+	}
+	if _, hasInfo := doc["info"]; hasInfo {
+		return true
+	}
+	_, hasStore := doc["store"].(map[string]any)
+	_, hasSession := doc["session"].(map[string]any)
+	return hasStore && hasSession
 }

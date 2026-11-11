@@ -236,6 +236,11 @@ Where each CLI keeps its sessions:
 | Codex | `~/.codex/sessions/` |
 | OpenCode | its own session store |
 
+An OpenCode session is read from one JSON file. It is either the CLI's own `session export`, as
+OpenCode 1 writes it, or a store file holding the session's rows out of that store.
+`cs-campaign archive` writes the store file for either generation. OpenCode 2's export carries
+each message's text alone and is not a session file.
+
 Inside the input directory, `node_modules`, `dist`, `.trace-cache` and `chunks` are skipped, as are
 `index.json` and `summary.json`. Pointing the tool at a tree it already normalized therefore
 re-exports that tree rather than normalizing it twice.

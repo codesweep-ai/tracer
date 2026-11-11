@@ -25,6 +25,7 @@ func TestSkippedByTypeAccountsForEveryRecord(t *testing.T) {
 		"claude/v2.1/simple",
 		"codex/v0.146/tool-heavy",
 		"opencode/v1.18/tool-heavy",
+		"opencode/v2.2/multi-agent-run",
 	} {
 		t.Run(fixture, func(t *testing.T) {
 			dir := filepath.Join("..", "..", "fixtures", fixture)
@@ -45,7 +46,7 @@ func TestSkippedByTypeAccountsForEveryRecord(t *testing.T) {
 				break
 			}
 			if doc == nil {
-				// Not a skip. These four fixtures are known-normalizable, so
+				// Not a skip. These fixtures are known-normalizable, so
 				// "nothing normalized" means the adapter broke — precisely when
 				// this test must speak up rather than go quiet.
 				t.Fatal("no file in this fixture normalized")

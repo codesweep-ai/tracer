@@ -15,6 +15,8 @@ func TestDetectFormat(t *testing.T) {
 		{"empty", " \n", "", ErrEmptyInput},
 		{"unrecognized", "not json", "", ErrNoKnownRecords},
 		{"opencode", `{"info":{},"messages":[]}`, SourceOpenCode, nil},
+		{"opencode store", `{"store":{"generation":2},"session":{},"messages":[]}`, SourceOpenCode, nil},
+		{"opencode store without its session", `{"store":{"generation":2},"messages":[]}`, SourceClaudeCode, nil},
 		{"codex", `{"type":"session_meta","payload":{}}`, SourceCodex, nil},
 		{"claude", `{"type":"user","uuid":"1"}`, SourceClaudeCode, nil},
 		{"malformed line ignored", "bad\n{\"type\":\"user\",\"uuid\":\"1\"}", SourceClaudeCode, nil},

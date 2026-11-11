@@ -15,7 +15,7 @@ The adapters read what each CLI actually writes:
 |---|---|
 | Claude Code | `<uuid>.jsonl`, sub-agents at `<uuid>/subagents/agent-<id>.jsonl` + `.meta.json` |
 | Codex | `rollout-<timestamp>-<uuid>.jsonl`, one file per thread |
-| OpenCode | one whole-file JSON export per session: `info` + `messages` |
+| OpenCode | one whole-file JSON document per session: the CLI's own export, `info` + `messages`, or a store file, `store` + `session` + `messages`, which is the session's rows out of the CLI's SQLite store as cs-campaign's archive writes them |
 
 ## What each case exercises
 
@@ -52,9 +52,16 @@ The adapters read what each CLI actually writes:
 | `multi-agent-run` | Parent/child linking through `info.parentID`, with `task` tool parts doing the spawning. Per-step tokens and cost come from `step-finish` parts and must not be double-counted against message rollups. OpenCode reports real `cost`, so it is authoritative rather than estimated. |
 | `simple` | A single-session export. |
 | `tool-heavy` | A stepwise build-and-test export. |
+| `store` | A generation-1 store file: the session's `message` and `part` rows, with the session's model as a JSON string. It must read exactly as the CLI's export of the same session. |
 
 Depth beyond 1 is not reachable in OpenCode's default configuration: spawned
 sub-agents get no `task` tool.
+
+### `opencode/v2.2/`
+
+| Case | Exercises |
+|---|---|
+| `multi-agent-run` | A generation-2 store file, the only shape OpenCode 2 leaves readable: its export carries text alone. Two root sessions, one with six `explore` children spawned through the `subagent` tool and linked by the child's `parent_id` and the call's `metadata.sessionID`. A message's parts sit in its `data.content`, and its `finish`, tokens and cost stand in for the `step-finish` part OpenCode 1 wrote. Carries `synthetic` rows, the instructions the CLI loaded, and `idle` rows, which yield no event and are counted. |
 
 ### `synthetic/`
 

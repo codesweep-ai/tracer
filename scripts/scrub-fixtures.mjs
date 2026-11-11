@@ -228,6 +228,10 @@ const STRUCTURAL_KEYS = new Set([
   // and the Workflow call's result repeats it. Redacted, the two disagree and
   // the agents lose the call that launched them.
   "runId",
+  // An OpenCode store file keeps the rows' own column names: `parent_id` and
+  // `message_id` are the edges, `providerID` prices the session, `agent`
+  // names the spawned role, and `finish` is the step's reason.
+  "parent_id", "message_id", "providerID", "agent", "finish", "rawFinish", "sessionID",
   "agent_thread_id", "parent_thread_id", "parentID", "thread_id", "event_id",
   "call_id", "callId", "conversationId", "conversation_id", "turnId", "turn_id",
   "mode", "permissionMode", "operation", "name", "timestamp", "ts", "cwd",

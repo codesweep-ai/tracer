@@ -31,6 +31,7 @@ func TestOracleTrees(t *testing.T) {
 		{"claude", "v2.1"},
 		{"codex", "v0.146"},
 		{"opencode", "v1.18"},
+		{"opencode", "v2.2"},
 	}
 	fixtureCount := 0
 	for _, s := range sources {
@@ -134,6 +135,7 @@ func TestNormalizeDirectoryStampsParentEventIndex(t *testing.T) {
 		{"codex/v0.146/multi-agent-run", 2, 2},
 		{"codex/v0.146/subagent-depth2", 2, 2},
 		{"opencode/v1.18/multi-agent-run", 2, 2},
+		{"opencode/v2.2/multi-agent-run", 6, 6},
 	} {
 		t.Run(tc.fixture, func(t *testing.T) {
 			result, err := NormalizeDirectory(filepath.Join("..", "..", "fixtures", tc.fixture), t.TempDir(), "")
