@@ -13,7 +13,7 @@
       "c06f5a4"
     ],
     "integrated": [],
-    "verified": "GitHub CI run 'ci' on commit 77856f7, 2026-11-11: build-test (macos-latest) and build-test (ubuntu-latest) both passed `make check`, where the macOS job on ee8bcdb had failed TestOracleTrees and TestNormalizeTreeMatchesOracle on the Codex 0.165 fixture. On amd64 `go test ./... -count=1` passes before and after the change, and no golden moved."
+    "verified": "GitHub CI run 'ci' on commit 77856f7, 2026-11-11: build-test (macos-latest) and build-test (ubuntu-latest) both passed `make check`. The macOS job on ee8bcdb had failed TestOracleTrees and TestNormalizeTreeMatchesOracle on the Codex 0.165 fixture. On amd64 `go test ./... -count=1` passes before and after the change, and no golden moved."
   },
   "resolution": null,
   "details": "The estimate sums four products, one per token class, and Go may fuse a multiply into the add that follows it. The arm64 runner does and the amd64 runner does not, so the root of the Codex 0.165 fixture costs 0.2452108 on macOS and 0.24521079999999998 on Linux. The golden pins the Linux figure, and the macOS job fails on it while every other job passes. The other fixtures happen to sum the same way on both. The fix rounds each product on its own with an explicit conversion, which the language promises stops the fusion.",
