@@ -1,0 +1,38 @@
+{
+  "id": "TRC-060",
+  "title": "Codex 0.165 writes three record types the adapter does not know",
+  "type": "defect",
+  "severity": "low",
+  "status": "closed",
+  "foundBy": "session agent, reading the goldens of the new fixture codex/v0.165/multi-agent-run on 2026-11-07",
+  "opened": "2026-11-07",
+  "resolved": "2026-11-07",
+  "stint": "cc/opencode-store, 2026-11-07",
+  "evidence": {
+    "commits": [
+      "8eee961",
+      "0b15909"
+    ],
+    "integrated": [],
+    "verified": "go test ./internal/normalizer -count=1 -run 'TestNormalizeCodexTokenUsageRecordIsTalliedNotCounted|TestNormalizeCodexAdditionalToolsIsTalliedNotRendered|TestNormalizeCodexAbortedTurnIsAnError|TestFixturesLeaveAlmostNothingUnrecognized|TestOracleTrees': all PASS. The regenerated golden of codex/v0.165/multi-agent-run reports parse.unrecognized 0 in all six rollouts, where the root reported 20 and the children 7 to 14. Nothing outside that golden moved."
+  },
+  "resolution": "`token_usage_record` and `additional_tools` are tallied under their own types, since each repeats what the adapter already reads from `token_count` and the tool calls. `turn_aborted` becomes a turn end marked as an error, with the reason as its label. A new test fails the suite when any fixture leaves more than 2% of its events unrecognized.",
+  "details": "A Codex 0.165 rollout carries `token_usage_record` records, one `response_item` of type `additional_tools`, and `item_completed` notices whose item is a `CollabAgentToolCall`. The adapter renders each as an unrecognized meta event, 25 in the root of `fixtures/codex/v0.165/multi-agent-run` when filed. Each needs a reading or a named skip. `token_usage_record` may carry the per-turn usage that `token_count` carries today.",
+  "notes": [
+    {
+      "date": "2026-11-07",
+      "text": "The `CollabAgentToolCall` notices are tallied under their type since e2be335. `token_usage_record` and `additional_tools` remain."
+    },
+    {
+      "date": "2026-11-07",
+      "text": "`token_usage_record` is the richer source: it carries the response id and the turn and thread totals. The adapter keeps reading `token_count` so that no golden outside 0.165 moves."
+    },
+    {
+      "date": "2026-11-07",
+      "text": "A survey of the archives on the box found two more Codex notices drawn as unrecognized: `item_completed` items of type `ImageView` (0.148 onward) and `Extension` (kinds `web.search` and `clock.sleep`). Each follows the exec script or `sleep` call that ran it, which the adapter draws, so both are tallied since 8eee961 and 8eee961, the extension under its kind. The same survey found `token_usage_record` at 32% of the events of two Codex 0.157.1 archives, and the skip holds there too."
+    }
+  ],
+  "links": [
+    "TRC-059"
+  ]
+}

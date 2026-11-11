@@ -1,0 +1,27 @@
+{
+  "id": "TRC-059",
+  "title": "A Codex 0.165 child cannot point back at the call that spawned it",
+  "type": "defect",
+  "severity": "med",
+  "status": "closed",
+  "foundBy": "user report (host), reading a cs-campaign viewer site on 2026-11-07: \"Opencode shows where they were forked from... but Claude and Codex dont\"",
+  "opened": "2026-11-07",
+  "resolved": "2026-11-07",
+  "stint": "cc/opencode-store, 2026-11-07",
+  "evidence": {
+    "commits": [
+      "e2be335"
+    ],
+    "integrated": [],
+    "verified": "`make ci` passed with exit 0 at 0b15909. `go test ./internal/normalizer/ -run TestNormalizeCodexSubAgentActivityItemJoinsTheSpawn -count=1`: PASS. The test feeds a `spawn_agent` call and the `SubAgentActivity` item that names its child, and the spawn event carries `childSessionId` t2 and the command `spawn /root/state_checks`. Without the change the spawn carries no child and the item is an unrecognized meta event. The tracer reads the fixture `codex/v0.165/multi-agent-run`, an archived Codex 0.165 member, into 6 trajectories. Its four children each carry a parentEventIndex at the parent's spawn call, at events 18, 21, 24 and 27, and the directory test checks those four stamps. TestNormalizeCodexCollabSpawnNoticeNamesTheChild: PASS, the v1 shape written from the source, with no v1 capture behind it."
+  },
+  "resolution": null,
+  "details": "The codex adapter learns which child a `spawn_agent` call started from the `sub_agent_activity` event Codex 0.146 writes, keyed by the call's id. Codex 0.165 writes no such event. It reports the start and end of a sub-agent as an `item_completed` event whose item is a `SubAgentActivity`. That item carries the spawning call's id as its own id, the child's `agent_thread_id` and its `agent_path`. The spawn call's own output names the task alone. So no spawn event carries a `childSessionId`, and the tree stamps no `parentEventIndex` on the child. The viewer's index draws the child under its parent with no way back to the call. The child still names its parent from its own `session_meta`.",
+  "notes": [
+    {
+      "date": "2026-11-07",
+      "text": "Multi-agent v1 on 0.165 writes neither record. Its spawn's notice is a `CollabAgentToolCall` item whose `receiver_thread_ids` are the threads it started, read from the 0.165 source, so the adapter now takes the child from there too. No v1 capture exists yet to confirm the shape; the `wait` notices of this run's v2 capture show the struct."
+    }
+  ],
+  "links": []
+}

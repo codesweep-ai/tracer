@@ -1,0 +1,27 @@
+{
+  "id": "TRC-058",
+  "title": "An OpenCode 2 session normalizes to zero events, so the viewer draws none of them",
+  "type": "defect",
+  "severity": "med",
+  "status": "closed",
+  "foundBy": "session agent, rendering a cs-campaign archive of an OpenCode 2.2.5 member on 2026-11-07: every session file was skipped as `normalized to zero events (adapter: opencode)`",
+  "opened": "2026-11-07",
+  "resolved": "2026-11-07",
+  "stint": "cc/opencode-store, 2026-11-07",
+  "evidence": {
+    "commits": [
+      "2b7d0e7"
+    ],
+    "integrated": [],
+    "verified": "`make ci` passed with exit 0 at 0b15909, every gate run, with the Playwright Chromium named for the parity gate. `go test ./internal/normalizer/ -run TestOpenCodeStore -count=1`: four tests PASS. TestOpenCodeStoreGeneration2 reads a generation-2 store file into eight events: user, system, thinking, two tool calls, a step finish, an assistant reply and a turn end. The spawn is linked to its child, and the step's tokens and cost sit on its last event. TestOpenCodeStoreGeneration1ReadsAsTheExport marshals the same session read as a store file and as the CLI's export and finds the meta, events, totals and parse equal. Against the previous adapter both store files normalize to zero events. The fixture `opencode/v2.2/multi-agent-run`, an archived OpenCode 2.2.5 member, normalizes to 8 trajectories with 210 events and 83 tool calls. Its six children each carry a parentEventIndex at their parent's `subagent` call. The fixture `opencode/v1.18/store` normalizes to the same 96 events as that session's own export."
+  },
+  "resolution": null,
+  "details": "The opencode adapter reads the shape OpenCode 1.18's `session export` writes: `info` beside `messages`, each message as `info` and `parts`. OpenCode 2.2.5's export is not that. Each of its messages holds only `id`, `time`, `text` and `type`, with no part, tool call, model, cost or token count. The adapter finds no part in any message, emits no event, and the file is skipped.\n\nThe whole record is in the CLI's SQLite store, in `session_message.data`. An assistant row there holds its `content` parts, its `model`, `finish`, `cost` and `tokens`. cs-campaign's archive now writes each session as a store file, on either generation. The file holds `store`, naming the generation, the `session` row, and the message rows with their `data` parsed and their part rows attached. The adapter should read that file.",
+  "notes": [
+    {
+      "date": "2026-11-07",
+      "text": "The adapter reads both store generations into the one form its message loop takes. A generation-1 row is the export's message info with its part rows beside it. A generation-2 row's `content` gives its parts, and its `finish` is read as the step-finish OpenCode 1 wrote."
+    }
+  ],
+  "links": []
+}

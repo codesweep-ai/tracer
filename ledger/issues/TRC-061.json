@@ -1,0 +1,22 @@
+{
+  "id": "TRC-061",
+  "title": "Claude Code renders a fork's task as an unrecognized content block",
+  "type": "defect",
+  "severity": "low",
+  "status": "closed",
+  "foundBy": "survey of the archives on the box, relayed by the coordinating session on 2026-11-07",
+  "opened": "2026-11-07",
+  "resolved": "2026-11-07",
+  "stint": "cc/opencode-store, 2026-11-07",
+  "evidence": {
+    "commits": [
+      "8eee961"
+    ],
+    "integrated": [],
+    "verified": "go test ./internal/normalizer -count=1 -run 'TestClaudeToolResultBesideTextIsTheForkInstruction|TestOracleTrees': both PASS. git status after the change shows no file under oracle/ moved."
+  },
+  "resolution": "A text block beside a tool_result in a user record is read as a user event, after the results are attached to their calls.",
+  "details": "Claude Code 2.1.283 writes the first record of a worker fork as a `user` record with two content blocks. A `tool_result` block answers the Fork call, and a `text` block beside it carries the fork's task prompt. The adapter read arrays of results and arrays of text, and drew the mixed form as an unrecognized `user-content:text` meta event. The one instruction a fork acts on was lost from its trajectory. Seven such records exist in the sub-agent files of the archives on the box.",
+  "notes": [],
+  "links": []
+}
