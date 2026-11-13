@@ -233,6 +233,9 @@ const STRUCTURAL_KEYS = new Set([
   // names the spawned role, and `finish` is the step's reason.
   "parent_id", "message_id", "providerID", "agent", "finish", "rawFinish", "sessionID",
   "agent_thread_id", "parent_thread_id", "parentID", "thread_id", "event_id",
+  // A Codex collaboration notice names the threads it acted on. A spawn's
+  // receivers are the only record of its child in a multi-agent v1 run.
+  "receiver_thread_ids", "sender_thread_id",
   "call_id", "callId", "conversationId", "conversation_id", "turnId", "turn_id",
   "mode", "permissionMode", "operation", "name", "timestamp", "ts", "cwd",
   "stop_reason", "stopReason", "status", "source", "adapter", "subtype", "level",

@@ -1,0 +1,16 @@
+{
+  "id": "TRC-063",
+  "title": "A Codex multi-agent v1 spawn made from a script does not link its child",
+  "type": "defect",
+  "severity": "low",
+  "status": "in-progress",
+  "foundBy": "session agent, 2026-11-13, from a Codex 0.166 multi-agent v1 capture the host asked for: \"can we run this with the creds we have right now?\"",
+  "opened": "2026-11-13",
+  "resolved": null,
+  "stint": "cc/codex-v1-link, 2026-11-13",
+  "evidence": { "commits": [], "integrated": [], "verified": null },
+  "resolution": null,
+  "details": "Codex picks multi-agent v1 or v2 per model, from its model catalog. On a v1 model such as gpt-5.6-luna, the model calls the collaboration tools from inside its `exec` tool, a JavaScript script that calls `tools.multi_agent_v1__spawn_agent`. The rollout records that `exec` call, then a `CollabAgentToolCall` notice whose `receiver_thread_ids` name the child, then the script's output. The notice's id is `exec-<uuid>` and matches no call, so the adapter tallies it and links nothing. The child still names its parent from its own `session_meta`, but the parent's call that spawned it carries no `childSessionId`, and the tree stamps no `parentEventIndex` on the child. The v1 rule from TRC-059 was written from the source, which shows a direct `spawn_agent` call, and no v1 capture existed to test it.",
+  "notes": [],
+  "links": ["TRC-059"]
+}

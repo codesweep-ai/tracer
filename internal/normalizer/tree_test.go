@@ -31,6 +31,7 @@ func TestOracleTrees(t *testing.T) {
 		{"claude", "v2.1"},
 		{"codex", "v0.146"},
 		{"codex", "v0.165"},
+		{"codex", "v0.166"},
 		{"opencode", "v1.18"},
 		{"opencode", "v2.2"},
 	}
@@ -136,6 +137,7 @@ func TestNormalizeDirectoryStampsParentEventIndex(t *testing.T) {
 		{"codex/v0.146/multi-agent-run", 2, 2},
 		{"codex/v0.146/subagent-depth2", 2, 2},
 		{"codex/v0.165/multi-agent-run", 4, 4},
+		{"codex/v0.166/multi-agent-v1", 1, 1},
 		{"opencode/v1.18/multi-agent-run", 2, 2},
 		{"opencode/v2.2/multi-agent-run", 6, 6},
 	} {

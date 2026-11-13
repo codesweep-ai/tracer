@@ -223,6 +223,38 @@ func TestNormalizeCodexCollabSpawnNoticeNamesTheChild(t *testing.T) {
 	t.Fatal("the two notices are not tallied under their item type")
 }
 
+// A multi-agent v1 model calls the collaboration tools from inside an `exec`
+// script (TRC-063). The rollout holds the script's call, a spawn notice whose
+// id is its own, and then the script's output, which is the record shape of a
+// Codex 0.166 capture on gpt-5.6-luna. The running script is the call that
+// spawned the child. A later `wait` notice must not link anything.
+func TestNormalizeCodexScriptSpawnNoticeNamesTheChild(t *testing.T) {
+	doc, err := NormalizeBytes([]byte(
+		"{\"type\":\"session_meta\",\"payload\":{\"id\":\"t1\"}}\n" +
+			"{\"timestamp\":\"2026-11-13T01:34:40.000Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"custom_tool_call\",\"name\":\"exec\",\"call_id\":\"call_1\",\"input\":\"const r = await tools.multi_agent_v1__spawn_agent({message:\\\"count\\\"});\"}}\n" +
+			"{\"timestamp\":\"2026-11-13T01:34:41.000Z\",\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"CollabAgentToolCall\",\"id\":\"exec-1\",\"tool\":\"spawn_agent\",\"status\":\"completed\",\"sender_thread_id\":\"t1\",\"receiver_thread_ids\":[\"t2\"],\"receiver_agents\":[],\"agents_states\":{}}}}\n" +
+			"{\"timestamp\":\"2026-11-13T01:34:41.100Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"custom_tool_call_output\",\"call_id\":\"call_1\",\"output\":\"Script completed\"}}\n" +
+			"{\"timestamp\":\"2026-11-13T01:34:42.000Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"custom_tool_call\",\"name\":\"exec\",\"call_id\":\"call_2\",\"input\":\"await tools.multi_agent_v1__wait_agent({targets:[\\\"t2\\\"]});\"}}\n" +
+			"{\"timestamp\":\"2026-11-13T01:34:44.000Z\",\"type\":\"event_msg\",\"payload\":{\"type\":\"item_completed\",\"item\":{\"type\":\"CollabAgentToolCall\",\"id\":\"exec-2\",\"tool\":\"wait\",\"status\":\"completed\",\"sender_thread_id\":\"t1\",\"receiver_thread_ids\":[\"t2\"],\"receiver_agents\":[],\"agents_states\":{}}}}\n" +
+			"{\"timestamp\":\"2026-11-13T01:34:44.100Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"custom_tool_call_output\",\"call_id\":\"call_2\",\"output\":\"Script completed\"}}\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	events := get(doc, "events").([]*obj)
+	if len(events) != 2 {
+		t.Fatalf("events = %d, want the two scripts alone: a collaboration notice repeats a call", len(events))
+	}
+	if !truthy(get(events[0], "subtask")) || str(get(events[0], "childSessionId")) != "t2" {
+		t.Fatalf("the spawning script does not name its child: %v", events[0])
+	}
+	if present(get(events[1], "subtask")) || present(get(events[1], "childSessionId")) {
+		t.Fatalf("the waiting script became a spawn: %v", events[1])
+	}
+	if n := num(get(object(get(doc, "parse")), "unrecognized")); n != 0 {
+		t.Fatalf("unrecognized = %v", n)
+	}
+}
+
 // Codex 0.165 writes a `token_usage_record` beside every `token_count`
 // notice, carrying the same usage. The notice is the source the adapter
 // reads, so the record is tallied, and reading both would count every

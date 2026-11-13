@@ -40,6 +40,10 @@ func NormalizeCodex(records []*obj) *obj {
 	meta := trajectory.NewObject("source", "codex", "sessionId", "unknown-session")
 	var events []*obj
 	calls := map[string]*obj{}
+	// The `exec` call whose output has not arrived yet. A multi-agent v1
+	// model calls the collaboration tools from inside that script, so a
+	// spawn notice that names no call of its own belongs to it.
+	var openScript *obj
 	counts := map[string]int{}
 	var order []string
 	skipped := skipTally{}
@@ -191,6 +195,9 @@ func NormalizeCodex(records []*obj) *obj {
 				if id := str(get(payload, "call_id")); id != "" {
 					calls[id] = e
 				}
+				if pt == "custom_tool_call" && str(get(payload, "name")) == "exec" {
+					openScript = e
+				}
 				events = append(events, e)
 			case "agent_message":
 				var b strings.Builder
@@ -212,6 +219,9 @@ func NormalizeCodex(records []*obj) *obj {
 			case "custom_tool_call_output", "function_call_output":
 				text := blockText(get(payload, "output"))
 				call := calls[str(get(payload, "call_id"))]
+				if call != nil && call == openScript {
+					openScript = nil
+				}
 				isErr := codexOutputIsError(text)
 				if call != nil {
 					call.Set("result", trajectory.NewObject("text", text, "ts", ts, "isError", isErr, "durationMs", millis(str(get(call, "ts")), str(ts))))
@@ -295,8 +305,17 @@ func NormalizeCodex(records []*obj) *obj {
 				// already read, so it is tallied. In multi-agent v1 the spawn
 				// is one of these, and its receivers are the threads it
 				// started: the one place that run names the child.
+				//
+				// A v1 model makes the call from an `exec` script, and then the
+				// notice's id is its own, `exec-<uuid>`. The script still
+				// running is the call that spawned the child, so it becomes the
+				// spawn. A script that spawns twice links its first child.
 				if it == "event_msg:item_completed:CollabAgentToolCall" {
 					call := calls[str(get(item, "id"))]
+					if call == nil && openScript != nil && str(get(item, "tool")) == "spawn_agent" {
+						call = openScript
+						call.Set("subtask", true)
+					}
 					if call != nil && truthy(get(call, "subtask")) && !present(get(call, "childSessionId")) {
 						if receivers := array(get(item, "receiver_thread_ids")); len(receivers) > 0 {
 							call.Set("childSessionId", jsString(receivers[0]))

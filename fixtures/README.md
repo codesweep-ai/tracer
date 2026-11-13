@@ -51,6 +51,12 @@ The adapters read what each CLI actually writes:
 |---|---|
 | `multi-agent-run` | A root that spawns four children through `spawn_agent` at effort ultra, plus a second root. The parent names a child only in an `item_completed` notice whose item is a `SubAgentActivity`, keyed by the spawning call's id; 0.146's `sub_agent_activity` is gone. The spawn's own output names the task alone. Each rollout carries a `token_usage_record` beside every `token_count`, one developer-role `additional_tools` listing the tool schemas, and each child a `turn_aborted` for the turn that was cut off. |
 
+### `codex/v0.166/`
+
+| Case | Exercises |
+|---|---|
+| `multi-agent-v1` | A root on a multi-agent v1 model that spawns one child. The model calls the collaboration tools from inside an `exec` script, so no `spawn_agent` call appears. The script's call is followed by a `CollabAgentToolCall` notice with an id of its own, whose `receiver_thread_ids` name the child, and then by the script's output. The running script must become the spawn. A second script waits on the child, and its notice must link nothing. |
+
 ### `opencode/v1.18/`
 
 | Case | Exercises |
